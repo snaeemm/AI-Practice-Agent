@@ -2,8 +2,9 @@
 streamlit==1.50.0
 
 # Google AI/ADK
-google-adk>=1.16.0
-google-generativeai>=0.8.0
+# Pinned to specific versions to resolve an internal ADK attribute error.
+google-adk==1.16.0
+google-generativeai==0.9.0
 
 # Database
 psycopg2-binary>=2.9.10
