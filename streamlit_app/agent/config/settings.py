@@ -14,9 +14,9 @@ class Settings:
         self.GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
         self.GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-09-2025")
 
-        self.FILES_DIR = Path(os.getenv("FILES_DIR", "./related_files")).resolve()
-        self.RESULTS_DIR = Path(os.getenv("RESULTS_DIR", "./results")).resolve()
-        self.OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "./output")).resolve()
+        self.FILES_DIR = Path(os.getenv("FILES_DIR", "./related_files"))
+        self.RESULTS_DIR = Path(os.getenv("RESULTS_DIR", "./results"))
+        self.OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "./output"))
 
         self.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         self.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
