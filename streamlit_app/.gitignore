@@ -1,0 +1,65 @@
+# Environment Variables
+.env
+.env.local
+.env.production
+
+# Streamlit Secrets (LOCAL ONLY - never commit!)
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Output/Results Directories (no longer needed with database)
+output/
+results/
+*.xlsx
+*.json
+!related_files/*.json
+!related_files/*.xlsx
+
+# Database backups
+*.sql
+*.dump
+
+# Logs
+*.log
+
+# Temporary files
+/tmp/
+*.tmp

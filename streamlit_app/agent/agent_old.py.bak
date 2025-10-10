@@ -1,0 +1,132 @@
+import os
+from pathlib import Path
+from .rfp_processor import process_rfp_document
+from google.adk.agents.llm_agent import LlmAgent
+
+class BidAgent:
+    """Simple, focused bid management agent that processes RFPs into bid plans."""
+    
+    def __init__(self):
+        self.related_files_dir = Path(
+            "/mnt/c/Users/Shahzeb/Granite Media/Granite MENA - Operations/2. Practices/AI/Agentic AI for Bid Process/Related Files"
+        )
+        self.output_dir = Path(
+            "/mnt/c/Users/Shahzeb/Granite Media/Granite MENA - Operations/2. Practices/AI/Agentic AI for Bid Process/Bid Files"
+        )
+
+        # Validate related files directory
+        if not self.related_files_dir.exists():
+            raise FileNotFoundError(f"Related files directory not found: {self.related_files_dir}")
+
+        # Ensure output directory exists
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+    
+    def list_available_rfps(self) -> dict:
+        """List all available RFP PDF files."""
+        try:
+            pdf_files = list(self.related_files_dir.glob("*.pdf"))
+            
+            files_info = []
+            for pdf_file in pdf_files:
+                size_mb = round(pdf_file.stat().st_size / (1024*1024), 2)
+                files_info.append({
+                    'filename': pdf_file.name,
+                    'path': str(pdf_file),
+                    'size_mb': size_mb
+                })
+            
+            return {
+                'success': True,
+                'files': files_info,
+                'count': len(files_info),
+                'message': f"Found {len(files_info)} RFP documents ready for processing"
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'files': [],
+                'count': 0,
+                'message': f"Couldn't access RFP files: {str(e)}"
+            }
+    
+    def process_rfp(self, pdf_path: str) -> dict:
+        """Process an RFP document and create a bid plan."""
+        try:
+            # Delegate the actual work to the processor
+            result = process_rfp_document(pdf_path, str(self.output_dir))
+            
+            if result['success']:
+                # Add human-friendly summary
+                data = result['rfp_data']
+                result['summary'] = self._create_friendly_summary(data, result['excel_path'])
+            
+            return result
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'message': f"Failed to process RFP: {str(e)}"
+            }
+    
+    def _create_friendly_summary(self, rfp_data: dict, excel_path: str) -> str:
+        """Create a human-friendly summary of what was processed."""
+        client = rfp_data.get('client_name', 'Unknown Client')
+        project = rfp_data.get('project_title', 'Unknown Project')
+        deadline = rfp_data.get('deadline', 'Not specified')
+        
+        tech_count = len(rfp_data.get('technical_deliverables', []))
+        comm_count = len(rfp_data.get('commercial_deliverables', []))
+        
+        summary = f"""
+🎯 **RFP Analysis Complete!**
+
+**Client:** {client}
+**Project:** {project}
+**Submission Deadline:** {deadline}
+
+**What I Found:**
+• {tech_count} technical deliverables identified
+• {comm_count} commercial sections required
+• Bid plan template populated and ready
+
+**Next Steps:**
+1. Review the Excel file: `{Path(excel_path).name}`
+2. Assign team members to each section
+3. Start working on the technical proposal
+
+Your bid plan is ready to go! 🚀
+"""
+        return summary
+
+# Initialize the agent
+agent = BidAgent()
+
+# Tool functions for Google ADK
+def list_available_rfps() -> dict:
+    """List all available RFP documents."""
+    return agent.list_available_rfps()
+
+def process_rfp_document_tool(pdf_path: str) -> dict:
+    """Process an RFP document to create a bid plan."""
+    return agent.process_rfp(pdf_path)
+
+# Google ADK Agent Setup
+root_agent = LlmAgent(
+    name="bid_manager",
+    model="gemini-2.5-flash",
+    instruction="""You are a helpful Bid Manager AI that processes RFP documents and creates structured bid plans.
+
+When someone asks to process RFPs or see available documents, automatically list all available PDF files first, then ask which one to process.
+
+I'm here to help you:
+• Automatically show available RFP documents 
+• Process selected RFPs into organized bid plans with Excel templates
+• Provide clear summaries of what was found and created
+
+I'm designed to be practical and direct - I'll show you what's available and process what you select.
+
+How can I help with your bid today?""",
+    tools=[list_available_rfps, process_rfp_document_tool]
+)
