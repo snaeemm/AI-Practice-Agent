@@ -26,7 +26,7 @@ FILES_DIR = Path(os.getenv("FILES_DIR", "/mnt/c/Users/Shahzeb/Granite Media/Gran
 RESULTS_DIR = Path(os.getenv("RESULTS_DIR", "/mnt/c/Users/Shahzeb/Granite Media/Granite MENA - Operations/2. Practices/AI/Agentic AI for Bid Process/Bid Files")).resolve()
 CAPABILITIES_JSON = FILES_DIR / "capabilities.json"
 QUALIFICATION_JSON = FILES_DIR / "qualification_matrix.json"
-# RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+# # RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ------------------ DATA MODELS ------------------ #
 class Contact(BaseModel):
