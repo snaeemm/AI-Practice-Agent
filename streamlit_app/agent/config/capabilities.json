@@ -1,0 +1,1543 @@
+{
+    "granite_mena": [
+        {
+            "name": "Bid Management",
+            "category": "Sales/Commercial Operations",
+            "sub_category": null,
+            "capabilities": [
+                "RFP Analysis - Rapid evaluation of requirements to align with company capabilities.",
+                "Proposal Development - Structured processes for drafting compelling, compliant bids.",
+                "Partner Coordination - Identifying and collaborating with the right delivery partners.",
+                "Compliance Assurance - Ensuring documentation meets client and regulatory standards."
+            ],
+            "industry_focus": [
+                "General Bidding, Procurement, Sales Support"
+            ],
+            "contact": null,
+            "website": null,
+            "use_cases": null,
+            "strategic_fit": null,
+            "past_projects": null,
+            "reliability_score": null,
+            "agreement_status": null,
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Account Management",
+            "category": "Client Relations/Sales",
+            "sub_category": null,
+            "capabilities": [
+                "Relationship Management - Building and maintaining long-term partnerships with clients.",
+                "Strategic Account Planning - Identifying growth opportunities and aligning services with client goals.",
+                "Client Advocacy - Acting as the client's voice internally to ensure needs are prioritized.",
+                "Contract & Renewal Management - Overseeing agreements, renewals, and upselling opportunities.",
+                "Performance Monitoring - Tracking service delivery, satisfaction, and ROI for continuous improvement."
+            ],
+            "industry_focus": [
+                "Client Retention, Business Development, Strategic Partnerships"
+            ],
+            "contact": null,
+            "website": null,
+            "use_cases": null,
+            "strategic_fit": null,
+            "past_projects": null,
+            "reliability_score": null,
+            "agreement_status": null,
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Project Management",
+            "category": "Operations/Delivery",
+            "sub_category": null,
+            "capabilities": [
+                "Planning & Scheduling - Robust frameworks for tracking milestones and deliverables.",
+                "Risk Management - Early identification and mitigation strategies.",
+                "Resource Allocation - Optimizing team and budget deployment for efficiency.",
+                "Performance Monitoring - Data-driven tracking of progress, deadlines, and outcomes."
+            ],
+            "industry_focus": [
+                "Project Delivery, Operations, Efficiency"
+            ],
+            "contact": null,
+            "website": null,
+            "use_cases": null,
+            "strategic_fit": null,
+            "past_projects": null,
+            "reliability_score": null,
+            "agreement_status": null,
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Agentic AI",
+            "category": "Technology/Artificial Intelligence",
+            "sub_category": null,
+            "capabilities": [
+                "AI Agents & Automation - Building custom agents (Google ADK and other frameworks) that can plan, reason, and take action across workflows.",
+                "RFP & Proposal Automation - Intelligent tools that analyze requirements, recommend delivery partners, and draft scope documents.",
+                "Computer Vision Solutions - Object detection, tracking, and segmentation for real-world applications, leveraging state-of-the-art models.",
+                "Applied Machine Learning - From concept to deployment, using leading frameworks to solve business problems."
+            ],
+            "industry_focus": [
+                "Business Process Automation, Decision Support, Computer Vision, Machine Learning"
+            ],
+            "contact": null,
+            "website": null,
+            "use_cases": null,
+            "strategic_fit": null,
+            "past_projects": null,
+            "reliability_score": null,
+            "agreement_status": null,
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Social Media",
+            "category": "Marketing/Digital Services",
+            "sub_category": null,
+            "capabilities": [
+                "Content Strategy - Data-backed planning for audience engagement.",
+                "Creative Development - Eye-catching posts, visuals, and campaigns.",
+                "Performance Analytics - Tracking metrics to refine campaigns in real time.",
+                "Community Management - Proactive interaction and brand presence building."
+            ],
+            "industry_focus": [
+                "Digital Marketing, Brand Building, Audience Engagement"
+            ],
+            "contact": null,
+            "website": null,
+            "use_cases": null,
+            "strategic_fit": null,
+            "past_projects": null,
+            "reliability_score": null,
+            "agreement_status": null,
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Product",
+            "category": "Product Development/Strategy",
+            "sub_category": null,
+            "capabilities": [
+                "Product Strategy - Market research and positioning to meet client needs.",
+                "Roadmapping - Prioritizing features aligned with business goals.",
+                "UX & Design - Creating intuitive, user-focused experiences.",
+                "Lifecycle Management - Continuous improvements post-launch."
+            ],
+            "industry_focus": [
+                "Software Development, Product Lifecycle Management, UX/UI"
+            ],
+            "contact": null,
+            "website": null,
+            "use_cases": null,
+            "strategic_fit": null,
+            "past_projects": null,
+            "reliability_score": null,
+            "agreement_status": null,
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Solutions Manager",
+            "category": "Consulting/Pre-Sales",
+            "sub_category": null,
+            "capabilities": [
+                "Client Engagement - Acting as the bridge between client needs and internal delivery teams.",
+                "Solution Design - Translating business requirements into practical, scalable solutions.",
+                "Cross-Functional Coordination - Aligning product, technical, and commercial teams for seamless execution.",
+                "Proposal Development - Building tailored solution roadmaps and supporting pre-sales efforts.",
+                "Market Awareness - Staying current with trends and competitor offerings to refine value propositions."
+            ],
+            "industry_focus": [
+                "Solution Architecture, Pre-Sales Support, Technical Consulting, Implementation Strategy"
+            ],
+            "contact": null,
+            "website": null,
+            "use_cases": null,
+            "strategic_fit": null,
+            "past_projects": null,
+            "reliability_score": null,
+            "agreement_status": null,
+            "agreement_type": null,
+            "notes": null
+        }
+    ],
+    "partners": [
+        {
+            "name": "Kentico",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Digital Experience Platform",
+            "capabilities": [
+                "Content Management",
+                "Digital Marketing",
+                "Commerce Capabilities"
+            ],
+            "industry_focus": [
+                "Various Industries"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Petr Klouda <PetrK@kentico.com>",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://www.kentico.com/",
+            "use_cases": "Website building, managing campaigns",
+            "strategic_fit": "Comprehensive platform for digital experiences",
+            "past_projects": null,
+            "reliability_score": 1,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": "Strong A/B testing and analytics tools."
+        },
+        {
+            "name": "Kubee Analytics",
+            "category": "Data & Platforms",
+            "sub_category": "Omnichannel Analytics",
+            "capabilities": [
+                "Unified Customer Insights",
+                "Physical + Digital Data Capture"
+            ],
+            "industry_focus": [
+                "Retail",
+                "E-commerce"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Ibrahima Conte <ibrahima.conte@kubeeanalytics.com>",
+                "internal_poc": "Sowjanya Gummella"
+            },
+            "website": "https://www.kubeeanalytics.com/",
+            "use_cases": "360 degree customer view , Personalized Marketing Retail Operations Management ",
+            "strategic_fit": "Provides 360-degree customer view",
+            "past_projects": "Increased retail conversions, retention improvements",
+            "reliability_score": 1,
+            "agreement_status": "Yes",
+            "agreement_type": "NDA MSA",
+            "notes": "Strong focus on customer-centric insights."
+        },
+        {
+            "name": "Loylogic",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Loyalty & Rewards Solutions",
+            "capabilities": [
+                "Global loyalty and rewards platform offering Points-as-a-Service\u2122",
+                "enabling brands to deliver personalized and engaging reward experiences."
+            ],
+            "industry_focus": [
+                "travel",
+                "banking",
+                "FMCG",
+                "digital health",
+                "and more"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Gabi Kool <Gabi.Kool@loylogic.com>",
+                "internal_poc": "Paul Wallis"
+            },
+            "website": "https://www.loylogic.com/",
+            "use_cases": "Brands seeking to enhance customer engagement, retention, and lifetime value through personalized rewards and incentives.",
+            "strategic_fit": "Ideal for partners aiming to integrate a comprehensive loyalty solution with global reach and robust technology infrastructure.",
+            "past_projects": "Collaborated with Allianz to integrate points collection through insurance products, enhancing customer engagement .",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "MetaMinds Studio",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Digital Design & Development",
+            "capabilities": [
+                "3D Animations",
+                "UI/UX Design",
+                "Web Development"
+            ],
+            "industry_focus": [
+                "Various Industries"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Sandra Helou <sandra@metaminds.group>",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://www.metaminds.group/",
+            "use_cases": "Immersive experiences, brand storytelling",
+            "strategic_fit": "Elevates storytelling with visuals",
+            "past_projects": "Delivered projects across Europe",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": "Creative-driven, boundary-pushing designs."
+        },
+        {
+            "name": "Mminds",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": null,
+            "capabilities": [
+                "Creator development and management",
+                "Content production, distribution, and monetization",
+                "Influencer marketing and brand partnerships",
+                "Merchandising and digital rights management",
+                "Podcasting and event management"
+            ],
+            "industry_focus": [
+                "Digital media and entertainment",
+                "Music, comedy, fashion, food, and lifestyle",
+                "E-commerce and merchandising",
+                "Sports and podcasting"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Dany Semaan <dany@fusionmena.com>",
+                "internal_poc": "Rana Al Najjar"
+            },
+            "website": "https://www.linkedin.com/in/danysemaan/",
+            "use_cases": "Amplifying brand reach through influencer collaborations; Developing and distributing original content; Launching creator-driven merchandise lines; Managing digital rights and content monetization; Organizing branded events and podcasts",
+            "strategic_fit": "Ideal for brands seeking to engage with Gen Z and millennial audiences; Suitable for creators aiming to scale their digital presence; Beneficial for companies looking to integrate influencer marketing into their strategies",
+            "past_projects": "Collaborated with Pepsi India on a summer anthem with Badshah and Jacqueline Fernandez achieving 200M+ views; Partnered with NASA-backed Space Hero project for global webcasting reality show; Managed 6,000+ creators generating 10 billion watched minutes of content monthly",
+            "reliability_score": 2,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": "UAE"
+        },
+        {
+            "name": "Novatiq",
+            "category": "Data & Platforms",
+            "sub_category": "Identity Solutions",
+            "capabilities": [
+                "Privacy-First Identity Solutions for Targeted Advertising"
+            ],
+            "industry_focus": [
+                "Telecom",
+                "Media",
+                "Banking"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Tanya Field <tanya.field@novatiq.com> (CEO) / Jurgita Rudzyte <jurgita.rudzyte@novatiq.com> (Marketing)",
+                "internal_poc": "Paul Wallis"
+            },
+            "website": "https://www.novatiq.com/",
+            "use_cases": "Audience segmentation, fraud prevention",
+            "strategic_fit": "Compliance-friendly identity management",
+            "past_projects": "Improved campaign precision for telecom clients",
+            "reliability_score": 1,
+            "agreement_status": "Yes",
+            "agreement_type": "Fwk Agreement",
+            "notes": "Pioneer in consent-driven identity solutions."
+        },
+        {
+            "name": "Opstalent",
+            "category": "Tech Resourcing",
+            "sub_category": "CX and Tech teams",
+            "capabilities": [
+                "Customer Service support(Call centers)",
+                "Remote tech teams"
+            ],
+            "industry_focus": [
+                "Banking",
+                "FinTech",
+                "Various"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Ken Coyne <k.coyne@opstalent.com>",
+                "internal_poc": "Paul Wallis"
+            },
+            "website": "https://www.opstalent.com/",
+            "use_cases": "Customer service outsourcing, Tech delivery, Transform CX operations",
+            "strategic_fit": "Mutlilingual support(30+ languages), Managed CS and Tech delivery with proven track record",
+            "past_projects": "Serviced leading brands - HSBC, BNY Mellon, Nestle, Revolut",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": "Nearshore operation from Poland, serve global clients"
+        },
+        {
+            "name": "PayTech",
+            "category": "Data & Platforms",
+            "sub_category": "Fintech",
+            "capabilities": [
+                "White-label payment gateway and payment orchestration platform",
+                "Integration with 700+ PSPs, cards, wallets, crypto, BNPL, and more",
+                "Smart transaction routing",
+                "Reconciliation",
+                "Compliance support",
+                "Fraud prevention",
+                "Banking layer integration",
+                "API-first SaaS delivery"
+            ],
+            "industry_focus": [
+                "fintech platforms",
+                "digital banks",
+                "e-commerce",
+                "retail",
+                "travel & hospitality",
+                "telecom",
+                "financial services",
+                "crypto & real-world asset tokenization providers"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Stuart Isted <Stuart@paytech.ae>",
+                "internal_poc": "Paul Wallis"
+            },
+            "website": "https://www.paytech.ae/",
+            "use_cases": "Partners may leverage PayTech to launch branded payment gateways, orchestrate global payment methods, connect local/domestic PSPs, tokenize real-world assets (RWA), automate reconciliation and financial operations, and scale POS and soft POS deployments. ",
+            "strategic_fit": "Ideal integration partner for firms needing modular, compliant payment infrastructure with global PSP connectivity. Complements agencies, systems integrators, and banks without in\u2011house gateway tech. Supports fast go\u2011to\u2011market and reduces technical overhead.",
+            "past_projects": "Exim Technologies LTD highlighted rapid market integration and expanded provider access. Atlantic\u202fB.V. emphasized a seamless integration, enhanced checkout experience, and higher conversion rates.",
+            "reliability_score": 2,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "PropVR",
+            "category": "Data & Platforms",
+            "sub_category": "Real Estate Visualization",
+            "capabilities": [
+                "3D Interactive Tours",
+                "Virtual Reality",
+                "Augmented Reality",
+                "Digital Twin Solutions"
+            ],
+            "industry_focus": [
+                "Real Estate",
+                "Architecture",
+                "Urban Planning"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Sunder Jagannathan <sunder@propvr.ai>",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://propvr.ai/",
+            "use_cases": "Virtual property showcases, immersive client presentations, urban planning simulations",
+            "strategic_fit": "Enhances property visualization and client engagement through immersive technologies",
+            "past_projects": "Partnered with over 220 builders to provide immersive property experiences",
+            "reliability_score": 1,
+            "agreement_status": "Yes",
+            "agreement_type": "MOU",
+            "notes": "Acquired by Square Yards in 2021; specializes in metaverse solutions for real estate"
+        },
+        {
+            "name": "Mikayla Karayiannis",
+            "category": "Marketing (inc. Content)",
+            "sub_category": "Content Creation",
+            "capabilities": [
+                "Content Strateg",
+                "SEO",
+                "Paid ads",
+                "Social media management",
+                "Brand management",
+                "copywriting"
+            ],
+            "industry_focus": [
+                "Loyalty & rewards (The ENTERTAINER Business & The ENTERTAINER Financial services (Visa",
+                " Mastercard",
+                " HSBC",
+                " FNB) Social media content"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Mikayala Karayiannis <Karamikayla9@gmail.com>",
+                "internal_poc": "Rana Al Najjar"
+            },
+            "website": "https://www.linkedin.com/in/mikayla-karayiannis-b29405218/?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app",
+            "use_cases": "LinkedIn content calander Targeted Marketing campaigns",
+            "strategic_fit": "Creative leadership and brand innovation Expanding into multicultural markets Enhancing customer engagement with tech-driven solutions",
+            "past_projects": "N/A",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": "South Africa"
+        },
+        {
+            "name": "RebootUp",
+            "category": "Consulting",
+            "sub_category": "Digital & AI Innovation",
+            "capabilities": [
+                "Data and AI product design and strategy",
+                "Business Agility"
+            ],
+            "industry_focus": [
+                "Telecom",
+                "Fintech",
+                "Pharma",
+                "Various other industries"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Damien Kopp <damien.kopp@rebootup.com>",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://rebootup.com/",
+            "use_cases": "Business Model Re-engineering, AI Products and Governance",
+            "strategic_fit": null,
+            "past_projects": null,
+            "reliability_score": null,
+            "agreement_status": "Yes",
+            "agreement_type": "NDA MSA",
+            "notes": "Singapore based. GTM Partner to Novatiq SEA and Pacific. "
+        },
+        {
+            "name": "Rey",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Social Media Engagement",
+            "capabilities": [
+                "User generated content",
+                "loyalty",
+                "marketing automation."
+            ],
+            "industry_focus": [],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "George Jason Absher <george@rey.team>",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": null,
+            "use_cases": null,
+            "strategic_fit": null,
+            "past_projects": null,
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Riaz Ahmed",
+            "category": "Consulting",
+            "sub_category": "Business Developent",
+            "capabilities": [],
+            "industry_focus": [],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Riaz Ahmed <thisisriazahmed@gmail.com>",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": null,
+            "use_cases": null,
+            "strategic_fit": null,
+            "past_projects": null,
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Risolv",
+            "category": "Consulting",
+            "sub_category": "AI, Data and Digital Transformation",
+            "capabilities": [
+                "Enabling AI first strategy and implementation"
+            ],
+            "industry_focus": [
+                "Various Industries"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Baha AbuSalem <abusalem@risolv.me>",
+                "internal_poc": "Paul Wallis"
+            },
+            "website": "https://www.linkedin.com/company/risolv/?originalSubdomain=ae",
+            "use_cases": "Tech and Data Strategy, Implementation",
+            "strategic_fit": "Data/AI implementation partners",
+            "past_projects": null,
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Siren Search",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Performance Marketing",
+            "capabilities": [
+                "Digital marketing services: PPC",
+                " SEO",
+                " Paid Social",
+                " Web Design",
+                " Email Marketing",
+                " Content Marketing",
+                " and Training"
+            ],
+            "industry_focus": [
+                "Small businesses and SMEs across retail",
+                " hospitality",
+                " education",
+                " healthcare",
+                " e\u2011commerce",
+                " and professional services primarily in MENA and UK"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Harps Sohal <harps@sirensearch.co.uk>",
+                "internal_poc": "Rana Al Najjar"
+            },
+            "website": "https://www.sirensearch.co.uk/dubai/",
+            "use_cases": "* Digital campaign launches (PPC, social media, SEO) * Website design or redesign * Training and upskilling internal digital teams * Ongoing digital channel optimization",
+            "strategic_fit": "Best for small to mid-sized projects needing end-to-end marketing execution or training support in UAE or UK markets, offering agency-grade service without in-house hires",
+            "past_projects": "Mixed UK and Dubai accounts; case studies mention long-term PPC/SEO work for small clients, training engagements; documented expansion into Dubai market beginning in 2024-25",
+            "reliability_score": 2,
+            "agreement_status": "Yes",
+            "agreement_type": "NDA MSA",
+            "notes": null
+        },
+        {
+            "name": "Digitality",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Software Development",
+            "capabilities": [
+                "Web Design",
+                "Digital Marketing",
+                "SEO",
+                "AI Automation"
+            ],
+            "industry_focus": [
+                "Various Industries"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "paul.darmas@granitemena.com",
+                "internal_poc": "Rana Al Najjar"
+            },
+            "website": "https://www.digitality-agency.com/",
+            "use_cases": "Website development, online advertising, automation",
+            "strategic_fit": "Drives digital growth through tailored strategies",
+            "past_projects": "Developed over 370 websites globally",
+            "reliability_score": 5,
+            "agreement_status": "Yes",
+            "agreement_type": "NDA MSA",
+            "notes": "Based in Dubai, serving clients worldwide."
+        },
+        {
+            "name": "Discovered",
+            "category": "Data & Platforms",
+            "sub_category": "Video Content Distribution",
+            "capabilities": [
+                "Talent solutions specializing in digital, tech & e\u2011commerce sectors, offering retained search, growth-hiring, scale projects, and contract staffing across functions (engineering, cloud, marketing, design, data, cybersecurity, e-commerce)"
+            ],
+            "industry_focus": [
+                "Tech startups",
+                "digital & e-commerce companies",
+                "retail",
+                "financial services",
+                "government",
+                "and digital agencies in MENA"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "dustin@discovered.tv",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://www.discovered.ae/",
+            "use_cases": "* Building core digital functions (product, tech, marketing) * Scaling teams during high-growth phases * Interim/contract hires for specialist roles * Market-mapped senior search to build local teams",
+            "strategic_fit": "Ideal for projects requiring high-quality, speed-to-hire talent in digital/tech domains with regional insight - especially when scaling agile teams across MENA appointments. Known for deep headhunting across global channels.",
+            "past_projects": "Placed 30+ senior professionals for G42 across cloud, security, infrastructure roles in 12 months Delivered 50+ hires for Banque Saudi Fransi in Riyadh/Dubai across digital banking, marketing, engineering domains Consistently partnered with Virgin Mobile UAE to build digital team since 2016 for brand launch and growth",
+            "reliability_score": null,
+            "agreement_status": "Yes",
+            "agreement_type": "NDA",
+            "notes": null
+        },
+        {
+            "name": "Dsquares",
+            "category": "Data & Platforms",
+            "sub_category": "Loyalty & Rewards Solutions",
+            "capabilities": [
+                "B2B Loyalty Programs",
+                "Merchant Management",
+                "Data Analytics"
+            ],
+            "industry_focus": [
+                "Banking",
+                "Telecom",
+                "Retail"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "marwan.kenawy@dsquares.com",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://www.dsquares.com/",
+            "use_cases": "Customer retention, loyalty program management",
+            "strategic_fit": "Offers comprehensive loyalty solutions",
+            "past_projects": "Served clients like Vodafone, CIB, MasterCard",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": "Leading provider in Egypt and beyond."
+        },
+        {
+            "name": "Epsilon",
+            "category": "Data & Platforms",
+            "sub_category": "Global Marketing Services",
+            "capabilities": [
+                "Data-driven Marketing",
+                "Loyalty Programs",
+                "Email Marketing"
+            ],
+            "industry_focus": [
+                "Various Industries"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "ali.diouri@epsilon.com",
+                "internal_poc": "Paul Wallis"
+            },
+            "website": "https://www.epsilon.com/emea",
+            "use_cases": "Customer acquisition, retention, personalized campaigns",
+            "strategic_fit": "Rich data expertise",
+            "past_projects": "Leading loyalty and marketing solutions",
+            "reliability_score": 5,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": "Global reach with scalable solutions."
+        },
+        {
+            "name": "Evam",
+            "category": "Data & Platforms",
+            "sub_category": "Marketing and Ad Tech",
+            "capabilities": [
+                "Platform to connect Enterprises and Partners to enable privacy first data sharing , target audience data sets, campaign design and activation through enterprise channel Real-time customer journey orchestration via continuous\u2011intelligence platform;  AI/ML-powered marketing automation; omnichannel personalization;  low\u2011code drag\u2011and\u2011drop journey design; real\u2011time monitoring & next\u2011best\u2011action workflows"
+            ],
+            "industry_focus": [
+                "Telecommunications",
+                "banking & financial services",
+                "insurance",
+                "retail & loyalty",
+                "airlines",
+                "manufacturing & production"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "nadia@evam.com",
+                "internal_poc": "Sowjana Gummella"
+            },
+            "website": "https://evam.com/",
+            "use_cases": "Data Monetization and Ad Tech for Enterprise Media Real\u2011time upsell & cross\u2011sell; churn reduction via timely offers;  personalization across app/web/push/web\u2011push; onboarding automation; customer feedback & surveys; fraud detection & operational cost reduction",
+            "strategic_fit": "For Enterprises seeking to monetize their data and channels - Privacy first, Low Investment, and faster time to market ( good option for Telcos, Banks, Retailers setting up a media platform) For D2C Brands seeking scalable, modular marketing automation; rapid time\u2011to\u2011market with minimal IT; AI\u2011driven personalization; managing high\u2011volume customer interactions across channels  ",
+            "past_projects": "* LC Waikiki: Achieved a 20% increase in average order value through personalized abandoned cart campaigns. * TBI Bank: Scaled monthly messages from 200K to over 5M without increasing headcount. * ABB Bank: Reached 1.5M customers monthly and generated AZN 25M in loan sales in 3 months. * Kapital Bank: Implemented 96 live scenarios, resulting in a 16% increase in deposit sales. * Jazz (Telecom): Launched 20+ campaigns to support SME and retail customer engagement. * Home Credit Bank Kazakhstan: Achieved 6\u00d7 higher conversion rates and reactivated dormant customers.",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": "New to Middle East, successful in other regions"
+        },
+        {
+            "name": "Flair Event",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Event Agency",
+            "capabilities": [
+                "End-to-end AV and technical production: audio, video, lighting, rigging, power, creative design"
+            ],
+            "industry_focus": [
+                "Weddings",
+                "corporate events",
+                "government ceremonies",
+                "brand activations",
+                "large-scale public celebrations"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Sameer Rahman",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://flair.ae/",
+            "use_cases": "Luxury weddings, national celebrations, brand experiences, corporate galas, immersive installations",
+            "strategic_fit": "Premium delivery partner with strong UAE presence, HSE-certified team, and high-quality execution standards",
+            "past_projects": "UAE National Day (Abu Dhabi Corniche), Global Gift Gala, Effie Awards, Dunhill \"Chill Chamber\", weddings at Burj Al Arab and Emirates Palace",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Fraser",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Agency",
+            "capabilities": [
+                "Automotive"
+            ],
+            "industry_focus": [],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "benjamin.baumann@frasertheagency.com",
+                "internal_poc": "Paul Wallis"
+            },
+            "website": "https://frasertheagency.com/",
+            "use_cases": null,
+            "strategic_fit": null,
+            "past_projects": null,
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Garreth Amoore",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Content Creation and Branding",
+            "capabilities": [
+                "Creative strategy and brand transformation Loyalty programs and digital engagement UX/UI design and campaign management Cross-cultural communication"
+            ],
+            "industry_focus": [
+                "Loyalty & rewards (The ENTERTAINER Business) Financial services (Visa",
+                "Mastercard",
+                "HSBC",
+                "FNB) Youth marketing E-commerce & retail (Rentoza) Travel & hospitality (Virgin Atlantic)"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "garrethamoore@gmail.com",
+                "internal_poc": "Rana Al Najjar"
+            },
+            "website": "https://www.linkedin.com/in/garreth-amoore-724a7097/?originalSubdomain=za",
+            "use_cases": "Designing loyalty programs to boost engagement Brand revitalization for diverse markets Digital platform development Targeted youth marketing campaigns",
+            "strategic_fit": "Creative leadership and brand innovation Expanding into multicultural markets Enhancing customer engagement with tech-driven solutions",
+            "past_projects": "Led multi-country teams at The ENTERTAINER creating 30+ B2B apps for major clients Headed youth marketing initiatives with brands like Adidas and Vodacom Shaped creative direction for Rentoza as Executive Creative Director",
+            "reliability_score": 5,
+            "agreement_status": "Yes",
+            "agreement_type": "NDA",
+            "notes": "South Africa"
+        },
+        {
+            "name": "Global Kinetic/ Future Bank",
+            "category": "Tech Resourcing",
+            "sub_category": "Software Development",
+            "capabilities": [
+                "Enterprise-Grade Software Engineering",
+                "Digital Transformation"
+            ],
+            "industry_focus": [
+                "Banking",
+                "FinTech",
+                "Various"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "pieterdw@globalkinetic.com",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://globalkinetic.com/",
+            "use_cases": "Custom software solutions, modernization projects",
+            "strategic_fit": "Delivers high-quality, scalable software",
+            "past_projects": "Pioneered solutions for global industries",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": "Nearly 20 years of experience"
+        },
+        {
+            "name": "Google Cloud Platform",
+            "category": "Cloud & Infra",
+            "sub_category": "Hyperscaler",
+            "capabilities": [
+                "Provides a combination of a 90-day $300 free credit and an Always Free Tier with limited usage of 20+ Google Cloud products, including Compute Engine, BigQuery, Cloud Storage, and AI APIs ."
+            ],
+            "industry_focus": [
+                "Suitable for startups",
+                "developers",
+                "students",
+                "and businesses exploring cloud infrastructure and services."
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "laithm@google.com",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://cloud.google.com/",
+            "use_cases": "Ideal for testing applications, learning cloud technologies, and developing proof-of-concept projects without incurring costs.",
+            "strategic_fit": "Aligns with partners aiming to offer scalable, secure, and cost-effective cloud solutions with global infrastructure.",
+            "past_projects": "Empowered numerous startups and developers to build and scale applications using Google Cloud's robust platform.",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Horizon CDP/ XCM",
+            "category": "Data & Platforms",
+            "sub_category": "Customer Data Platform",
+            "capabilities": [
+                "Centralized Customer Data for Unified Customer View"
+            ],
+            "industry_focus": [
+                "Retail",
+                "Telecom",
+                "Banking"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Luke.Ibbetson@xcm-uk.com",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://horizoncdp.com/horizoncdp/",
+            "use_cases": "Customer engagement, personalization, data unification",
+            "strategic_fit": "Integrates diverse data into actionable insights",
+            "past_projects": "Enabled high-ROI campaigns for retail clients",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": "Focused on data harmonization."
+        },
+        {
+            "name": "HubSpot",
+            "category": "Data & Platforms",
+            "sub_category": "Software",
+            "capabilities": [
+                "HubSpot provides an all-in-one inbound marketing, sales, customer service, and CRM platform. Their tools cover marketing automation, email campaigns, lead management, sales pipeline tracking, customer support ticketing, and reporting dashboards. The platform is known for ease of use, scalability, and integration flexibility."
+            ],
+            "industry_focus": [
+                "HubSpot serves a broad range of industries",
+                "from SMBs to enterprises",
+                "with strong adoption in tech",
+                "professional services",
+                "education",
+                "manufacturing",
+                "and ecommerce sectors. Their scalable solutions support businesses at various growth stages."
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "aomorris@hubspot.com",
+                "internal_poc": "Sowjana Gummella"
+            },
+            "website": "https://www.hubspot.com/",
+            "use_cases": "Useful for companies needing a unified system for marketing automation, CRM, customer support, and sales enablement. Ideal for driving inbound lead generation, automating campaigns, improving sales productivity, and providing personalized customer experiences.",
+            "strategic_fit": "Fits partners looking to integrate or resell a leading CRM and marketing automation platform with strong brand recognition. Well suited for agencies, systems integrators, and consultancies that advise on digital transformation and customer lifecycle management.",
+            "past_projects": "HubSpot is widely used by thousands of companies globally, with notable success stories including small businesses scaling through inbound marketing and enterprises improving sales and service operations with unified data and automation workflows.",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": null
+        },
+        {
+            "name": "Icogz",
+            "category": "Data & Platforms",
+            "sub_category": "AI/ML Solutions",
+            "capabilities": [
+                "Predictive Analytics",
+                "NLP",
+                "Forecasting"
+            ],
+            "industry_focus": [
+                "Retail",
+                "Banking",
+                "Smart Cities"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Amit Tripathi",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://www.icogz.com/",
+            "use_cases": "Customer segmentation, fraud detection",
+            "strategic_fit": "Enhances decision-making with AI analytics",
+            "past_projects": "Not specified",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": "Comprehensive and customizable offerings."
+        },
+        {
+            "name": "Include Agency",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Web Development Agency",
+            "capabilities": [
+                "Headless Web Development",
+                "Sitecore",
+                "Optimizely",
+                "Uniform"
+            ],
+            "industry_focus": [
+                "Various Industries"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "ab@includeagency.com",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://includeagency.com/",
+            "use_cases": "Personalized digital experiences, composable DXP",
+            "strategic_fit": "Specializes in headless CMS implementations",
+            "past_projects": "Delivered transformative websites for diverse clients",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": null,
+            "notes": "Offices in Denmark and Dubai."
+        },
+        {
+            "name": "Infinite Solutions",
+            "category": "Data & Platforms",
+            "sub_category": "Fintech",
+            "capabilities": [
+                "Full-spectrum fintech and IT services, including: scalable lending, payments, trading platforms, loyalty systems, merchant infrastructure, communication platforms, ERP, self-service kiosks, blockchain / Web3, and enterprise cybersecurity"
+            ],
+            "industry_focus": [
+                "Primarily financial services and fintech",
+                "but also engineering education and tech development across multiple countries (Mongolia",
+                "USA",
+                "Singapore)"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "gabit@infinite.mn",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://www.infinite.mn/",
+            "use_cases": "* Building and operating fintech products (e.g. APIs for capital access, crypto exchange, secure payment systems) * Implementing ERP & CRM systems * Rolling out self-service kiosks or blockchain-powered tools * Enhancing cybersecurity for institutions and platforms",
+            "strategic_fit": "Well-suited for projects requiring foundational fintech enablement, enterprise software platforms, or Web3-enabled digital services - particularly in financial institutions or ecosystems where strong API and regulatory compliance are needed",
+            "past_projects": "Worked with Mongolian banks to launch next-gen fintech products; developed ERP systems like Ultimate ERP used by major brands (APU, GS25, Gobi Cashmere); deployed cloud POS via MASU platform in collaboration with global players like Heineken ",
+            "reliability_score": 3,
+            "agreement_status": "Yes",
+            "agreement_type": "MSA",
+            "notes": null
+        },
+        {
+            "name": "Granite Ireland",
+            "category": "",
+            "sub_category": "",
+            "capabilities": [
+                "Experience Design (UX, customer journey, creative, web)",
+                "Tech & Engineering (web & mobile dev, CMS, e-commerce, hosting)",
+                "Digital Marketing (SEO, PPC, email, analytics)",
+                "Brand Innovation (campaigns, social, PR, brand experience)",
+                "Video Production (corporate, live streaming, documentaries)",
+                "Data & Insights (measurement, analytics integration)"
+            ],
+            "industry_focus": [
+                "Fortune 500 and enterprise brands",
+                "Education & government",
+                "Finance, healthcare, hospitality, retail"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "robert.carpenter@granite.ie",
+                "internal_poc": "Paul Wallis"
+            },
+            "website": "https://www.wearegranite.com/",
+            "use_cases": "* Digital transformation & platform modernization * Enterprise website migration (WordPress, WP Engine) * UX-driven engagement strategies * Data-led marketing and ROI optimization",
+            "strategic_fit": "* Expertise in complex, scalable digital projects * Partnerships with Kentico, Umbraco, AWS, WP Engine, TikTok, Google * Strong data-driven and user-centric approach * Enterprise governance and performance focus",
+            "past_projects": "* UCA - UX Award nomination for collaborative web project * Davy - Digital channel strategy for client-first experiences * Luxottica - Scalable brand-aligned communications * Volkswagen - VW Snapshot social platform boosting brand sentiment * WP Engine partnership - Migration of 200+ enterprise clients including Abbey Capital & Cliffs of Moher",
+            "reliability_score": 5,
+            "agreement_status": "Yes",
+            "agreement_type": "",
+            "notes": "More than 5"
+        },
+        {
+            "name": "AdOmega",
+            "category": "Data & Platforms",
+            "sub_category": "Ad Tech",
+            "capabilities": [
+                "Programmatic advertising platform offering monetization via video, native, CTV/OTT, display, and rich-media ad formats; includes tools like AdOmega Hub, header bidding, and future immersive formats (VR/AR)"
+            ],
+            "industry_focus": [
+                "Digital publishing - primarily web and mobile content publishers in India and Tier-1 markets"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Sohail Nawaz / Harish Pandey",
+                "internal_poc": "Sowjana Gummella"
+            },
+            "website": "https://adomega.in/",
+            "use_cases": "For publishers aiming to: Monetize content via advanced ad formats, Implement video without producing content,Enhance yield via header bidding,Tap into rich-media, app, and immersive ad revenue.",
+            "strategic_fit": "AdOmega positions itself as a technology partner for publishers - not just an ad network. Its value lies in delivering higher-margin, direct-demand monetization and flexible, modular ad formats that optimize for user experience and revenue generation",
+            "past_projects": "- Saambaa LLC: Partner since 2019; expanded role across Tier-1 markets - Mid-Day: Increased video demand and user-friendly UX - Kashmir Monitor: Captured incremental revenue through AdOmega",
+            "reliability_score": 5,
+            "agreement_status": "Yes",
+            "agreement_type": "MOU",
+            "notes": "Potential partner for publisher monetization projects requiring flexibility in ad format and delivery infrastructure; actively expanding into immersive formats like VR/AR"
+        },
+        {
+            "name": "Aishore",
+            "category": "Tech Resourcing",
+            "sub_category": "Talent & Advanced AI",
+            "capabilities": [
+                "Offshoring and AI-enabled technology services including Cloud Data Transformation, Data Engineering, Master Data Management, Analytics/Reporting, and ESG reporting support"
+            ],
+            "industry_focus": [
+                "Financial services",
+                "Retail",
+                "Telecom",
+                "ESG/Reporting",
+                "Media & Entertainment"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "hicham@aishore.ai",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://www.aishore.ai/",
+            "use_cases": "AI-powered enterprise data platforms Automated data governance & quality control Master Data Management (MDM) solutions Fintech automation (credit, research, analytics) AIOps for IT monitoring & response Conversational AI (chatbots & virtual agents) Multicloud AI infrastructure setup",
+            "strategic_fit": "Suitable as a tech-first partner for projects requiring cloud/data modernization, AI-driven insights, and ESG maturity - with scalable offshoring capabilities via African talent pool",
+            "past_projects": "No public case names disclosed; operations since 2023 with multi-industry engagements across global markets including US, EU, GCC ",
+            "reliability_score": 0,
+            "agreement_status": "Yes",
+            "agreement_type": "MSA",
+            "notes": "Employee size 11-50; headquartered in Casablanca; founded in 2023; combining African talent with scalable AI services globally"
+        },
+        {
+            "name": "Alibaba Cloud",
+            "category": "Cloud & Infra",
+            "sub_category": "Hyperscaler",
+            "capabilities": [
+                "Comprehensive cloud computing services including elastic computing, data storage, relational databases, big-data processing, DDoS protection, and content delivery networks (CDN) ."
+            ],
+            "industry_focus": [
+                "Serves a wide range of industries including e-commerce",
+                "finance",
+                "logistics",
+                "healthcare",
+                "and manufacturing."
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "dipesh.m@alibaba-inc.com",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://www.alibabacloud.com/",
+            "use_cases": "Businesses seeking scalable, secure, and reliable cloud computing services for digital transformation, big data analytics, and AI integration.",
+            "strategic_fit": "Ideal for partners aiming to leverage Alibaba Cloud's global infrastructure and AI capabilities to enhance their digital offerings.",
+            "past_projects": "Trusted by global enterprises such as LVMH for integrating AI tools to improve customer experiences and operational efficiency .",
+            "reliability_score": 0,
+            "agreement_status": "No",
+            "agreement_type": "",
+            "notes": ""
+        },
+        {
+            "name": "Antavo",
+            "category": "Data & Platforms",
+            "sub_category": "Loyalty & Rewards Solutions",
+            "capabilities": [
+                "AI-powered, no-code loyalty platform for building enterprise-grade, omnichannel loyalty programs."
+            ],
+            "industry_focus": [
+                "Retail",
+                "eCommerce",
+                "fashion",
+                "beauty",
+                "lifestyle",
+                "hospitality",
+                "and CPG sectors."
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "michelle.ellicott-taylor@antavo.com",
+                "internal_poc": "Paul Wallis"
+            },
+            "website": "https://antavo.com/",
+            "use_cases": "Brands seeking to enhance customer engagement and retention through personalized, scalable loyalty programs.",
+            "strategic_fit": "Ideal for partners aiming to integrate a flexible, API-driven loyalty solution with robust customization and gamification features.",
+            "past_projects": "Trusted by global brands such as Skims, KFC, C&A, Notino, and Kathmandu to transform customer loyalty strategies.",
+            "reliability_score": 0,
+            "agreement_status": "No",
+            "agreement_type": "",
+            "notes": ""
+        },
+        {
+            "name": "Azart & Co",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Product Development",
+            "capabilities": [
+                "Full-stack digital product development, UX/UI design, MVP & MLP delivery, big data systems, analytics, post-launch support, and marketing assets."
+            ],
+            "industry_focus": [
+                "FinTech",
+                "eCommerce",
+                "Big Data",
+                "Hospitality (HoReCa)",
+                "Entertainment",
+                "Early-stage startups"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "gillesgvidal@gmail.com",
+                "internal_poc": "Rana Al Najjar"
+            },
+            "website": "https://azarties.com/",
+            "use_cases": "* MVP/MLP product builds with UX/UI and analytics * Data-heavy platforms with AI/ML * Pitch decks, marketing assets, and product launches",
+            "strategic_fit": "Ideal for early-stage digital projects needing fast design-to-launch execution, analytics integration, and user validation cycles",
+            "past_projects": "Projects include Shuffle startup, gift store platform, pizza delivery app, ChiliIt service - combining UX, web/app dev, and analytics",
+            "reliability_score": 0,
+            "agreement_status": "No",
+            "agreement_type": "",
+            "notes": "UAE Likely Eastern Europe / Central Asia"
+        },
+        {
+            "name": "Bain",
+            "category": "Consulting",
+            "sub_category": "Strategy and Operation",
+            "capabilities": [
+                "Bain & Company Middle East provides top-tier management consulting services with capabilities spanning strategy, digital transformation, performance improvement, mergers & acquisitions, private equity advisory, customer experience, organizational transformation, and sustainability consulting. They support clients across both corporate and public sectors in navigating complex business challenges and driving measurable results."
+            ],
+            "industry_focus": [
+                "The firm focuses on key industries including financial services",
+                "energy and natural resources",
+                "consumer products",
+                "retail",
+                "telecommunications",
+                "healthcare",
+                "government and public sector",
+                "private equity",
+                "and technology."
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Brahim Laaidi",
+                "internal_poc": "Paul Wallis"
+            },
+            "website": "https://www.bain.com/offices/middle-east/",
+            "use_cases": "Typical use cases include designing national economic transformation strategies, optimizing cost structures, digitizing customer journeys, improving operational performance, advising on large-scale mergers or investments, launching new market entries, and shaping sustainability or ESG initiatives.",
+            "strategic_fit": "Bain is strategically positioned to serve governments, large corporates, family businesses, and investment funds in the GCC seeking long-term growth, transformation, or diversification. Their deep regional insight and global expertise allow them to tailor high-impact solutions for Middle East markets.",
+            "past_projects": "Bain supported Ounass (Al Tayer Group) in scaling luxury e-commerce in the Gulf by advising on customer experience improvements and operational efficiency. The firm has also advised leading Gulf sovereign wealth funds on investment strategy and portfolio design, and helped Middle Eastern banks with digitization, leading to higher customer retention and cost savings. Their Middle East M&A Reports are widely used to guide strategic investment across sectors.",
+            "reliability_score": 0,
+            "agreement_status": "No",
+            "agreement_type": "",
+            "notes": ""
+        },
+        {
+            "name": "Bright Insights Consulting",
+            "category": "Consulting",
+            "sub_category": "Loyalty & Rewards Solutions",
+            "capabilities": [
+                "Bright Insights Consulting is a niche consultancy with a focused offering around loyalty strategy, customer experience design, CRM optimization, and data-driven campaign management. Their delivery spans both strategic and executional layers, including journey mapping, commercial modelling, vendor selection, and end-to-end program management. They also advise on integrating next-gen technologies (e.g., card-linked offers, AI, blockchain), positioning them as both practical and forward-looking."
+            ],
+            "industry_focus": [
+                "retail",
+                "hospitality",
+                "luxury",
+                "airlines",
+                "telecom",
+                "automotive",
+                "and financial services."
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "lisa@brightinsightsconsulting.com",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://www.brightinsightsconsulting.com/",
+            "use_cases": "A partnership could support the design or optimization of loyalty programs, either standalone or embedded within broader customer engagement initiatives. They could act as a specialized delivery partner for CX workshops, tech stack evaluation (e.g., card-linked loyalty), or white-label campaign strategy. Their expertise is especially relevant for projects needing localized insight, rapid implementation, or industry-specific customer engagement models.",
+            "strategic_fit": "Bright Insights offers high strategic alignment for partners seeking a nimble, execution-focused loyalty specialist in the GCC. Their tech-agnostic, commercially grounded model makes them a strong complement to firms with platform-based solutions or broader consulting mandates. Their founder-led structure enables agility and bespoke engagement models.",
+            "past_projects": "Etihad Guest engaged them on long-term loyalty strategy and praised their expertise in retail engagement. Aldar used them for end-to-end loyalty rollout. Fazaa credited their operational delivery and creative approach. Beside Group renewed contracts post-launch due to strong outcomes. Trafalgar Luxury Group highlighted their CX strategy support across multiple luxury brands. These reflect consistent performance in high-expectation environments.",
+            "reliability_score": 0,
+            "agreement_status": "No",
+            "agreement_type": "",
+            "notes": ""
+        },
+        {
+            "name": "Canari",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Data and Analytics",
+            "capabilities": [
+                ""
+            ],
+            "industry_focus": [
+                ""
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "lisa@brightinsightsconsulting.com",
+                "internal_poc": "Rana Al Najjar"
+            },
+            "website": "No website yet",
+            "use_cases": "",
+            "strategic_fit": "",
+            "past_projects": "",
+            "reliability_score": 2,
+            "agreement_status": "No",
+            "agreement_type": "",
+            "notes": ""
+        },
+        {
+            "name": "Channel Factory",
+            "category": "Data & Platforms",
+            "sub_category": "Ad-tech platform & data analytics",
+            "capabilities": [
+                "Channel Factory is a global ad-tech company focused on brand-safe, contextually aligned video advertising. Their platform optimizes YouTube and CTV campaigns using proprietary tools like ViewIQ and ActivateIQ, with recent expansion into AI-driven cross-platform media intelligence."
+            ],
+            "industry_focus": [
+                "Works with brands in FMCG",
+                "electronics",
+                "luxury",
+                "and purpose-led sectors. Strong in markets where brand safety and cultural relevance are priorities. Active across 30+ countries and 49 languages."
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "jon.brotherhood@channelfactory.com",
+                "internal_poc": "Paul Wallis"
+            },
+            "website": "https://www.channelfactory.com/",
+            "use_cases": "Ideal for brands needing contextual video ad targeting, brand safety compliance, DE&I-conscious media, or AI-based optimization across YouTube, Meta, TikTok, and CTV.",
+            "strategic_fit": "A strong fit for partners needing scalable, brand-safe video media capabilities. Complements firms lacking deep contextual or AI-driven ad tech. Well aligned with ethical advertising frameworks.",
+            "past_projects": "PwC audit showed ~23% waste reduction and ~12% cost savings. Electronics, FMCG, and alcohol brands saw improved ROI and engagement. Glenfiddich campaign reached 12.5M+ views with 92% watch time.",
+            "reliability_score": 0,
+            "agreement_status": "No",
+            "agreement_type": "",
+            "notes": ""
+        },
+        {
+            "name": "Comarch",
+            "category": "Data & Platforms",
+            "sub_category": "Loyalty & Rewards Solutions",
+            "capabilities": [
+                "Proprietary IT platforms and solutions including ERP, CRM, loyalty program management, e\u2011invoicing, EDI, data integration, cloud, data center & managed services, BI/analytics, IoT, field service management"
+            ],
+            "industry_focus": [
+                "Telecommunications",
+                "banking & finance",
+                "public administration",
+                "retail & consumer goods",
+                "transport & travel (airlines, airports)",
+                "oil & gas",
+                "healthcare",
+                "utilities",
+                "manufacturing",
+                "SMEs"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Piotr.Kolinski@comarch.pl",
+                "internal_poc": "Sowjana Gummella"
+            },
+            "website": "https://www.comarch.com/",
+            "use_cases": "* Loyalty management implementations across major brands * Digital transformation via ERP/CRM/EDI * Field Service Management for telecom (e.g., UAE operator) * E\u2011invoicing & data exchange automation * Cloud-based infrastructure & outsourcing",
+            "strategic_fit": "Fits projects requiring mature, scalable enterprise-grade IT systems and digital transformation: loyalty programs, ERP adoption, managed cloud services, telecom infrastructure, data platforms, outsourcing across global markets",
+            "past_projects": "BP Global, Heathrow Airport, JetBlue Airways, Costa Coffee, Saudia, Natura Brasil, Livelo Brasil, Enterprise Rent-A-Car using loyalty platform",
+            "reliability_score": 0,
+            "agreement_status": "Yes",
+            "agreement_type": "NDA",
+            "notes": "Founded in 1993 in Krak\u00f3w"
+        },
+        {
+            "name": "Concrete",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Marketing",
+            "capabilities": [
+                ""
+            ],
+            "industry_focus": [
+                ""
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Paul having a call - to fill if partnering",
+                "internal_poc": "Paul Wallis"
+            },
+            "website": "Paul having a call - to fill if partnering",
+            "use_cases": "",
+            "strategic_fit": "",
+            "past_projects": "",
+            "reliability_score": 5,
+            "agreement_status": "No",
+            "agreement_type": "",
+            "notes": ""
+        },
+        {
+            "name": "CONVIVA",
+            "category": "Data & Platforms",
+            "sub_category": "Web & App Monitoring",
+            "capabilities": [
+                "Conviva Operational Data Platform (ODP), powered by patented Time\u2011State Analytics\u2122, enables full\u2011census client\u2011side telemetry, AI alerts, and real\u2011time analysis across web, mobile apps, and streaming video"
+            ],
+            "industry_focus": [
+                "Global OTT and streaming media platforms (e.g., Disney+",
+                "Hulu",
+                "Paramount+",
+                "DAZN",
+                "Sky",
+                "WarnerMedia)"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Sean Wilkinson <swilkinson@conviva.com> (Global Partnership) / Rick Cordeiro <rcordeiro@conviva.com> (MENA Sales - Media) / Mahmoud Ahmed <mahmed@conviva.com> (MENA Sales - Non Media) / Adam Saidi <asaidi@conviva.com> (Pre-Sales)",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://www.conviva.com/",
+            "use_cases": "* Monitor and optimize video QoE (startup, buffering, bitrate) * Reduce churn and preserve revenue * Diagnose performance issues by cohort, ISP, CDN, device * Support multiple teams (product, ops, support, engineering) with actionable real\u2011time insights",
+            "strategic_fit": "Best suited for projects that require a high-scale, real-time data platform to improve user experience, operational efficiency, and cross-functional decision-making",
+            "past_projects": "Saved ~$564,000/year by reducing call center costs through QoE insights; retained ~154,000 users and recovered ~$1.5M in revenue",
+            "reliability_score": 0,
+            "agreement_status": "No",
+            "agreement_type": "",
+            "notes": "Company is headquartered in California with offices in NY, London, Singapore, Bengaluru, Beijing."
+        },
+        {
+            "name": "Digital Business Lab",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Web3 Marketing",
+            "capabilities": [
+                "Full-service digital marketing agency specializing in social media strategy, influencer marketing, video production, and social commerce in Asia. Also offers Web3 growth marketing and training."
+            ],
+            "industry_focus": [
+                "Serves tech",
+                "finance",
+                "luxury",
+                "F&B",
+                "and more across 13+ Asian markets."
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "albin@db-lab.com",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://digital-business-lab.com/",
+            "use_cases": "Brands wanting to boost engagement and sales via localized social media campaigns, influencer activations, video content, and emerging Web3 channels.",
+            "strategic_fit": "Good fit for partners targeting Asian digital marketing with strong regional expertise and influencer-driven growth strategies.",
+            "past_projects": "Worked with Alibaba, DreameTech, Ant Financial, and 200+ other brands to scale regional social campaigns.",
+            "reliability_score": 0,
+            "agreement_status": "No",
+            "agreement_type": "",
+            "notes": ""
+        },
+        {
+            "name": "Trajan Consultancy",
+            "category": "Tech Resourcing",
+            "sub_category": "Strategy and Operation",
+            "capabilities": [
+                "Agile/Lean transformation",
+                "Process re-engineering",
+                "Interim leadership"
+            ],
+            "industry_focus": [
+                "Various Industries"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Catherine Granger <catherinegranger@trajanconsultancy.com>",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://www.linkedin.com/company/risolv/?originalSubdomain=ae",
+            "use_cases": "Business Process mapping and improvement",
+            "strategic_fit": "",
+            "past_projects": "",
+            "reliability_score": null,
+            "agreement_status": "No",
+            "agreement_type": "",
+            "notes": "Presence in Middle East and Asia(Hong Kong)"
+        },
+        {
+            "name": "Together",
+            "category": "",
+            "sub_category": "",
+            "capabilities": [],
+            "industry_focus": [],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "",
+            "use_cases": "",
+            "strategic_fit": "",
+            "past_projects": "",
+            "reliability_score": null,
+            "agreement_status": "Yes",
+            "agreement_type": "NDA",
+            "notes": ""
+        },
+        {
+            "name": "Versatile Synergy",
+            "category": "Web & Marketing (inc. Content)",
+            "sub_category": "Digital Marketing and Software development",
+            "capabilities": [
+                "Web/mobile development",
+                "UI/UX design",
+                "DevOps",
+                "influencer campaigns"
+            ],
+            "industry_focus": [
+                "Various Industries"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "Paola Garc\u00eda Malo <paola@versatilesynergy.com>",
+                "internal_poc": "Lionel Laulhe"
+            },
+            "website": "https://www.versatilesynergy.com/",
+            "use_cases": "* Building web/mobile and custom software systems * UI/UX and design for digital products * Digital marketing campaigns and SEO * Blockchain/NFT/crypto solutions * DevOps and QA support",
+            "strategic_fit": "Strong network & expertise in UAE. Partnership led growth and marketing",
+            "past_projects": "Multiple SMB e-commerce, fitness company booking systems, and investment platform builds via React/Next.js, WordPress, Firebase. (Clients include DataLime, Capital\u202fM, MBAL Investments, etc.)",
+            "reliability_score": 5,
+            "agreement_status": "Yes",
+            "agreement_type": "MSA",
+            "notes": "Digital growth partner, Influencer/celebrity led marketing"
+        },
+        {
+            "name": "Meiro CDP",
+            "category": "Data & Platforms",
+            "sub_category": "Customer Data Platform",
+            "capabilities": [
+                "Customer Data Platform empowering marketing teams with AI-assisted tools for real time data activation and personalization"
+            ],
+            "industry_focus": [
+                "Fintech",
+                "Telcos",
+                "Entertainment",
+                "Football Legues"
+            ],
+            "contact": {
+                "name": null,
+                "role": null,
+                "email": "fazal.mohammed@meiro.io",
+                "internal_poc": "Sowjanya Gummella"
+            },
+            "website": "https://www.meiro.io/",
+            "use_cases": "Convert anonymous web visitors into identifiable users through real-time segmentation and activation.  Boost Customer Lifetime Value (CLV) via personalization, journey orchestration, and predictive modeling.  Prevent churn by identifying friction points and responding proactively.  Optimize Advertising Spend through refined audience targeting, budget efficiency, and predictive lookalike modeling",
+            "strategic_fit": "One of the few on-premise CDP products, suitable for Saudi customers.",
+            "past_projects": "Stand out case is DER Touristik (Europe's leading travel company), which achieved remarkable results using Meiro CDP:  217% better ad performance relative to budget spend.  19.8% lift in revenue per booking via personalized email and call center interventions.  290% higher CTOR and 620% higher CTR in email campaigns.",
+            "reliability_score": null,
+            "agreement_status": "Yes",
+            "agreement_type": "NDA",
+            "notes": "Focus markets in the region: Saudi, Qatar, UAE Potential for a global partnership"
+        }
+    ]
+}

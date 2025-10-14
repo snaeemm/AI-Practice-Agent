@@ -2,6 +2,7 @@ import json
 import time
 import re
 import difflib
+import sys
 from typing import List, Optional
 from pathlib import Path
 from dotenv import load_dotenv
@@ -14,19 +15,16 @@ import os
 # Load environment variables
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
+# Import centralized settings
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config.settings import settings
+
 # Configure Gemini API
-api_key = os.getenv("GOOGLE_API_KEY")
+api_key = settings.GOOGLE_API_KEY
 if not api_key:
     raise RuntimeError("Missing GOOGLE_API_KEY in .env")
 genai.configure(api_key=api_key)
-gemini_model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-09-2025"))
-
-# Constants
-FILES_DIR = Path(os.getenv("FILES_DIR", "/mnt/c/Users/Shahzeb/Granite Media/Granite MENA - Operations/2. Practices/AI/Agentic AI for Bid Process/Related Files")).resolve()
-RESULTS_DIR = Path(os.getenv("RESULTS_DIR", "/mnt/c/Users/Shahzeb/Granite Media/Granite MENA - Operations/2. Practices/AI/Agentic AI for Bid Process/Bid Files")).resolve()
-CAPABILITIES_JSON = FILES_DIR / "capabilities.json"
-QUALIFICATION_JSON = FILES_DIR / "qualification_matrix.json"
-# # RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL)
 
 # ------------------ DATA MODELS ------------------ #
 class Contact(BaseModel):
@@ -1002,8 +1000,8 @@ def process_rfp_qualification(pdf_input: Optional[str] = None, user_context: Opt
             print(f"   Additional info: {user_context.additional_info[:100]}...")
 
     rfp_data, deliv_data, raw_document_text = extract_rfp_data(None, user_context)
-    capabilities_data = load_json_file(CAPABILITIES_JSON, CapabilitiesData)
-    matrix = load_json_file(QUALIFICATION_JSON, QualificationMatrix)
+    capabilities_data = load_json_file(settings.CAPABILITIES_JSON, CapabilitiesData)
+    matrix = load_json_file(settings.QUALIFICATION_JSON, QualificationMatrix)
 
     if not rfp_data or not capabilities_data or not matrix:
         print("❌ Missing required data; cannot evaluate qualification")
@@ -1120,8 +1118,8 @@ def process_rfp_qualification(pdf_input: Optional[str] = None, user_context: Opt
             print(f"   Additional info: {user_context.additional_info[:100]}...")
 
     rfp_data, deliv_data, raw_document_text = extract_rfp_data(None, user_context)
-    capabilities_data = load_json_file(CAPABILITIES_JSON, CapabilitiesData)
-    matrix = load_json_file(QUALIFICATION_JSON, QualificationMatrix)
+    capabilities_data = load_json_file(settings.CAPABILITIES_JSON, CapabilitiesData)
+    matrix = load_json_file(settings.QUALIFICATION_JSON, QualificationMatrix)
 
     if not rfp_data or not capabilities_data or not matrix:
         print("❌ Missing required data; cannot evaluate qualification")

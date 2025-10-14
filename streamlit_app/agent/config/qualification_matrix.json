@@ -1,0 +1,149 @@
+{
+    "criteria": [
+        {
+            "name": "Revenue Value",
+            "options": [
+                "< $500,000",
+                "$500,000 - $999,999",
+                "$999,999 - $5,000,000",
+                "$5,000,000 +"
+            ],
+            "scores": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "weight": 1.5
+        },
+        {
+            "name": "Potential Margin (EBIT)",
+            "options": [
+                "Profitability is negative or break-even",
+                "Projected Margin is below 20%",
+                "Projected Margin is 20%",
+                "Projected Margin is above 20%"
+            ],
+            "scores": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "weight": 1.5
+        },
+        {
+            "name": "Granite MENA's Vision Alignment",
+            "options": [
+                "Counter to core business and strategic vision",
+                "Neutral core business and strategic vision",
+                "Partially aligned to core business and strategic vision",
+                "Fully aligned to core business and strategic vision"
+            ],
+            "scores": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "weight": 1.0
+        },
+        {
+            "name": "Strategic Value",
+            "options": [
+                "Is of low importance that Granite MENA win this business",
+                "It is somewhat important that Granite MENA win this business",
+                "It is of high importance that Granite MENA win this business",
+                "It is critical that Granite MENA win this business"
+            ],
+            "scores": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "weight": 1.0
+        },
+        {
+            "name": "Ability to Respond",
+            "options": [
+                "Will significantly drain resources working on other opportunities",
+                "Will drain dome resources working on other opportunities",
+                "Will have little or no impact on resources working on other opportunities",
+                "Will use resources currently underutilized"
+            ],
+            "scores": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "weight": 1.25
+        },
+        {
+            "name": "Ability to Deliver",
+            "options": [
+                "Key skill sets to deliver does not exist",
+                "Key skills to deliver exists but are fully allocated to other projects",
+                "Key skills to deliver are partially allocated to other projects",
+                "Key skills to deliver wil be made available "
+            ],
+            "scores": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "weight": 1.5
+        },
+        {
+            "name": "Competitive Environment",
+            "options": [
+                "Competitor is clear and leader is favored by customer",
+                "Customer favors the competitor and is neutral to Granite MENA",
+                "No clear leader and customer has no supplier preference",
+                "Granite MENA is a clear leader and is favored by the customer"
+            ],
+            "scores": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "weight": 1.0
+        },
+        {
+            "name": "Future Business Potential",
+            "options": [
+                "Little to no connection to future business",
+                "Possible link to future business",
+                "Likely link to future business",
+                "Assured or Mandatory link to future business"
+            ],
+            "scores": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "weight": 1.25
+        },
+        {
+            "name": "Probability of Success",
+            "options": [
+                "Probability of success is near zero",
+                "Probability of success is less than 50%",
+                "Probability of success is over 50%",
+                "Probability of success is almost certain"
+            ],
+            "scores": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "weight": 1.25
+        }
+    ],
+    "average_weight": 1.25
+}
