@@ -7,7 +7,12 @@ def render_user_section():
         user = st.session_state.user
         st.markdown(f"### 👤 {user.get('full_name', user['username'])}")
         st.caption(f"@{user['username']}")
+        return user['username']
+    return None
 
+
+def render_user_actions():
+    if 'user' in st.session_state and st.session_state.user:
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🔑 Change Password", use_container_width=True):
@@ -18,9 +23,6 @@ def render_user_section():
                 from auth import logout
                 logout()
                 st.rerun()
-
-        return user['username']
-    return None
 
 
 def render_session_selector(username, sessions):
@@ -134,6 +136,10 @@ def render_sidebar():
                 st.divider()
 
                 render_session_info(session)
+
+                st.divider()
+
+                render_user_actions()
 
                 return session
             except Exception as e:

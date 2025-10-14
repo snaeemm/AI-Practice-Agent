@@ -1,7 +1,10 @@
 import streamlit as st
 from auth import require_auth
+from styles import apply_custom_styles
 
 st.set_page_config(page_title="Help - GRANITE", page_icon="❓")
+
+apply_custom_styles()
 
 if not require_auth():
     st.stop()
