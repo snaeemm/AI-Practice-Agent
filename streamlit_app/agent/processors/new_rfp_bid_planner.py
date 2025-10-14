@@ -119,16 +119,17 @@ class AssignmentData(BaseModel):
 
 # ------------------ CAPABILITIES HELPERS ------------------ #
 def load_capabilities_json() -> Optional[CapabilitiesData]:
-    """Load capabilities JSON from file."""
-    if not settings.CAPABILITIES_JSON.exists():
-        print(f"⚠️ Capabilities JSON not found: {settings.CAPABILITIES_JSON}")
-        return None
+    """Load capabilities from database."""
     try:
-        with open(settings.CAPABILITIES_JSON, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+        data = settings.get_capabilities_data()
+        if not data:
+            print(f"❌ No capabilities data found in database")
+            return None
         return CapabilitiesData(**data)
     except Exception as e:
-        print(f"❌ Error loading capabilities JSON: {e}")
+        print(f"❌ Error loading capabilities from database: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 # ** OLD assign_owner function is removed and replaced by AI logic in generate_assignment_report **
