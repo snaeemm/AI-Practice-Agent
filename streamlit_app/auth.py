@@ -158,8 +158,10 @@ def render_login_page():
     st.subheader("Please log in to continue")
 
     with st.form("login_form"):
-        username = st.text_input("Username", placeholder="e.g., paul.wallis")
-        password = st.text_input("Password", type="password")
+        st.markdown('<p style="color: white;">Username</p>', unsafe_allow_html=True)
+        username = st.text_input("Username", placeholder="e.g., paul.wallis", label_visibility="collapsed")
+        st.markdown('<p style="color: white;">Password</p>', unsafe_allow_html=True)
+        password = st.text_input("Password", type="password", label_visibility="collapsed")
         submit = st.form_submit_button("Login", use_container_width=True)
 
         if submit:
