@@ -20,8 +20,8 @@ def login(username: str, password: str) -> Optional[Dict]:
     Authenticate user and return user data if successful
     Returns None if authentication fails
     """
-    from agent.database.db_singleton import get_db_manager
-    db = get_db_manager()
+    from agent.database.db_singleton import get_db
+    db = get_db()
 
     with db._get_connection() as conn:
         with conn.cursor() as cursor:
@@ -65,8 +65,8 @@ def change_password(user_id: str, old_password: str, new_password: str) -> tuple
     Change user password
     Returns (success: bool, message: str)
     """
-    from agent.database.db_singleton import get_db_manager
-    db = get_db_manager()
+    from agent.database.db_singleton import get_db
+    db = get_db()
 
     with db._get_connection() as conn:
         with conn.cursor() as cursor:

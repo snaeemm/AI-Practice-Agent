@@ -17,8 +17,8 @@ Add authentication fields to the `rfp_users` table:
 ```bash
 cd streamlit_app
 python -c "
-from agent.database.db_singleton import get_db_manager
-db = get_db_manager()
+from agent.database.db_singleton import get_db
+db = get_db()
 with open('agent/database/add_auth_to_users.sql', 'r') as f:
     sql = f.read()
 with db._get_connection() as conn:
@@ -116,9 +116,9 @@ To add new users after initial setup:
 
 ```python
 from auth import hash_password
-from agent.database.db_singleton import get_db_manager
+from agent.database.db_singleton import get_db
 
-db = get_db_manager()
+db = get_db()
 
 with db._get_connection() as conn:
     with conn.cursor() as cursor:

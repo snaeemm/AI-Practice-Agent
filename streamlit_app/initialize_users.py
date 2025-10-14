@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from agent.database.db_singleton import get_db_manager
+from agent.database.db_singleton import get_db
 from auth import hash_password
 
 USERS = [
@@ -27,7 +27,7 @@ USERS = [
 
 def initialize_users():
     """Create initial user accounts"""
-    db = get_db_manager()
+    db = get_db()
 
     print("🔧 Initializing users...")
 
