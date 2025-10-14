@@ -187,9 +187,12 @@ def render_change_password_dialog():
         st.warning("⚠️ You must change your password before continuing")
 
     with st.form("change_password_form"):
-        old_password = st.text_input("Current Password", type="password")
-        new_password = st.text_input("New Password", type="password")
-        confirm_password = st.text_input("Confirm New Password", type="password")
+        st.markdown('<p style="color: white;">Current Password</p>', unsafe_allow_html=True)
+        old_password = st.text_input("Current Password", type="password", label_visibility="collapsed")
+        st.markdown('<p style="color: white;">New Password</p>', unsafe_allow_html=True)
+        new_password = st.text_input("New Password", type="password", label_visibility="collapsed")
+        st.markdown('<p style="color: white;">Confirm New Password</p>', unsafe_allow_html=True)
+        confirm_password = st.text_input("Confirm New Password", type="password", label_visibility="collapsed")
 
         col1, col2 = st.columns(2)
         with col1:
