@@ -9,6 +9,7 @@ from agent.tools import (
 )
 from datetime import datetime
 from styles import apply_custom_styles
+from auth import require_auth
 
 st.set_page_config(
     page_title="Download Reports - GRANITE",
@@ -18,6 +19,9 @@ st.set_page_config(
 )
 
 apply_custom_styles()
+
+if not require_auth():
+    st.stop()
 
 render_sidebar()
 

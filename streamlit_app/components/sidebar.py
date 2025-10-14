@@ -3,17 +3,24 @@ from agent.session_wrapper import create_session, load_session, list_sessions
 
 
 def render_user_section():
-    if 'username' not in st.session_state:
-        st.session_state.username = "default_user"
+    if 'user' in st.session_state and st.session_state.user:
+        user = st.session_state.user
+        st.markdown(f"### 👤 {user.get('full_name', user['username'])}")
+        st.caption(f"@{user['username']}")
 
-    username = st.text_input(
-        "👤 Username",
-        value=st.session_state.username,
-        key="username_input",
-        help="Your unique username for session management"
-    )
-    st.session_state.username = username
-    return username
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔑 Change Password", use_container_width=True):
+                st.session_state.show_change_password = True
+                st.rerun()
+        with col2:
+            if st.button("🚪 Logout", use_container_width=True):
+                from auth import logout
+                logout()
+                st.rerun()
+
+        return user['username']
+    return None
 
 
 def render_session_selector(username, sessions):

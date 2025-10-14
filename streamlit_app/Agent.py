@@ -2,10 +2,14 @@ import streamlit as st
 from components.sidebar import render_sidebar
 from components.chat import render_chat
 from styles import apply_custom_styles
-apply_custom_styles()
-import streamlit as st
+from auth import require_auth
 
-st.set_page_config(page_title="My Cool App", page_icon="🚀")
+st.set_page_config(page_title="GRANITE - Bid Assistant", page_icon="🚀")
+
+apply_custom_styles()
+
+if not require_auth():
+    st.stop()
 
 st.title("GRANITE - Bid Assistant")
 
