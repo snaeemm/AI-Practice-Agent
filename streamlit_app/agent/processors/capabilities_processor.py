@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import sys
 from typing import List, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -13,27 +14,22 @@ from pydantic import BaseModel, Field
 # Load environment variables
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
-# Constants
-FILES_DIR = Path(os.getenv("FILES_DIR", "/mnt/c/Users/Shahzeb/Granite Media/Granite MENA - Operations/2. Practices/AI/Agentic AI for Bid Process/Related Files")).resolve()
-RESULTS_DIR = Path(os.getenv("RESULTS_DIR", str(FILES_DIR))).resolve()
-RESULTS_DIR.mkdir(exist_ok=True)
-
-COMPANY_CAPABILITIES_FILE = FILES_DIR / "Granite_MENA_Capabilities.docx"
-PARTNER_MATRIX_FILE = FILES_DIR / "Partner Matrix.xlsx"
-CAPABILITIES_JSON = FILES_DIR / "capabilities.json"
+# Import centralized settings
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config.settings import settings
 
 # Debug: List files in directory
-print(f"📁 Checking directory: {FILES_DIR}")
-if FILES_DIR.exists():
-    print(f"📄 Available files: {[f.name for f in FILES_DIR.iterdir() if f.is_file()]}")
+print(f"📁 Checking directory: {settings.FILES_DIR}")
+if settings.FILES_DIR.exists():
+    print(f"📄 Available files: {[f.name for f in settings.FILES_DIR.iterdir() if f.is_file()]}")
 else:
-    print(f"❌ Directory not found: {FILES_DIR}")
+    print(f"❌ Directory not found: {settings.FILES_DIR}")
 
-api_key = os.getenv("GOOGLE_API_KEY")
+api_key = settings.GOOGLE_API_KEY
 if not api_key:
     raise RuntimeError("Missing GOOGLE_API_KEY in .env")
 genai.configure(api_key=api_key)
-gemini_model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-09-2025"))
+gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL)
 
 # ------------------ DATA MODELS ------------------ #
 class Contact(BaseModel):
@@ -64,21 +60,21 @@ class CapabilitiesData(BaseModel):
 
 # ------------------ HELPERS ------------------ #
 def load_company_docx() -> str:
-    if not COMPANY_CAPABILITIES_FILE.exists():
-        print(f"⚠️ Company file not found: {COMPANY_CAPABILITIES_FILE}")
+    if not settings.FILES_DIR / "Granite_MENA_Capabilities.docx".exists():
+        print(f"⚠️ Company file not found: {settings.FILES_DIR / "Granite_MENA_Capabilities.docx"}")
         return ""
-    doc = Document(COMPANY_CAPABILITIES_FILE)
+    doc = Document(settings.FILES_DIR / "Granite_MENA_Capabilities.docx")
     text = "\n".join(p.text.strip() for p in doc.paragraphs if p.text.strip())
     print(f"✅ Loaded company text ({len(text)} chars)")
     return text
 
 def load_partner_excel() -> pd.DataFrame:
-    file_to_try = PARTNER_MATRIX_FILE
+    file_to_try = settings.FILES_DIR / "Partner Matrix.xlsx"
     if not file_to_try.exists():
         # Try with (1)
         file_to_try = FILES_DIR / "Partner Matrix (1).xlsx"
     if not file_to_try.exists():
-        print(f"⚠️ Partner file not found: {PARTNER_MATRIX_FILE} or alternative")
+        print(f"⚠️ Partner file not found: {settings.FILES_DIR / "Partner Matrix.xlsx"} or alternative")
         return pd.DataFrame()
     df = pd.read_excel(file_to_try, sheet_name="Partners", header=0)
     df = df.fillna("")  # Replace NaN with empty string
@@ -334,18 +330,18 @@ Output ONLY a valid JSON array of services.
 
     # Final JSON
     capabilities = CapabilitiesData(granite_mena=granite_services, partners=partners_list)
-    with open(CAPABILITIES_JSON, 'w', encoding='utf-8') as f:
+    with open(settings.CAPABILITIES_JSON, 'w', encoding='utf-8') as f:
         json.dump(capabilities.model_dump(), f, indent=4)
-    print(f"✅ Saved final JSON → {CAPABILITIES_JSON} in {time.time()-start:.2f}s")
+    print(f"✅ Saved final JSON → {settings.CAPABILITIES_JSON} in {time.time()-start:.2f}s")
     return capabilities
 
 def load_capabilities_json() -> Optional[CapabilitiesData]:
     """Load capabilities from existing JSON file."""
-    if not CAPABILITIES_JSON.exists():
-        print(f"⚠️ Capabilities JSON not found: {CAPABILITIES_JSON}")
+    if not settings.CAPABILITIES_JSON.exists():
+        print(f"⚠️ Capabilities JSON not found: {settings.CAPABILITIES_JSON}")
         return None
     try:
-        with open(CAPABILITIES_JSON, 'r', encoding='utf-8') as f:
+        with open(settings.CAPABILITIES_JSON, 'r', encoding='utf-8') as f:
             data = json.load(f)
         return CapabilitiesData(**data)
     except Exception as e:

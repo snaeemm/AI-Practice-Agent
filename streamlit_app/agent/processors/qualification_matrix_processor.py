@@ -2,6 +2,7 @@ import json
 import os
 import time
 import asyncio
+import sys
 from typing import List, Optional
 from pathlib import Path
 from dotenv import load_dotenv
@@ -12,27 +13,23 @@ from pydantic import BaseModel, Field
 # Load environment variables
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
-# Constants
-FILES_DIR = Path(os.getenv("FILES_DIR", "/mnt/c/Users/Shahzeb/Granite Media/Granite MENA - Operations/2. Practices/AI/Agentic AI for Bid Process/Related Files")).resolve()
-RESULTS_DIR = Path(os.getenv("RESULTS_DIR", str(FILES_DIR))).resolve()
-RESULTS_DIR.mkdir(exist_ok=True)
-
-QUALIFICATION_MATRIX_FILE = FILES_DIR / "Qualification Matrix [Client  Opp Name]_LL_170125.xlsx"
-QUALIFICATION_JSON = FILES_DIR / "qualification_matrix.json"
+# Import centralized settings
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config.settings import settings
 
 # Debug: List files in directory
-print(f"📁 Checking directory: {FILES_DIR}")
-if FILES_DIR.exists():
-    print(f"📄 Available files: {[f.name for f in FILES_DIR.iterdir() if f.is_file()]}")
+print(f"📁 Checking directory: {settings.FILES_DIR}")
+if settings.FILES_DIR.exists():
+    print(f"📄 Available files: {[f.name for f in settings.FILES_DIR.iterdir() if f.is_file()]}")
 else:
-    print(f"❌ Directory not found: {FILES_DIR}")
+    print(f"❌ Directory not found: {settings.FILES_DIR}")
 
 # Configure Gemini API
-api_key = os.getenv("GOOGLE_API_KEY")
+api_key = settings.GOOGLE_API_KEY
 if not api_key:
     raise RuntimeError("Missing GOOGLE_API_KEY in .env")
 genai.configure(api_key=api_key)
-gemini_model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-09-2025"))
+gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL)
 
 # ------------------ DATA MODELS ------------------ #
 class QualificationCriterion(BaseModel):
@@ -48,13 +45,13 @@ class QualificationMatrix(BaseModel):
 # ------------------ HELPERS ------------------ #
 def load_qualification_excel() -> pd.DataFrame:
     """Load the Qualification Matrix Excel file."""
-    if not QUALIFICATION_MATRIX_FILE.exists():
-        print(f"⚠️ Qualification Matrix file not found: {QUALIFICATION_MATRIX_FILE}")
+    if not settings.FILES_DIR / "Qualification Matrix [Client  Opp Name]_LL_170125.xlsx".exists():
+        print(f"⚠️ Qualification Matrix file not found: {settings.FILES_DIR / "Qualification Matrix [Client  Opp Name]_LL_170125.xlsx"}")
         return pd.DataFrame()
     try:
-        df = pd.read_excel(QUALIFICATION_MATRIX_FILE, sheet_name="Qualification Matrix", header=None)
+        df = pd.read_excel(settings.FILES_DIR / "Qualification Matrix [Client  Opp Name]_LL_170125.xlsx", sheet_name="Qualification Matrix", header=None)
         df = df.fillna("")  # Replace NaN with empty string
-        print(f"✅ Loaded {len(df)} rows from {QUALIFICATION_MATRIX_FILE}")
+        print(f"✅ Loaded {len(df)} rows from {settings.FILES_DIR / "Qualification Matrix [Client  Opp Name]_LL_170125.xlsx"}")
         return df
     except Exception as e:
         print(f"❌ Error loading Qualification Matrix: {e}")
@@ -254,10 +251,10 @@ Return ONLY the JSON object. No explanations."""
             print(f"✅ Pydantic validation passed - {len(matrix.criteria)} criteria extracted")
 
             # Save JSON
-            with open(QUALIFICATION_JSON, 'w', encoding='utf-8') as f:
+            with open(settings.QUALIFICATION_JSON, 'w', encoding='utf-8') as f:
                 json.dump(matrix.model_dump(), f, indent=4)
 
-            print(f"✅ Saved Qualification Matrix JSON → {QUALIFICATION_JSON} in {time.time()-start:.2f}s")
+            print(f"✅ Saved Qualification Matrix JSON → {settings.QUALIFICATION_JSON} in {time.time()-start:.2f}s")
             return matrix
 
         except json.JSONDecodeError as e:

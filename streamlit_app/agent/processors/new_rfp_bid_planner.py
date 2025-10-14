@@ -2,6 +2,7 @@ import os
 import json
 import re
 import time
+import sys
 from typing import List, Optional
 from pathlib import Path
 from dotenv import load_dotenv
@@ -15,18 +16,16 @@ from docx import Document
 # Load environment variables
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
+# Import centralized settings
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config.settings import settings
+
 # Configure Gemini API
-api_key = os.getenv("GOOGLE_API_KEY")
+api_key = settings.GOOGLE_API_KEY
 if not api_key:
     raise RuntimeError("Missing GOOGLE_API_KEY in .env")
 genai.configure(api_key=api_key)
-gemini_model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-2.5-flash-preview-09-2025"))
-
-# Constants
-FILES_DIR = Path(os.getenv("FILES_DIR", "/mnt/c/Users/Shahzeb/Granite Media/Granite MENA - Operations/2. Practices/AI/Agentic AI for Bid Process/Related Files")).resolve()
-RESULTS_DIR = Path(os.getenv("RESULTS_DIR", "/mnt/c/Users/Shahzeb/Granite Media/Granite MENA - Operations/2. Practices/AI/Agentic AI for Bid Process/Bid Files")).resolve()
-CAPABILITIES_JSON = FILES_DIR / "capabilities.json"
-RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL)
 
 # ------------------ DATA MODELS ------------------ #
 class Contact(BaseModel):
@@ -122,11 +121,11 @@ class AssignmentData(BaseModel):
 # ------------------ CAPABILITIES HELPERS ------------------ #
 def load_capabilities_json() -> Optional[CapabilitiesData]:
     """Load capabilities JSON from file."""
-    if not CAPABILITIES_JSON.exists():
-        print(f"⚠️ Capabilities JSON not found: {CAPABILITIES_JSON}")
+    if not settings.CAPABILITIES_JSON.exists():
+        print(f"⚠️ Capabilities JSON not found: {settings.CAPABILITIES_JSON}")
         return None
     try:
-        with open(CAPABILITIES_JSON, 'r', encoding='utf-8') as f:
+        with open(settings.CAPABILITIES_JSON, 'r', encoding='utf-8') as f:
             data = json.load(f)
         return CapabilitiesData(**data)
     except Exception as e:
@@ -1048,7 +1047,7 @@ if __name__ == "__main__":
     output_template = "{pdf_name}_bid_plan.xlsx"
     
     for pdf in pdf_files:
-        pdf_path = (FILES_DIR / pdf).resolve()
+        pdf_path = (settings.FILES_DIR / pdf).resolve()
         if pdf_path.exists():
             process_pdf(pdf, template_input, output_template)
         else:
