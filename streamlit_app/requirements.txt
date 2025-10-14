@@ -3,7 +3,7 @@ streamlit==1.50.0
 
 # Google AI/ADK
 # Pinned to specific versions to resolve an internal ADK attribute error.
-google-adk==1.16.0
+google-adk==1.15.1
 google-generativeai==0.8.5
 
 # Database
