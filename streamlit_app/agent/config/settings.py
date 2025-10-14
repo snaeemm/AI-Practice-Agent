@@ -21,8 +21,10 @@ class Settings:
         # self.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         # self.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-        self.CAPABILITIES_JSON = self.FILES_DIR / "capabilities.json"
-        self.QUALIFICATION_JSON = self.FILES_DIR / "qualification_matrix.json"
+        # Config files always use agent/config/ directory (deployment-agnostic)
+        config_dir = Path(__file__).parent
+        self.CAPABILITIES_JSON = config_dir / "capabilities.json"
+        self.QUALIFICATION_JSON = config_dir / "qualification_matrix.json"
 
         self.DB_POOL_MIN_CONN = int(os.getenv("DB_POOL_MIN_CONN", "1"))
         self.DB_POOL_MAX_CONN = int(os.getenv("DB_POOL_MAX_CONN", "20"))
