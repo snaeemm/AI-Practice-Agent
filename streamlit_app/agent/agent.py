@@ -17,10 +17,7 @@ from agent.tools import (
     tool_update_assignment,
     tool_add_deliverable,
     tool_remove_deliverable,
-    tool_generate_report,
-    tool_download_qualification_report,
-    tool_download_bid_plan_report,
-    tool_requalify_rfp
+    tool_generate_report
 )
 from agent.prompts import SYSTEM_PROMPT
 
@@ -86,9 +83,6 @@ root_agent = LlmAgent(
         tool_update_assignment,
         tool_add_deliverable,
         tool_remove_deliverable,
-        tool_generate_report,
-        tool_download_qualification_report,
-        tool_download_bid_plan_report,
-        tool_requalify_rfp
+        tool_generate_report
     ]
 )

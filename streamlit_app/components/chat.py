@@ -252,62 +252,12 @@ def render_chat(session):
                     if 'pending_file' in st.session_state:
                         del st.session_state.pending_file
                         
-    if st.session_state.get('show_downloads', False):
-        with st.expander("📥 Available Downloads", expanded=True):
-            from agent.database.db_manager import DatabaseManager
-            db = DatabaseManager()
-
-            show_limit = st.session_state.get('download_limit', 10)
-            generated_files = db.get_recent_generated_files(limit=show_limit)
-
-            if generated_files:
-                st.caption(f"Showing {len(generated_files)} most recent files")
-                if len(generated_files) >= show_limit:
-                    if st.button("Show more files"):
-                        st.session_state.download_limit = show_limit + 10
-                        st.rerun()
-
-                for file_info in generated_files:
-                    file_id = file_info.get('id')
-                    file_name = file_info.get('file_name', 'Unknown')
-                    file_type = file_info.get('file_type', 'file')
-                    rfp_id = file_info.get('rfp_id', 'N/A')
-                    downloaded = file_info.get('downloaded', False)
-                    created_at = file_info.get('created_at', '')
-
-                    col_a, col_b = st.columns([3, 1])
-                    with col_a:
-                        status = "✅ " if downloaded else ""
-                        st.markdown(f"{status}**{file_name}**")
-                        st.caption(f"{file_type} · {created_at}")
-                    with col_b:
-                        file_data = db.get_generated_file_data(file_id)
-                        if file_data:
-                            st.download_button(
-                                "⬇️",
-                                data=file_data,
-                                file_name=file_name,
-                                key=f"download_{file_id}",
-                                on_click=lambda fid=file_id: db.mark_file_downloaded(fid)
-                            )
-            else:
-                st.info("No files generated yet. Ask the agent to generate qualification reports!")
-
     st.markdown("---")
 
-    col1, _, col3 = st.columns([0.5, 7, 0.5])
-
-    with col1:
-        current_show_uploader = st.session_state.get('show_uploader', False)
-        if st.button("📎", help="Upload RFP or documents", key="upload_btn"):
-            st.session_state.show_uploader = not current_show_uploader
-            st.rerun()
-
-    with col3:
-        current_show_downloads = st.session_state.get('show_downloads', False)
-        if st.button("📥", help="Download generated files", key="download_btn"):
-            st.session_state.show_downloads = not current_show_downloads
-            st.rerun()
+    current_show_uploader = st.session_state.get('show_uploader', False)
+    if st.button("📎 Upload Document", help="Upload RFP or documents", key="upload_btn", use_container_width=True):
+        st.session_state.show_uploader = not current_show_uploader
+        st.rerun()
 
     user_input = st.chat_input("Type your message here...", key="chat_input")
 

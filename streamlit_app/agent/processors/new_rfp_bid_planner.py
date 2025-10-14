@@ -977,9 +977,9 @@ def process_pdf(pdf_input: Optional[str], template_input: str, output_template: 
     # Save to database instead of files
     try:
         import sys
-        from agent.database.db_manager import DatabaseManager
+        from agent.database.db_singleton import get_db
 
-        db = DatabaseManager()
+        db = get_db()
 
         rfp_id = pdf_base
         client_name = deliv_data.client_and_opportunity if deliv_data else "Unknown Client"

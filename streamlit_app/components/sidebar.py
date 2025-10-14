@@ -98,6 +98,7 @@ def render_sidebar():
     with st.sidebar:
         st.title("🎯 Bid Assistant")
 
+
         username = render_user_section()
 
         st.divider()
