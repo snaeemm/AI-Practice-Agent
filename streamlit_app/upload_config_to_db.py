@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Upload config files (capabilities.json, qualification_matrix.json) to database.
-Run this once to populate the config_files table.
+Upload config files and templates to database.
+Run this once to populate the config_files and templates tables.
 """
 import json
 import sys
@@ -14,8 +14,8 @@ from agent.database.db_manager import DatabaseManager
 from agent.config.settings import settings
 
 def upload_config_files():
-    """Upload config JSON files to database"""
-    print("🚀 Uploading config files to database...")
+    """Upload config JSON files and Excel templates to database"""
+    print("🚀 Uploading config files and templates to database...")
 
     db = DatabaseManager()
 
@@ -48,7 +48,26 @@ def upload_config_files():
     else:
         print(f"⚠️  Qualification matrix file not found: {qual_matrix_path}")
 
-    print("\n✅ Upload complete! Config files are now in the database.")
+    # Upload Bid Plan template
+    templates_dir = Path(__file__).parent / "agent" / "related_files"
+    bid_plan_template_path = templates_dir / "Bid Plan - [Client  Opp Name]_BB_140125.xlsx"
+
+    if bid_plan_template_path.exists():
+        print(f"\n📄 Reading bid plan template...")
+        with open(bid_plan_template_path, 'rb') as f:
+            template_data = f.read()
+
+        print(f"💾 Saving bid plan template to database ({len(template_data)} bytes)...")
+        template_id = db.save_template(
+            'bid_plan_template',
+            template_data,
+            'Default bid plan Excel template for report generation'
+        )
+        print(f"✅ Saved bid plan template (ID: {template_id})")
+    else:
+        print(f"⚠️  Bid plan template not found: {bid_plan_template_path}")
+
+    print("\n✅ Upload complete! Config files and templates are now in the database.")
     print("   These will be used on Streamlit Cloud where local files aren't available.")
 
 if __name__ == "__main__":

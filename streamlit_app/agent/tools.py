@@ -908,14 +908,17 @@ def generate_bid_plan_excel_bytes(rfp_id: str) -> Optional[bytes]:
             print(f"❌ Missing deliverables or assignments for {rfp_id}")
             return None
 
-        template_path = settings.FILES_DIR / "Bid Plan - [Client Opp Name]_BB_140125.xlsx"
+        # Load template from database
+        print(f"📂 Loading bid plan template from database...")
+        template_data = db.get_template('bid_plan_template')
 
-        if not template_path.exists():
-            print(f"❌ Template not found: {template_path}")
+        if not template_data:
+            print(f"❌ Bid plan template not found in database")
             return None
 
-        # Load template
-        wb = load_workbook(template_path)
+        # Load template from bytes
+        template_buffer = io.BytesIO(template_data)
+        wb = load_workbook(template_buffer)
 
         # Use existing helper from excel_reports
         from .report_generators.excel_reports import _fill_deliverables_sheet, _fill_overview_sheet

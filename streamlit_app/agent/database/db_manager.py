@@ -697,3 +697,35 @@ class DatabaseManager:
                 """, (config_name,))
                 row = cursor.fetchone()
                 return dict(row)['config_data'] if row else None
+
+    # ==================== Templates Management ====================
+
+    def save_template(self, template_name: str, template_data: bytes, description: str = None) -> int:
+        """Save or update Excel template"""
+        with self._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO templates (template_name, template_data, description)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (template_name)
+                    DO UPDATE SET
+                        template_data = EXCLUDED.template_data,
+                        description = EXCLUDED.description,
+                        updated_at = CURRENT_TIMESTAMP
+                    RETURNING id
+                """, (template_name, template_data, description))
+                conn.commit()
+                return cursor.fetchone()[0]
+
+    def get_template(self, template_name: str) -> Optional[bytes]:
+        """Get Excel template by name"""
+        with self._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT template_data FROM templates
+                    WHERE template_name = %s
+                """, (template_name,))
+                row = cursor.fetchone()
+                if row and row[0]:
+                    return bytes(row[0])
+                return None
