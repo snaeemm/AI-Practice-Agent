@@ -15,8 +15,7 @@ from pydantic import BaseModel, Field
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 # Import centralized settings
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from config.settings import settings
+from agent.config.settings import settings
 
 # Debug: List files in directory
 print(f"📁 Checking directory: {settings.FILES_DIR}")

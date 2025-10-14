@@ -17,8 +17,7 @@ from docx import Document
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 # Import centralized settings
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from config.settings import settings
+from agent.config.settings import settings
 
 # Configure Gemini API
 api_key = settings.GOOGLE_API_KEY

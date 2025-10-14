@@ -12,7 +12,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from agent.database.db_singleton import get_db
 from agent.database.db_manager import DatabaseManager # Added for fetching data
-from .processors.new_rfp_qualifier import QualificationReport, create_qualification_excel_report # Added for Excel generation
 import io # Added for byte stream handling
 
 db = get_db()
@@ -718,7 +717,9 @@ def generate_and_download_qualification_excel(rfp_id: str) -> Optional[bytes]:
         print(f"✅ [STEP 2] Extracted qualification_report JSONB")
         print(f"   Report data keys: {list(report_data.keys()) if isinstance(report_data, dict) else 'NOT A DICT'}")
 
-        # Reconstruct Pydantic model from fetched data
+        # Reconstruct Pydantic model from fetched data (lazy import)
+        from agent.processors.new_rfp_qualifier import QualificationReport
+
         print(f"🔍 [STEP 3] Reconstructing QualificationReport Pydantic model...")
         try:
             report = QualificationReport(**report_data)
@@ -729,7 +730,9 @@ def generate_and_download_qualification_excel(rfp_id: str) -> Optional[bytes]:
             traceback.print_exc()
             return None
 
-        # Generate the Excel workbook
+        # Generate the Excel workbook (lazy import)
+        from agent.processors.new_rfp_qualifier import create_qualification_excel_report
+
         print(f"🔍 [STEP 4] Generating Excel workbook...")
         try:
             workbook = create_qualification_excel_report(report)
@@ -780,6 +783,7 @@ def generate_reasoning_excel(rfp_id: str) -> Optional[bytes]:
         if not report_data:
             return None
 
+        from agent.processors.new_rfp_qualifier import QualificationReport
         report = QualificationReport(**report_data)
 
         # Create reasoning-focused workbook
