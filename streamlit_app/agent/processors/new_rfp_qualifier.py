@@ -117,6 +117,7 @@ class QualificationReport(BaseModel):
 
 # ------------------ HELPERS ------------------ #
 def load_json_file(file_path: Path, model_class: BaseModel) -> Optional[BaseModel]:
+    """DEPRECATED: Use load_config_from_db instead"""
     if not file_path.exists():
         print(f"⚠️ File not found: {file_path}")
         return None
@@ -126,6 +127,28 @@ def load_json_file(file_path: Path, model_class: BaseModel) -> Optional[BaseMode
         return model_class(**data)
     except Exception as e:
         print(f"❌ Error loading {file_path}: {e}")
+        return None
+
+def load_config_from_db(config_name: str, model_class: BaseModel) -> Optional[BaseModel]:
+    """Load config from database (capabilities or qualification_matrix)"""
+    try:
+        if config_name == 'capabilities':
+            data = settings.get_capabilities_data()
+        elif config_name == 'qualification_matrix':
+            data = settings.get_qualification_matrix()
+        else:
+            print(f"❌ Unknown config name: {config_name}")
+            return None
+
+        if not data:
+            print(f"❌ No data found for config: {config_name}")
+            return None
+
+        return model_class(**data)
+    except Exception as e:
+        print(f"❌ Error loading {config_name} from database: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def extract_first_json_object(text: str) -> Optional[str]:
@@ -999,8 +1022,8 @@ def process_rfp_qualification(pdf_input: Optional[str] = None, user_context: Opt
             print(f"   Additional info: {user_context.additional_info[:100]}...")
 
     rfp_data, deliv_data, raw_document_text = extract_rfp_data(None, user_context)
-    capabilities_data = load_json_file(settings.CAPABILITIES_JSON, CapabilitiesData)
-    matrix = load_json_file(settings.QUALIFICATION_JSON, QualificationMatrix)
+    capabilities_data = load_config_from_db('capabilities', CapabilitiesData)
+    matrix = load_config_from_db('qualification_matrix', QualificationMatrix)
 
     if not rfp_data or not capabilities_data or not matrix:
         print("❌ Missing required data; cannot evaluate qualification")
@@ -1116,8 +1139,8 @@ def process_rfp_qualification(pdf_input: Optional[str] = None, user_context: Opt
             print(f"   Additional info: {user_context.additional_info[:100]}...")
 
     rfp_data, deliv_data, raw_document_text = extract_rfp_data(None, user_context)
-    capabilities_data = load_json_file(settings.CAPABILITIES_JSON, CapabilitiesData)
-    matrix = load_json_file(settings.QUALIFICATION_JSON, QualificationMatrix)
+    capabilities_data = load_config_from_db('capabilities', CapabilitiesData)
+    matrix = load_config_from_db('qualification_matrix', QualificationMatrix)
 
     if not rfp_data or not capabilities_data or not matrix:
         print("❌ Missing required data; cannot evaluate qualification")

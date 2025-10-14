@@ -668,3 +668,32 @@ class DatabaseManager:
     def list_user_sessions(self, user_id: str, active_only: bool = True) -> List[Dict[str, Any]]:
         """List user sessions"""
         return self.session_manager.list_user_sessions(user_id, active_only)
+
+    # ==================== Config Files Management ====================
+
+    def save_config_file(self, config_name: str, config_data: Dict[str, Any]) -> int:
+        """Save or update config file (capabilities.json, qualification_matrix.json)"""
+        with self._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO config_files (config_name, config_data)
+                    VALUES (%s, %s)
+                    ON CONFLICT (config_name)
+                    DO UPDATE SET
+                        config_data = EXCLUDED.config_data,
+                        updated_at = CURRENT_TIMESTAMP
+                    RETURNING id
+                """, (config_name, Json(config_data)))
+                conn.commit()
+                return cursor.fetchone()[0]
+
+    def get_config_file(self, config_name: str) -> Optional[Dict[str, Any]]:
+        """Get config file by name"""
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT config_data FROM config_files
+                    WHERE config_name = %s
+                """, (config_name,))
+                row = cursor.fetchone()
+                return dict(row)['config_data'] if row else None
