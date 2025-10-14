@@ -1,6 +1,44 @@
 import streamlit as st
 import bcrypt
 from typing import Optional, Dict
+from pathlib import Path
+
+_migration_checked = False
+
+def ensure_auth_migration():
+    """Ensure auth migration has been run"""
+    global _migration_checked
+
+    if _migration_checked:
+        return
+
+    try:
+        from agent.database.db_singleton import get_db
+        db = get_db()
+
+        with db._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name = 'rfp_users'
+                    AND column_name = 'password_hash'
+                """)
+
+                if cursor.fetchone() is None:
+                    migration_sql = Path(__file__).parent / "agent" / "database" / "add_auth_to_users.sql"
+
+                    if migration_sql.exists():
+                        with open(migration_sql, 'r') as f:
+                            sql = f.read()
+
+                        cursor.execute(sql)
+                        conn.commit()
+                        print("✅ Auth migration completed automatically")
+
+        _migration_checked = True
+    except Exception as e:
+        print(f"⚠️ Migration check failed: {e}")
 
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt"""
@@ -20,6 +58,8 @@ def login(username: str, password: str) -> Optional[Dict]:
     Authenticate user and return user data if successful
     Returns None if authentication fails
     """
+    ensure_auth_migration()
+
     from agent.database.db_singleton import get_db
     db = get_db()
 
