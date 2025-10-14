@@ -976,8 +976,7 @@ def process_pdf(pdf_input: Optional[str], template_input: str, output_template: 
     # Save to database instead of files
     try:
         import sys
-        sys.path.insert(0, str(Path(__file__).parent.parent))
-        from database.db_manager import DatabaseManager
+        from agent.database.db_manager import DatabaseManager
 
         db = DatabaseManager()
 

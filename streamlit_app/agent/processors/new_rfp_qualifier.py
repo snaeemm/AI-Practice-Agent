@@ -1011,8 +1011,7 @@ def process_rfp_qualification(pdf_input: Optional[str] = None, user_context: Opt
     # Save to database
     try:
         import sys
-        sys.path.insert(0, str(Path(__file__).parent.parent))
-        from database.db_manager import DatabaseManager
+        from agent.database.db_manager import DatabaseManager
 
         db = DatabaseManager()
 
@@ -1129,8 +1128,7 @@ def process_rfp_qualification(pdf_input: Optional[str] = None, user_context: Opt
     # Save to database
     try:
         import sys
-        sys.path.insert(0, str(Path(__file__).parent.parent))
-        from database.db_manager import DatabaseManager
+        from agent.database.db_manager import DatabaseManager
 
         db = DatabaseManager()
 

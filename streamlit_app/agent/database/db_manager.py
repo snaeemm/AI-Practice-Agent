@@ -9,8 +9,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any
 from contextlib import contextmanager
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from config.settings import settings
+from agent.config.settings import settings
 
 class DatabaseManager:
     def __init__(self, connection_string: Optional[str] = None):

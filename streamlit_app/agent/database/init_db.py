@@ -7,8 +7,6 @@ Run this once to set up the database tables
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from agent.database.db_manager import DatabaseManager
 
 def main():
