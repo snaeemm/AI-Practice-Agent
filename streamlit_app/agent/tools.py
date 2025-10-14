@@ -8,8 +8,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from agent.database.db_singleton import get_db
 from agent.database.db_manager import DatabaseManager # Added for fetching data
 import io # Added for byte stream handling
