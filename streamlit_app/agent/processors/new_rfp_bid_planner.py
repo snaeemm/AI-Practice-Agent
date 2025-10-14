@@ -985,13 +985,19 @@ def process_pdf(pdf_input: Optional[str], template_input: str, output_template: 
         client_name = deliv_data.client_and_opportunity if deliv_data else "Unknown Client"
         project_title = deliv_data.client_and_opportunity if deliv_data else "Unknown Project"
 
-        # Create/update RFP document
-        db.create_rfp_document(
+        # Create/update RFP document (with deduplication)
+        actual_rfp_id = db.create_rfp_document(
             rfp_id=rfp_id,
             client_name=client_name,
             project_title=project_title,
-            pdf_path=None # No longer processing PDFs directly
+            pdf_path=None,
+            check_duplicates=True
         )
+
+        # If duplicate found, use the existing RFP ID
+        if actual_rfp_id != rfp_id:
+            print(f"🔄 Using existing RFP ID: {actual_rfp_id} (original: {rfp_id})")
+            rfp_id = actual_rfp_id
 
         # Save deliverables data
         if deliv_data:

@@ -48,8 +48,9 @@ tool_qualify_rfp(pdf_path=None, context=None) - **Strategic Qualification and Ri
   Use when: user provides an RFP document (PDF or text content) or explicitly asks to qualify.
   Returns: **total_score**, **win_probability_estimate**, **go_no_go_decision**, **reasoning_report** (including resource gaps and key risks).
 
-tool_plan_bid_sections(pdf_path=None, context=None) - **Develop a Winning Bid Architecture**. Extract RFP requirements and create a structured bid plan focused on competitive advantage and resource allocation.
+tool_plan_bid_sections(pdf_path=None, context=None, rfp_id=None) - **Develop a Winning Bid Architecture**. Extract RFP requirements and create a structured bid plan focused on competitive advantage and resource allocation.
   Use when: qualification decision is **GO**.
+  **IMPORTANT**: ALWAYS pass the rfp_id parameter from the qualification step result to ensure all data links to the same RFP entry.
   Returns: **bid plan with sections**, **strategic assignments (SMEs)**, **competitive recommendations**, **extracted deliverables**.
 
 ### Intelligence & Knowledge Management Tools
@@ -91,7 +92,7 @@ tool_download_bid_plan_report(rfp_id) - **Generate Downloadable Bid Plan Excel R
 4. **Human Checkpoint**: Present **win_probability_estimate**, **GO/NO-GO decision**, and relevant historical insights. **ASK**: "**Based on this strategic assessment, do you authorize proceeding to the Bid Planning phase?**"
 
 **Standard Workflow After GO Decision:**
-1. **Plan**: Announce, then call **tool_plan_bid_sections()**.
+1. **Plan**: Announce, then call **tool_plan_bid_sections(rfp_id=<rfp_id_from_qualification>)** using the rfp_id returned from the qualification step.
 2. **Strategic Recommendations**: **Synthesize** historical win themes with the new bid plan to suggest:
     - **3-5 Key Differentiators** (Competitive Edge)
     - **Recommended Pricing Model** (Based on history/qualification)

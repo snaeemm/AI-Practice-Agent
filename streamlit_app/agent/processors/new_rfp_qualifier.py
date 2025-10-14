@@ -1057,14 +1057,20 @@ def process_rfp_qualification(pdf_input: Optional[str] = None, user_context: Opt
                 # Store None instead of unparseable string
                 submission_deadline = None
 
-        # Save RFP document metadata
-        db.create_rfp_document(
+        # Save RFP document metadata (with deduplication)
+        actual_rfp_id = db.create_rfp_document(
             rfp_id=rfp_id,
             client_name=client_name,
             project_title=project_title,
-            pdf_path=None, # No longer processing PDFs directly
-            submission_deadline=submission_deadline
+            pdf_path=None,
+            submission_deadline=submission_deadline,
+            check_duplicates=True
         )
+
+        # If duplicate found, use the existing RFP ID
+        if actual_rfp_id != rfp_id:
+            print(f"🔄 Using existing RFP ID: {actual_rfp_id} (original: {rfp_id})")
+            rfp_id = actual_rfp_id
 
         # Save complete RFP raw data as JSONB
         db.save_rfp_raw_data(
@@ -1174,14 +1180,20 @@ def process_rfp_qualification(pdf_input: Optional[str] = None, user_context: Opt
                 # Store None instead of unparseable string
                 submission_deadline = None
 
-        # Save RFP document metadata
-        db.create_rfp_document(
+        # Save RFP document metadata (with deduplication)
+        actual_rfp_id = db.create_rfp_document(
             rfp_id=rfp_id,
             client_name=client_name,
             project_title=project_title,
-            pdf_path=None, # No longer processing PDFs directly
-            submission_deadline=submission_deadline
+            pdf_path=None,
+            submission_deadline=submission_deadline,
+            check_duplicates=True
         )
+
+        # If duplicate found, use the existing RFP ID
+        if actual_rfp_id != rfp_id:
+            print(f"🔄 Using existing RFP ID: {actual_rfp_id} (original: {rfp_id})")
+            rfp_id = actual_rfp_id
 
         # Save complete RFP raw data as JSONB
         db.save_rfp_raw_data(

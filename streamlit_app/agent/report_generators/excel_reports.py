@@ -192,10 +192,10 @@ def generate_qualification_excel(rfp_id: str) -> str:
                 top=Side(style='thin'), bottom=Side(style='thin')
             )
 
-        if analysis['reasoning'] or analysis.get('missing_data_justification'):
+        if analysis.get('reasoning') or analysis.get('missing_data_justification'):
             min_height = 60
-            reasoning_lines = len(analysis['reasoning'].split('\n')) if analysis['reasoning'] else 0
-            justification_lines = len(analysis.get('missing_data_justification', '').split('\n'))
+            reasoning_lines = len((analysis.get('reasoning') or '').split('\n'))
+            justification_lines = len((analysis.get('missing_data_justification') or '').split('\n'))
             content_height = max(reasoning_lines, justification_lines) * 15
             detail_ws.row_dimensions[i].height = max(min_height, content_height)
 

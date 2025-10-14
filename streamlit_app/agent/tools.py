@@ -32,7 +32,7 @@ def tool_qualify_rfp(context: Optional[str] = None, pdf_path: Optional[str] = No
     """
     try:
         from pathlib import Path
-        from .processors.new_rfp_qualifier import process_rfp_qualification, UserContext
+        from .processors.new_rfp_qualifier import process_rfp_qualification, UserContext, RFPData
 
         # Validate that at least one input is provided
         if not context and not pdf_path:
@@ -48,6 +48,45 @@ def tool_qualify_rfp(context: Optional[str] = None, pdf_path: Optional[str] = No
             # Context is the preferred method - treat as full RFP content
             user_context = UserContext(rfp_content=context)
             pdf_path = None  # Ignore pdf_path if context is provided
+
+        # STEP 1: Quick extraction to get client/project names for duplicate check
+        print("🔍 Checking if RFP already qualified...")
+        from .processors.new_rfp_qualifier import extract_rfp_data
+        rfp_data_check, _, _ = extract_rfp_data(None, user_context)
+
+        if rfp_data_check and rfp_data_check.client_and_opportunity:
+            client_name = rfp_data_check.client_and_opportunity.value if rfp_data_check.client_and_opportunity.value else "Unknown"
+            project_title = client_name  # Use same for lookup
+
+            # Check if already exists
+            existing_rfp_id = db.find_existing_rfp(client_name, project_title)
+            if existing_rfp_id:
+                # Check if already qualified
+                existing_qual = db.get_qualification_results(existing_rfp_id)
+                if existing_qual:
+                    print(f"✅ RFP already qualified: {existing_rfp_id}")
+                    print("⚠️  Skipping re-qualification - returning existing results")
+
+                    # Return existing qualification data
+                    report_data = existing_qual.get('qualification_report', {})
+                    return {
+                        'success': True,
+                        'message': f'RFP already qualified (using existing): {existing_rfp_id}',
+                        'rfp_id': existing_rfp_id,
+                        'already_processed': True,
+                        'total_score': report_data.get('total_score'),
+                        'threshold': report_data.get('threshold'),
+                        'qualifies': report_data.get('qualifies'),
+                        'decision': 'PURSUE' if report_data.get('qualifies') else 'DECLINE',
+                        'executive_summary': report_data.get('executive_summary'),
+                        'recommendations': report_data.get('recommendations', []),
+                        'rfp_classification': report_data.get('rfp_classification'),
+                        'analyses': report_data.get('analyses', []),
+                        'qualification_context': report_data.get('qualification_context')
+                    }
+
+        # STEP 2: Not qualified yet, proceed with qualification
+        print("🚀 Proceeding with new qualification...")
 
         # Determine pdf_base for file naming
         if pdf_path:
@@ -118,7 +157,7 @@ def tool_qualify_rfp(context: Optional[str] = None, pdf_path: Optional[str] = No
         }
 
 
-def tool_plan_bid_sections(context: Optional[str] = None, pdf_path: Optional[str] = None) -> Dict[str, Any]:
+def tool_plan_bid_sections(context: Optional[str] = None, pdf_path: Optional[str] = None, rfp_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Create detailed bid plan with section assignments and recommendations.
 
@@ -129,6 +168,7 @@ def tool_plan_bid_sections(context: Optional[str] = None, pdf_path: Optional[str
     Args:
         context: Pre-extracted RFP text content (preferred method)
         pdf_path: Legacy parameter for FILES_DIR PDFs (fallback only)
+        rfp_id: Optional RFP ID from qualification step (to ensure same ID is used)
 
     Returns:
         Dictionary with bid plan including sections and assignments
@@ -153,24 +193,97 @@ def tool_plan_bid_sections(context: Optional[str] = None, pdf_path: Optional[str
             user_context = UserContext(rfp_content=context)
             pdf_path = None  # Ignore pdf_path if context is provided
 
-        # Determine pdf filename
+        # STEP 1: Check if bid plan already exists for this RFP
+        if rfp_id:
+            print(f"🔍 Checking if bid plan already exists for: {rfp_id}")
+            existing_deliverables = db.get_rfp_deliverables(rfp_id)
+            existing_assignments = db.get_rfp_assignments(rfp_id)
+
+            if existing_deliverables and existing_assignments:
+                print(f"✅ Bid plan already exists for: {rfp_id}")
+                print("⚠️  Skipping re-planning - returning existing results")
+
+                # Return existing bid plan data
+                return {
+                    'success': True,
+                    'message': f'Bid plan already exists (using existing): {rfp_id}',
+                    'rfp_id': rfp_id,
+                    'already_processed': True,
+                    'client_and_opportunity': existing_deliverables.get('client_and_opportunity'),
+                    'total_deliverables': existing_assignments.get('total_deliverables'),
+                    'granite_assigned': existing_assignments.get('granite_assigned'),
+                    'partner_assigned': existing_assignments.get('partner_assigned'),
+                    'assignments': existing_assignments.get('assignment_report', {}).get('assignments', [])
+                }
+
+        # STEP 2: Not yet planned, or no rfp_id provided - check by client/project names
+        if not rfp_id and context:
+            print("🔍 Checking if RFP already has bid plan (by client/project)...")
+            from .processors.new_rfp_qualifier import extract_rfp_data
+            rfp_data_check, _, _ = extract_rfp_data(None, user_context)
+
+            if rfp_data_check and rfp_data_check.client_and_opportunity:
+                client_name = rfp_data_check.client_and_opportunity.value if rfp_data_check.client_and_opportunity.value else "Unknown"
+                project_title = client_name
+
+                # Check if already exists
+                existing_rfp_id = db.find_existing_rfp(client_name, project_title)
+                if existing_rfp_id:
+                    # Check if already has bid plan
+                    existing_deliverables = db.get_rfp_deliverables(existing_rfp_id)
+                    existing_assignments = db.get_rfp_assignments(existing_rfp_id)
+
+                    if existing_deliverables and existing_assignments:
+                        print(f"✅ Bid plan already exists: {existing_rfp_id}")
+                        print("⚠️  Skipping re-planning - returning existing results")
+
+                        return {
+                            'success': True,
+                            'message': f'Bid plan already exists (using existing): {existing_rfp_id}',
+                            'rfp_id': existing_rfp_id,
+                            'already_processed': True,
+                            'client_and_opportunity': existing_deliverables.get('client_and_opportunity'),
+                            'total_deliverables': existing_assignments.get('total_deliverables'),
+                            'granite_assigned': existing_assignments.get('granite_assigned'),
+                            'partner_assigned': existing_assignments.get('partner_assigned'),
+                            'assignments': existing_assignments.get('assignment_report', {}).get('assignments', [])
+                        }
+                    else:
+                        # Exists but no bid plan yet - use the existing rfp_id
+                        rfp_id = existing_rfp_id
+                        print(f"🔄 Using existing rfp_id (no bid plan yet): {rfp_id}")
+
+        # STEP 3: Proceed with bid planning
+        print("🚀 Proceeding with new bid planning...")
+
+        # Determine pdf filename - IMPORTANT: Pass rfp_id as pdf_input to process_pdf
         if pdf_path:
             pdf_file = Path(pdf_path)
             pdf_filename = pdf_file.name
             pdf_name = pdf_file.stem
+            pdf_input_for_processor = pdf_path
+        elif rfp_id:
+            # Use the provided rfp_id from qualification step
+            # Pass rfp_id as the pdf_input so process_pdf uses it as pdf_base
+            pdf_filename = f"{rfp_id}.txt"
+            pdf_name = rfp_id
+            pdf_input_for_processor = rfp_id  # Pass the rfp_id directly
+            print(f"🔄 Using rfp_id: {rfp_id}")
         else:
-            # Generate a name for context-only processing
+            # Generate a name for context-only processing (fallback)
             import hashlib
             import datetime
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             context_hash = hashlib.md5(context[:100].encode()).hexdigest()[:8]
             pdf_filename = f"context_rfp_{timestamp}_{context_hash}.txt"
             pdf_name = f"context_rfp_{timestamp}_{context_hash}"
+            pdf_input_for_processor = None  # Let process_pdf generate from context
 
         template_input = "Bid Plan - [Client Opp Name]_BB_140125.xlsx"
         output_template = "{pdf_name}_bid_plan.xlsx"
 
-        process_pdf(pdf_path, template_input, output_template, user_context)
+        # CRITICAL: Pass rfp_id as pdf_input so process_pdf uses the same ID
+        process_pdf(pdf_input_for_processor, template_input, output_template, user_context)
 
         # Read the generated assignment analysis JSON to return to agent
         import os

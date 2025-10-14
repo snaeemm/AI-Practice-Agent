@@ -72,15 +72,92 @@ class DatabaseManager:
 
     # ==================== RFP Documents ====================
 
+    def _normalize_text(self, text: str) -> str:
+        """Normalize text for deduplication matching"""
+        import re
+        if not text:
+            return ""
+        text = text.lower().strip()
+        text = re.sub(r'[^\w\s]', '', text)
+        text = re.sub(r'\s+', ' ', text)
+        return text
+
+    def find_existing_rfp(
+        self,
+        client_name: str,
+        project_title: str,
+        submission_deadline: Optional[str] = None
+    ) -> Optional[str]:
+        """Find existing RFP by normalized client and project names"""
+        client_normalized = self._normalize_text(client_name)
+        project_normalized = self._normalize_text(project_title)
+
+        with self._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT canonical_rfp_id FROM rfp_lookup
+                    WHERE client_name_normalized = %s
+                    AND project_title_normalized = %s
+                """, (client_normalized, project_normalized))
+                row = cursor.fetchone()
+                if row:
+                    print(f"✅ Found existing RFP: {row[0]}")
+                    return row[0]
+        return None
+
+    def register_rfp_lookup(
+        self,
+        rfp_id: str,
+        client_name: str,
+        project_title: str,
+        submission_deadline: Optional[str] = None
+    ):
+        """Register RFP in lookup table for deduplication"""
+        client_normalized = self._normalize_text(client_name)
+        project_normalized = self._normalize_text(project_title)
+
+        with self._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO rfp_lookup
+                    (canonical_rfp_id, client_name_normalized, project_title_normalized, submission_deadline)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (client_name_normalized, project_title_normalized)
+                    DO UPDATE SET
+                        canonical_rfp_id = EXCLUDED.canonical_rfp_id,
+                        submission_deadline = EXCLUDED.submission_deadline,
+                        updated_at = CURRENT_TIMESTAMP
+                """, (rfp_id, client_normalized, project_normalized, submission_deadline))
+                conn.commit()
+
     def create_rfp_document(
         self,
         rfp_id: str,
         client_name: str,
         project_title: str,
         pdf_path: Optional[str] = None,
-        submission_deadline: Optional[str] = None
+        submission_deadline: Optional[str] = None,
+        check_duplicates: bool = True
     ) -> str:
-        """Create or update RFP document"""
+        """Create or update RFP document with optional deduplication
+
+        Args:
+            rfp_id: RFP identifier
+            client_name: Client name
+            project_title: Project title
+            pdf_path: Optional PDF path
+            submission_deadline: Optional submission deadline
+            check_duplicates: If True, check for existing RFP and return its ID instead
+
+        Returns:
+            rfp_id: Either the new RFP ID or the existing one if duplicate found
+        """
+        if check_duplicates:
+            existing_rfp_id = self.find_existing_rfp(client_name, project_title, submission_deadline)
+            if existing_rfp_id:
+                print(f"⚠️  Duplicate RFP detected! Using existing RFP ID: {existing_rfp_id}")
+                return existing_rfp_id
+
         with self._get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
@@ -95,6 +172,9 @@ class DatabaseManager:
                         updated_date = CURRENT_TIMESTAMP
                 """, (rfp_id, client_name, project_title, pdf_path, submission_deadline))
                 conn.commit()
+
+        self.register_rfp_lookup(rfp_id, client_name, project_title, submission_deadline)
+        print(f"✅ Created new RFP: {rfp_id}")
         return rfp_id
 
     def get_rfp_document(self, rfp_id: str) -> Optional[Dict[str, Any]]:
