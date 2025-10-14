@@ -1,7 +1,6 @@
 import streamlit as st
 import bcrypt
 from typing import Optional, Dict
-from agent.database.db_singleton import get_db_manager
 
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt"""
@@ -21,6 +20,7 @@ def login(username: str, password: str) -> Optional[Dict]:
     Authenticate user and return user data if successful
     Returns None if authentication fails
     """
+    from agent.database.db_singleton import get_db_manager
     db = get_db_manager()
 
     with db._get_connection() as conn:
@@ -65,6 +65,7 @@ def change_password(user_id: str, old_password: str, new_password: str) -> tuple
     Change user password
     Returns (success: bool, message: str)
     """
+    from agent.database.db_singleton import get_db_manager
     db = get_db_manager()
 
     with db._get_connection() as conn:
