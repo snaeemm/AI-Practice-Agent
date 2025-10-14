@@ -12,6 +12,7 @@ from agent.database.db_singleton import get_db_manager
 from auth import hash_password
 
 USERS = [
+    {"username": "shahzeb.naeem", "password": "shahzeb-naeem-123!", "full_name": "Shahzeb Naeem"},
     {"username": "paul.wallis", "password": "paul-wallis-123!", "full_name": "Paul Wallis"},
     {"username": "lionel.laulhe", "password": "lionel-laulhe-123!", "full_name": "Lionel Laulhe"},
     {"username": "bethany.bromfield", "password": "bethany-bromfield-123!", "full_name": "Bethany Bromfield"},
