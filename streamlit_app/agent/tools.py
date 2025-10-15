@@ -794,86 +794,86 @@ def tool_download_bid_plan_report(rfp_id: str) -> Dict[str, Any]:
         }
 
 
-def tool_generate_report(
-    rfp_id: str,
-    report_type: str
-) -> Dict[str, Any]:
-    """
-    Generate Excel reports on demand from stored data.
-    Uses the LATEST data including all agent/user edits.
+# def tool_generate_report(
+#     rfp_id: str,
+#     report_type: str
+# ) -> Dict[str, Any]:
+#     """
+#     Generate Excel reports on demand from stored data.
+#     Uses the LATEST data including all agent/user edits.
 
-    Args:
-        rfp_id: The RFP ID
-        report_type: Type of report - "qualification", "bid_plan", "assignment", or "all"
+#     Args:
+#         rfp_id: The RFP ID
+#         report_type: Type of report - "qualification", "bid_plan", "assignment", or "all"
 
-    Returns:
-        Dictionary with file paths to generated reports
+#     Returns:
+#         Dictionary with file paths to generated reports
 
-    Examples:
-        # Generate qualification report only
-        tool_generate_report("KHDA_2024", "qualification")
+#     Examples:
+#         # Generate qualification report only
+#         tool_generate_report("KHDA_2024", "qualification")
 
-        # Generate all reports at once
-        tool_generate_report("KHDA_2024", "all")
-    """
-    try:
-        from .report_generators.excel_reports import (
-            generate_qualification_excel,
-            generate_bid_plan_excel,
-            generate_assignment_excel,
-            generate_all_reports
-        )
+#         # Generate all reports at once
+#         tool_generate_report("KHDA_2024", "all")
+#     """
+#     try:
+#         from .report_generators.excel_reports import (
+#             generate_qualification_excel,
+#             generate_bid_plan_excel,
+#             generate_assignment_excel,
+#             generate_all_reports
+#         )
 
-        if report_type == "qualification":
-            file_path = generate_qualification_excel(rfp_id)
-            return {
-                'success': True,
-                'rfp_id': rfp_id,
-                'report_type': report_type,
-                'file_path': file_path,
-                'message': f'Generated qualification report: {file_path}'
-            }
+#         if report_type == "qualification":
+#             file_path = generate_qualification_excel(rfp_id)
+#             return {
+#                 'success': True,
+#                 'rfp_id': rfp_id,
+#                 'report_type': report_type,
+#                 'file_path': file_path,
+#                 'message': f'Generated qualification report: {file_path}'
+#             }
 
-        elif report_type == "bid_plan":
-            file_path = generate_bid_plan_excel(rfp_id)
-            return {
-                'success': True,
-                'rfp_id': rfp_id,
-                'report_type': report_type,
-                'file_path': file_path,
-                'message': f'Generated bid plan: {file_path}'
-            }
+#         elif report_type == "bid_plan":
+#             file_path = generate_bid_plan_excel(rfp_id)
+#             return {
+#                 'success': True,
+#                 'rfp_id': rfp_id,
+#                 'report_type': report_type,
+#                 'file_path': file_path,
+#                 'message': f'Generated bid plan: {file_path}'
+#             }
 
-        elif report_type == "assignment":
-            file_path = generate_assignment_excel(rfp_id)
-            return {
-                'success': True,
-                'rfp_id': rfp_id,
-                'report_type': report_type,
-                'file_path': file_path,
-                'message': f'Generated assignment report: {file_path}'
-            }
+#         elif report_type == "assignment":
+#             file_path = generate_assignment_excel(rfp_id)
+#             return {
+#                 'success': True,
+#                 'rfp_id': rfp_id,
+#                 'report_type': report_type,
+#                 'file_path': file_path,
+#                 'message': f'Generated assignment report: {file_path}'
+#             }
 
-        elif report_type == "all":
-            reports = generate_all_reports(rfp_id)
-            return {
-                'success': True,
-                'rfp_id': rfp_id,
-                'report_type': report_type,
-                'reports': reports,
-                'message': f'Generated all reports for {rfp_id}'
-            }
+#         elif report_type == "all":
+#             reports = generate_all_reports(rfp_id)
+#             return {
+#                 'success': True,
+#                 'rfp_id': rfp_id,
+#                 'report_type': report_type,
+#                 'reports': reports,
+#                 'message': f'Generated all reports for {rfp_id}'
+#             }
 
-        else:
-            return {
-                'success': False,
-                'error': 'Invalid report_type',
-                'message': f'report_type must be "qualification", "bid_plan", "assignment", or "all", got: {report_type}'
-            }
+#         else:
+#             return {
+#                 'success': False,
+#                 'error': 'Invalid report_type',
+#                 'message': f'report_type must be "qualification", "bid_plan", "assignment", or "all", got: {report_type}'
+#             }
 
-    except Exception as e:
-        return {
-            'success': False,
-            'error': str(e),
-            'message': f'Failed to generate report: {str(e)}'
-        }
+#     except Exception as e:
+#         return {
+#             'success': False,
+#             'error': str(e),
+#             'message': f'Failed to generate report: {str(e)}'
+#         }

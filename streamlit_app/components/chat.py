@@ -258,9 +258,40 @@ def render_chat(session):
                 if extraction_result and extraction_result['status'] == 'success':
                     # Extract title and check database
                     with st.spinner("🔍 Checking for duplicates..."):
-                        rfp_title = extract_rfp_title(extraction_result['text'])
                         db = DatabaseManager()
-                        status = db.get_rfp_status_by_title(rfp_title)
+                        existing_rfps = db.list_recent_rfps(limit=100)
+
+                        extraction = extract_rfp_title(extraction_result['text'], existing_rfps=existing_rfps)
+                        rfp_title = extraction['title']
+                        matching_rfp_id = extraction['matching_rfp_id']
+
+                        print(f"🔍 Extracted title: {rfp_title}")
+                        print(f"🔄 Matching RFP ID: {matching_rfp_id}")
+
+                        # Get status using the matched ID or by title
+                        if matching_rfp_id:
+                            rfp_doc = db.get_rfp_document(matching_rfp_id)
+                            qual = db.get_qualification_results(matching_rfp_id)
+                            deliverables = db.get_rfp_deliverables(matching_rfp_id)
+
+                            status = {
+                                'exists': True,
+                                'rfp_id': matching_rfp_id,
+                                'title': rfp_doc.get('project_title') if rfp_doc else rfp_title,
+                                'client_name': rfp_doc.get('client_name') if rfp_doc else None,
+                                'has_qualification': bool(qual),
+                                'has_bid_plan': bool(deliverables)
+                            }
+                        else:
+                            status = {
+                                'exists': False,
+                                'rfp_id': None,
+                                'title': None,
+                                'has_qualification': False,
+                                'has_bid_plan': False
+                            }
+
+                        print(f"📊 Database status: {status}")
 
                     st.session_state.pending_extraction = {
                         'filename': extraction_result['filename'],
@@ -271,6 +302,8 @@ def render_chat(session):
                         'has_qualification': status.get('has_qualification', False),
                         'has_bid_plan': status.get('has_bid_plan', False)
                     }
+
+                    print(f"💾 Pending extraction data: rfp_title={rfp_title}, existing_rfp_id={status.get('rfp_id')}, has_qual={status.get('has_qualification')}, has_bid={status.get('has_bid_plan')}")
 
                     st.success(f"✅ Document processed: {extraction_result['filename']}")
 
@@ -318,6 +351,12 @@ existing_rfp_id: {extraction.get('existing_rfp_id', 'null')}
 has_qualification: {extraction.get('has_qualification', False)}
 has_bid_plan: {extraction.get('has_bid_plan', False)}
 [/RFP_METADATA]"""
+
+                # Debug: Print metadata being sent
+                print("\n" + "="*80)
+                print("📋 METADATA BEING SENT TO AGENT:")
+                print(metadata)
+                print("="*80 + "\n")
 
                 # Full merged for agent (private, not shown in chat)
                 merged_message = f"""📎 Document: {extraction['filename']}

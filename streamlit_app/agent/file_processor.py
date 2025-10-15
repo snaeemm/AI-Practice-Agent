@@ -112,48 +112,81 @@ Output the complete text content:"""
         }
 
 
-def extract_rfp_title(text: str) -> str:
+def extract_rfp_title(text: str, existing_rfps: list = None) -> Dict[str, Any]:
     """
-    Extract RFP title/name from document text using Gemini.
+    Extract RFP title/name from document text using Gemini, and check for duplicates.
 
     Args:
         text: The RFP document text
+        existing_rfps: List of existing RFPs from database with rfp_id, client_name, project_title
 
     Returns:
-        Extracted title string
+        Dictionary with:
+        - title: Extracted title string
+        - matching_rfp_id: RFP ID if duplicate found, else None
     """
     try:
         model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
-        prompt = """Extract the RFP/project title from this document.
+        # Build existing RFPs list for prompt
+        existing_list = ""
+        if existing_rfps:
+            existing_list = "\n\n### EXISTING RFPs IN DATABASE:\n"
+            for rfp in existing_rfps[:50]:  # Limit to 50 most recent
+                existing_list += f"- ID: {rfp.get('rfp_id')} | Client: {rfp.get('client_name')} | Project: {rfp.get('project_title')}\n"
+
+        prompt = f"""Extract the RFP/project title from this document and check for duplicates.
 
 Instructions:
 - Look for the main project title, RFP name, or opportunity name
-- Return ONLY the title, nothing else
-- If there's a client name and project, return both: "Client Name - Project Title"
+- If there's a client name and project, format as: "Client Name - Project Title"
 - Keep it concise (under 100 characters)
 
-Document text:
-{text}
+{existing_list}
 
-Title:"""
+**CRITICAL:** If this RFP matches ANY of the existing RFPs above (same client and project), return the matching RFP ID.
+
+Document text:
+{{text}}
+
+Response format:
+Title: [extracted title]
+Matching RFP ID: [rfp_id if duplicate, otherwise "None"]"""
 
         response = client.models.generate_content(
             model=model_name,
-            contents=[prompt.format(text=text[:3000])]  # Use first 3000 chars for speed
+            contents=[prompt.format(text=text[:3000])]
         )
 
-        title = response.text.strip() if response and hasattr(response, 'text') else "Untitled RFP"
+        response_text = response.text.strip() if response and hasattr(response, 'text') else ""
 
-        # Clean up the title
-        title = title.replace('"', '').replace("'", "").strip()
+        # Parse response
+        title = "Untitled RFP"
+        matching_rfp_id = None
+
+        for line in response_text.split('\n'):
+            if line.startswith('Title:'):
+                title = line.replace('Title:', '').strip().replace('"', '').replace("'", "")
+            elif line.startswith('Matching RFP ID:'):
+                match_value = line.replace('Matching RFP ID:', '').strip()
+                if match_value.lower() not in ['none', 'null', '']:
+                    matching_rfp_id = match_value
 
         print(f"📋 Extracted RFP title: {title}")
-        return title
+        if matching_rfp_id:
+            print(f"🔄 Found duplicate: {matching_rfp_id}")
+
+        return {
+            'title': title,
+            'matching_rfp_id': matching_rfp_id
+        }
 
     except Exception as e:
         print(f"⚠️ Failed to extract title: {e}")
-        return "Untitled RFP"
+        return {
+            'title': "Untitled RFP",
+            'matching_rfp_id': None
+        }
 
 
 def cleanup_gemini_file(file_uri: str):

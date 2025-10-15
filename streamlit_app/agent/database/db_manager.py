@@ -73,7 +73,7 @@ class DatabaseManager:
     # ==================== RFP Documents ====================
 
     def _normalize_text(self, text: str) -> str:
-        """Normalize text for deduplication matching"""
+        """Normalize text for deduplication matching (legacy/fallback)"""
         import re
         if not text:
             return ""
@@ -88,7 +88,7 @@ class DatabaseManager:
         project_title: str,
         submission_deadline: Optional[str] = None
     ) -> Optional[str]:
-        """Find existing RFP by normalized client and project names"""
+        """Find existing RFP by exact match (simplified - Gemini now handles matching)"""
         client_normalized = self._normalize_text(client_name)
         project_normalized = self._normalize_text(project_title)
 
@@ -101,25 +101,18 @@ class DatabaseManager:
                 """, (client_normalized, project_normalized))
                 row = cursor.fetchone()
                 if row:
-                    print(f"✅ Found existing RFP: {row[0]}")
                     return row[0]
+
         return None
 
     def find_existing_rfp_by_title(self, title: str) -> Optional[str]:
-        """Find existing RFP by normalized title (searches in both client and project fields)"""
-        title_normalized = self._normalize_text(title)
+        """Find existing RFP by title (simplified - Gemini now handles matching)"""
+        if " - " in title:
+            parts = title.split(" - ", 1)
+            client_name = parts[0].strip()
+            project_title = parts[1].strip()
+            return self.find_existing_rfp(client_name, project_title)
 
-        with self._get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    SELECT canonical_rfp_id FROM rfp_lookup
-                    WHERE client_name_normalized LIKE %s
-                    OR project_title_normalized LIKE %s
-                """, (f"%{title_normalized}%", f"%{title_normalized}%"))
-                row = cursor.fetchone()
-                if row:
-                    print(f"✅ Found existing RFP by title: {row[0]}")
-                    return row[0]
         return None
 
     def get_rfp_status_by_title(self, title: str) -> Dict[str, Any]:
