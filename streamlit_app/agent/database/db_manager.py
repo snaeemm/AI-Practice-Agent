@@ -105,6 +105,57 @@ class DatabaseManager:
                     return row[0]
         return None
 
+    def find_existing_rfp_by_title(self, title: str) -> Optional[str]:
+        """Find existing RFP by normalized title (searches in both client and project fields)"""
+        title_normalized = self._normalize_text(title)
+
+        with self._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT canonical_rfp_id FROM rfp_lookup
+                    WHERE client_name_normalized LIKE %s
+                    OR project_title_normalized LIKE %s
+                """, (f"%{title_normalized}%", f"%{title_normalized}%"))
+                row = cursor.fetchone()
+                if row:
+                    print(f"✅ Found existing RFP by title: {row[0]}")
+                    return row[0]
+        return None
+
+    def get_rfp_status_by_title(self, title: str) -> Dict[str, Any]:
+        """
+        Check if RFP exists and what processing has been completed.
+
+        Args:
+            title: RFP title to search for
+
+        Returns:
+            Dict with: exists, rfp_id, title, has_qualification, has_bid_plan
+        """
+        rfp_id = self.find_existing_rfp_by_title(title)
+
+        if not rfp_id:
+            return {
+                'exists': False,
+                'rfp_id': None,
+                'title': None,
+                'has_qualification': False,
+                'has_bid_plan': False
+            }
+
+        rfp_doc = self.get_rfp_document(rfp_id)
+        qual = self.get_qualification_results(rfp_id)
+        deliverables = self.get_rfp_deliverables(rfp_id)
+
+        return {
+            'exists': True,
+            'rfp_id': rfp_id,
+            'title': rfp_doc.get('project_title') if rfp_doc else title,
+            'client_name': rfp_doc.get('client_name') if rfp_doc else None,
+            'has_qualification': bool(qual),
+            'has_bid_plan': bool(deliverables)
+        }
+
     def register_rfp_lookup(
         self,
         rfp_id: str,

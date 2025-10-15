@@ -112,6 +112,50 @@ Output the complete text content:"""
         }
 
 
+def extract_rfp_title(text: str) -> str:
+    """
+    Extract RFP title/name from document text using Gemini.
+
+    Args:
+        text: The RFP document text
+
+    Returns:
+        Extracted title string
+    """
+    try:
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
+        prompt = """Extract the RFP/project title from this document.
+
+Instructions:
+- Look for the main project title, RFP name, or opportunity name
+- Return ONLY the title, nothing else
+- If there's a client name and project, return both: "Client Name - Project Title"
+- Keep it concise (under 100 characters)
+
+Document text:
+{text}
+
+Title:"""
+
+        response = client.models.generate_content(
+            model=model_name,
+            contents=[prompt.format(text=text[:3000])]  # Use first 3000 chars for speed
+        )
+
+        title = response.text.strip() if response and hasattr(response, 'text') else "Untitled RFP"
+
+        # Clean up the title
+        title = title.replace('"', '').replace("'", "").strip()
+
+        print(f"📋 Extracted RFP title: {title}")
+        return title
+
+    except Exception as e:
+        print(f"⚠️ Failed to extract title: {e}")
+        return "Untitled RFP"
+
+
 def cleanup_gemini_file(file_uri: str):
     """
     Delete a file from Gemini File API.

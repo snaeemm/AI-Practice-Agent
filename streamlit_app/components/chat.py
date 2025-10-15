@@ -1,6 +1,7 @@
 import streamlit as st
 from agent.agent import root_agent
-from agent.file_processor import extract_document_text, cleanup_gemini_file
+from agent.file_processor import extract_document_text, cleanup_gemini_file, extract_rfp_title
+from agent.database.db_manager import DatabaseManager
 from google.adk.runners import Runner
 from google.adk.sessions import DatabaseSessionService
 from google.genai import types
@@ -255,12 +256,35 @@ def render_chat(session):
                 st.session_state.uploading_in_progress = False  # NEW: Unlock chat
 
                 if extraction_result and extraction_result['status'] == 'success':
+                    # Extract title and check database
+                    with st.spinner("🔍 Checking for duplicates..."):
+                        rfp_title = extract_rfp_title(extraction_result['text'])
+                        db = DatabaseManager()
+                        status = db.get_rfp_status_by_title(rfp_title)
+
                     st.session_state.pending_extraction = {
                         'filename': extraction_result['filename'],
                         'text': extraction_result['text'],
-                        'file_uri': extraction_result.get('file_uri')
+                        'file_uri': extraction_result.get('file_uri'),
+                        'rfp_title': rfp_title,
+                        'existing_rfp_id': status.get('rfp_id'),
+                        'has_qualification': status.get('has_qualification', False),
+                        'has_bid_plan': status.get('has_bid_plan', False)
                     }
+
                     st.success(f"✅ Document processed: {extraction_result['filename']}")
+
+                    # Show status if RFP exists
+                    if status.get('exists'):
+                        st.warning(f"⚠️ This RFP already exists: **{rfp_title}**")
+                        status_parts = []
+                        if status.get('has_qualification'):
+                            status_parts.append("✓ Qualification")
+                        if status.get('has_bid_plan'):
+                            status_parts.append("✓ Bid Plan")
+                        if status_parts:
+                            st.info(f"Status: {', '.join(status_parts)}")
+
                     st.info("💬 Add your instructions below and send")
                 else:
                     error_msg = extraction_result.get('error', 'Unknown error') if extraction_result else 'Unknown error'
@@ -287,11 +311,22 @@ def render_chat(session):
                 extraction = st.session_state.pending_extraction
                 st.session_state.show_uploader = False
 
+                # Build metadata section
+                metadata = f"""[RFP_METADATA]
+rfp_title: {extraction.get('rfp_title', 'Unknown')}
+existing_rfp_id: {extraction.get('existing_rfp_id', 'null')}
+has_qualification: {extraction.get('has_qualification', False)}
+has_bid_plan: {extraction.get('has_bid_plan', False)}
+[/RFP_METADATA]"""
+
                 # Full merged for agent (private, not shown in chat)
                 merged_message = f"""📎 Document: {extraction['filename']}
 
-DOCUMENT CONTENT:
+{metadata}
+
+[FULL_DOCUMENT]
 {extraction['text']}
+[/FULL_DOCUMENT]
 
 ---
 USER REQUEST:

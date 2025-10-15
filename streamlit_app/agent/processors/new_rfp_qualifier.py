@@ -1064,7 +1064,7 @@ def process_rfp_qualification(pdf_input: Optional[str] = None, user_context: Opt
             project_title=project_title,
             pdf_path=None,
             submission_deadline=submission_deadline,
-            check_duplicates=True
+            check_duplicates=False
         )
 
         # If duplicate found, use the existing RFP ID
@@ -1187,7 +1187,7 @@ def process_rfp_qualification(pdf_input: Optional[str] = None, user_context: Opt
             project_title=project_title,
             pdf_path=None,
             submission_deadline=submission_deadline,
-            check_duplicates=True
+            check_duplicates=False
         )
 
         # If duplicate found, use the existing RFP ID
