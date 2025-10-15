@@ -49,44 +49,9 @@ def tool_qualify_rfp(context: Optional[str] = None, pdf_path: Optional[str] = No
             user_context = UserContext(rfp_content=context)
             pdf_path = None  # Ignore pdf_path if context is provided
 
-        # STEP 1: Quick extraction to get client/project names for duplicate check
-        print("🔍 Checking if RFP already qualified...")
-        from .processors.new_rfp_qualifier import extract_rfp_data
-        rfp_data_check, _, _ = extract_rfp_data(None, user_context)
-
-        if rfp_data_check and rfp_data_check.client_and_opportunity:
-            client_name = rfp_data_check.client_and_opportunity.value if rfp_data_check.client_and_opportunity.value else "Unknown"
-            project_title = client_name  # Use same for lookup
-
-            # Check if already exists
-            existing_rfp_id = db.find_existing_rfp(client_name, project_title)
-            if existing_rfp_id:
-                # Check if already qualified
-                existing_qual = db.get_qualification_results(existing_rfp_id)
-                if existing_qual:
-                    print(f"✅ RFP already qualified: {existing_rfp_id}")
-                    print("⚠️  Skipping re-qualification - returning existing results")
-
-                    # Return existing qualification data
-                    report_data = existing_qual.get('qualification_report', {})
-                    return {
-                        'success': True,
-                        'message': f'RFP already qualified (using existing): {existing_rfp_id}',
-                        'rfp_id': existing_rfp_id,
-                        'already_processed': True,
-                        'total_score': report_data.get('total_score'),
-                        'threshold': report_data.get('threshold'),
-                        'qualifies': report_data.get('qualifies'),
-                        'decision': 'PURSUE' if report_data.get('qualifies') else 'DECLINE',
-                        'executive_summary': report_data.get('executive_summary'),
-                        'recommendations': report_data.get('recommendations', []),
-                        'rfp_classification': report_data.get('rfp_classification'),
-                        'analyses': report_data.get('analyses', []),
-                        'qualification_context': report_data.get('qualification_context')
-                    }
-
-        # STEP 2: Not qualified yet, proceed with qualification
-        print("🚀 Proceeding with new qualification...")
+        # NOTE: Duplicate detection is handled by the processor after proper extraction
+        # This ensures we have accurate client/project data before deduplication
+        print("🚀 Proceeding with qualification...")
 
         # Determine pdf_base for file naming
         if pdf_path:
@@ -234,42 +199,8 @@ def tool_plan_bid_sections(context: Optional[str] = None, pdf_path: Optional[str
                     'assignments': existing_assignments.get('assignment_report', {}).get('assignments', [])
                 }
 
-        # STEP 2: Not yet planned, or no rfp_id provided - check by client/project names
-        if not rfp_id and context:
-            print("🔍 Checking if RFP already has bid plan (by client/project)...")
-            from .processors.new_rfp_qualifier import extract_rfp_data
-            rfp_data_check, _, _ = extract_rfp_data(None, user_context)
-
-            if rfp_data_check and rfp_data_check.client_and_opportunity:
-                client_name = rfp_data_check.client_and_opportunity.value if rfp_data_check.client_and_opportunity.value else "Unknown"
-                project_title = client_name
-
-                # Check if already exists
-                existing_rfp_id = db.find_existing_rfp(client_name, project_title)
-                if existing_rfp_id:
-                    # Check if already has bid plan
-                    existing_deliverables = db.get_rfp_deliverables(existing_rfp_id)
-                    existing_assignments = db.get_rfp_assignments(existing_rfp_id)
-
-                    if existing_deliverables and existing_assignments:
-                        print(f"✅ Bid plan already exists: {existing_rfp_id}")
-                        print("⚠️  Skipping re-planning - returning existing results")
-
-                        return {
-                            'success': True,
-                            'message': f'Bid plan already exists (using existing): {existing_rfp_id}',
-                            'rfp_id': existing_rfp_id,
-                            'already_processed': True,
-                            'client_and_opportunity': existing_deliverables.get('client_and_opportunity'),
-                            'total_deliverables': existing_assignments.get('total_deliverables'),
-                            'granite_assigned': existing_assignments.get('granite_assigned'),
-                            'partner_assigned': existing_assignments.get('partner_assigned'),
-                            'assignments': existing_assignments.get('assignment_report', {}).get('assignments', [])
-                        }
-                    else:
-                        # Exists but no bid plan yet - use the existing rfp_id
-                        rfp_id = existing_rfp_id
-                        print(f"🔄 Using existing rfp_id (no bid plan yet): {rfp_id}")
+        # NOTE: Duplicate detection is handled by the processor after proper extraction
+        # This ensures we have accurate client/project data before deduplication
 
         # STEP 3: Proceed with bid planning
         print("🚀 Proceeding with new bid planning...")
