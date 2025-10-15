@@ -23,7 +23,7 @@ apply_custom_styles()
 if not require_auth():
     st.stop()
 
-render_sidebar()
+render_sidebar("download")
 
 st.title("📥 Download Reports")
 st.markdown("---")

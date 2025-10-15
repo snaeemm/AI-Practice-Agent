@@ -1,6 +1,7 @@
 import streamlit as st
 from auth import require_auth
 from styles import apply_custom_styles
+from components.sidebar import render_sidebar
 
 st.set_page_config(page_title="Help - GRANITE", page_icon="❓")
 
@@ -8,6 +9,8 @@ apply_custom_styles()
 
 if not require_auth():
     st.stop()
+
+render_sidebar("help")
 
 st.title("❓ Help & User Guide")
 st.markdown("### Welcome to GRANITE - Bid Assistant")

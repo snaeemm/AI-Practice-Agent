@@ -19,8 +19,31 @@ def apply_custom_styles():
 .stMarkdown div,
 .stMarkdown span,
 .stMarkdown li,
-.stMarkdown h1, h2, h3, h4, h5, h6 {
+.stMarkdown h1,
+.stMarkdown h2,
+.stMarkdown h3,
+.stMarkdown h4,
+.stMarkdown h5,
+.stMarkdown h6,
+h1, h2, h3, h4, h5, h6 {
     color: #ffffff !important;
+}
+
+/* st.metric styling */
+[data-testid="stMetricLabel"],
+[data-testid="stMetricValue"],
+[data-testid="stMetricDelta"] {
+    color: #ffffff !important;
+}
+
+[data-testid="stMetricLabel"] > div,
+[data-testid="stMetricValue"] > div {
+    color: #ffffff !important;
+}
+
+/* Caption text */
+.stCaption, [data-testid="stCaption"] {
+    color: #aaaaaa !important;
 }
 
 section[data-testid="stSidebar"] {

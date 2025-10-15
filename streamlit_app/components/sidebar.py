@@ -103,46 +103,88 @@ def render_session_info(session):
                 st.rerun()
 
 
-def render_sidebar():
+def render_dashboard_sidebar(username):
+    """Sidebar for RFP Dashboard - shows RFP list for quick navigation"""
+    from agent.database.db_manager import DatabaseManager
+
+    st.markdown("### 📊 Quick Navigation")
+
+    db = DatabaseManager()
+    rfps = db.list_recent_rfps(limit=20)
+
+    if rfps:
+        for rfp in rfps:
+            rfp_id = rfp.get('rfp_id')
+            project_title = rfp.get('project_title', 'No Title')
+
+            # Create compact button with truncated title
+            button_label = project_title[:30] + "..." if len(project_title) > 30 else project_title
+            if st.button(button_label, key=f"nav_{rfp_id}", use_container_width=True, help=project_title):
+                st.session_state.selected_rfp = rfp_id
+                st.rerun()
+    else:
+        st.info("No RFPs found")
+
+
+def render_sidebar(page_context="default"):
+    """Render sidebar based on page context
+
+    Args:
+        page_context: "agent", "dashboard", "download", "help"
+    """
     with st.sidebar:
         st.title("🎯 Bid Assistant")
-
 
         username = render_user_section()
 
         st.divider()
 
-        sessions = list_sessions(username)
+        # Show different content based on page context
+        if page_context == "dashboard":
+            # Dashboard: Show RFP quick nav
+            render_dashboard_sidebar(username)
+            st.divider()
+            render_user_actions()
+            return None
 
-        render_session_selector(username, sessions)
+        elif page_context in ["download", "help"]:
+            # Minimal sidebar: just user actions
+            render_user_actions()
+            return None
 
-        st.divider()
-
-        render_new_session_form(username)
-
-        if 'session_id' not in st.session_state:
-            session = create_session(username, f"Session {len(sessions) + 1}")
-            st.session_state.session_id = session.session_id
-            st.session_state.session_object = session
-            return session
         else:
-            try:
-                if 'session_object' not in st.session_state:
-                    session = load_session(st.session_state.session_id)
-                    st.session_state.session_object = session
-                else:
-                    session = st.session_state.session_object
+            # Agent page: Full session management
+            sessions = list_sessions(username)
 
-                st.divider()
+            render_session_selector(username, sessions)
 
-                render_session_info(session)
+            st.divider()
 
-                st.divider()
+            render_new_session_form(username)
 
-                render_user_actions()
-
+            if 'session_id' not in st.session_state:
+                session = create_session(username, f"Session {len(sessions) + 1}")
+                st.session_state.session_id = session.session_id
+                st.session_state.session_object = session
                 return session
-            except Exception as e:
-                st.error(f"❌ Error loading session: {e}")
-                del st.session_state.session_id
-                st.rerun()
+            else:
+                try:
+                    if 'session_object' not in st.session_state:
+                        session = load_session(st.session_state.session_id)
+                        st.session_state.session_object = session
+                    else:
+                        session = st.session_state.session_object
+
+                    st.divider()
+
+                    render_session_info(session)
+
+                    st.divider()
+
+                    render_user_actions()
+
+                    return session
+                except Exception as e:
+                    st.error(f"❌ Error loading session: {e}")
+                    del st.session_state.session_id
+                    st.rerun()
