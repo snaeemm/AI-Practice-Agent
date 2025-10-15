@@ -877,3 +877,132 @@ def tool_download_bid_plan_report(rfp_id: str) -> Dict[str, Any]:
 #             'error': str(e),
 #             'message': f'Failed to generate report: {str(e)}'
 #         }
+
+
+def tool_generate_client_brief(context: Optional[str] = None, file_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Generate a structured client brief from meeting notes.
+
+    Accepts meeting notes as text or uploaded document (.txt, .docx, .pdf).
+    Extracts client information, business goals, challenges, and generates
+    strategic recommendations for Granite MENA opportunities.
+
+    Args:
+        context: Meeting notes as text (preferred method)
+        file_path: Path to uploaded document with meeting notes (fallback)
+
+    Returns:
+        Dictionary with:
+        - success: True/False
+        - brief_id: Database ID of saved brief
+        - client_name: Extracted client name
+        - message: Success or error message
+
+    Example:
+        tool_generate_client_brief(context="Met with ABC Corp. They need digital transformation...")
+    """
+    try:
+        from pathlib import Path
+        from .file_processor import extract_document_text
+        from .processors.client_brief_processor import (
+            extract_client_brief_from_notes,
+            save_client_brief_to_db
+        )
+        from .database.db_manager import DatabaseManager
+
+        if not context and not file_path:
+            return {
+                'success': False,
+                'error': 'Missing input',
+                'message': 'Either context or file_path must be provided'
+            }
+
+        meeting_notes = context
+
+        if file_path and not context:
+            print(f"📄 Extracting text from file: {file_path}")
+            extraction_result = extract_document_text(file_path)
+
+            if extraction_result['status'] != 'success':
+                return {
+                    'success': False,
+                    'error': extraction_result.get('error', 'File extraction failed'),
+                    'message': f"Failed to extract text from file: {extraction_result.get('error')}"
+                }
+
+            meeting_notes = extraction_result['text']
+            print(f"✅ Extracted {len(meeting_notes)} characters from file")
+
+        if not meeting_notes or len(meeting_notes.strip()) < 50:
+            return {
+                'success': False,
+                'error': 'Insufficient content',
+                'message': 'Meeting notes are too short or empty. Please provide more detail.'
+            }
+
+        print("🔍 Fetching Granite capabilities and partners...")
+        db_manager = DatabaseManager()
+
+        granite_caps_data = db.get_capabilities_data()
+        granite_capabilities = granite_caps_data.get('granite_mena', []) if granite_caps_data else []
+
+        partners_caps_data = db.get_capabilities_data()
+        partners_data = partners_caps_data.get('partners', []) if partners_caps_data else []
+
+        print(f"📊 Extracting client brief from {len(meeting_notes)} characters of notes...")
+        client_brief = extract_client_brief_from_notes(
+            meeting_notes=meeting_notes,
+            granite_capabilities=granite_capabilities[:20],
+            partners_data=partners_data[:30],
+            past_rfps=None
+        )
+
+        client_name = client_brief.client_overview.organization_overview or "Unknown Client"
+        if client_brief.client_overview.context:
+            import re
+            match = re.search(r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b', client_brief.client_overview.context)
+            if match:
+                client_name = match.group(1)
+
+        past_rfps = db_manager.get_client_past_rfps(client_name, limit=5)
+        if past_rfps:
+            print(f"📋 Found {len(past_rfps)} past RFPs for {client_name}")
+            client_brief = extract_client_brief_from_notes(
+                meeting_notes=meeting_notes,
+                granite_capabilities=granite_capabilities[:20],
+                partners_data=partners_data[:30],
+                past_rfps=past_rfps
+            )
+
+        print(f"💾 Saving client brief to database...")
+        brief_id = save_client_brief_to_db(
+            client_name=client_name,
+            meeting_notes=meeting_notes,
+            brief_data=client_brief,
+            meeting_date=None,
+            created_by=None
+        )
+
+        return {
+            'success': True,
+            'brief_id': brief_id,
+            'client_name': client_name,
+            'message': f'✅ Client brief generated and saved (ID: {brief_id}). Client: {client_name}. Access it from the Client Brief page.',
+            'brief_preview': {
+                'stakeholders_count': len(client_brief.client_overview.stakeholders),
+                'business_goals_count': len(client_brief.client_overview.business_goals),
+                'quick_wins_count': len(client_brief.granite_opportunity.quick_wins),
+                'value_mappings_count': len(client_brief.granite_opportunity.value_mappings)
+            }
+        }
+
+    except Exception as e:
+        import traceback
+        print(f"❌ Error generating client brief: {e}")
+        traceback.print_exc()
+        return {
+            'success': False,
+            'error': str(e),
+            'message': f'Failed to generate client brief: {str(e)}'
+        }
+

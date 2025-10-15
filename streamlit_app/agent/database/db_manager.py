@@ -898,3 +898,75 @@ class DatabaseManager:
                 if row and row[0]:
                     return bytes(row[0])
                 return None
+
+    # ==================== Client Briefs ====================
+
+    def save_client_brief(
+        self,
+        client_name: str,
+        meeting_notes: str,
+        brief_data: Dict[str, Any],
+        meeting_date: Optional[datetime] = None,
+        created_by: Optional[str] = None
+    ) -> int:
+        """Save client brief to database"""
+        with self._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO client_briefs
+                    (client_name, meeting_date, meeting_notes, brief_data, created_by)
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING id
+                """, (client_name, meeting_date, meeting_notes, Json(brief_data), created_by))
+                conn.commit()
+                brief_id = cursor.fetchone()[0]
+                print(f"✅ Saved client brief ID: {brief_id}")
+                return brief_id
+
+    def get_client_brief(self, brief_id: int) -> Optional[Dict[str, Any]]:
+        """Get a single client brief by ID"""
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT * FROM client_briefs
+                    WHERE id = %s
+                """, (brief_id,))
+                row = cursor.fetchone()
+                return dict(row) if row else None
+
+    def list_client_briefs(self, client_name: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+        """List client briefs, optionally filtered by client name"""
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                if client_name:
+                    cursor.execute("""
+                        SELECT * FROM client_briefs
+                        WHERE client_name ILIKE %s
+                        ORDER BY created_date DESC LIMIT %s
+                    """, (f'%{client_name}%', limit))
+                else:
+                    cursor.execute("""
+                        SELECT * FROM client_briefs
+                        ORDER BY created_date DESC LIMIT %s
+                    """, (limit,))
+                return [dict(row) for row in cursor.fetchall()]
+
+    def delete_client_brief(self, brief_id: int) -> bool:
+        """Delete a client brief"""
+        with self._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM client_briefs WHERE id = %s", (brief_id,))
+                conn.commit()
+                return cursor.rowcount > 0
+
+    def get_client_past_rfps(self, client_name: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get past RFPs for a specific client"""
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT rfp_id, client_name, project_title, status, submission_deadline, processed_date
+                    FROM rfp_documents
+                    WHERE client_name ILIKE %s
+                    ORDER BY processed_date DESC LIMIT %s
+                """, (f'%{client_name}%', limit))
+                return [dict(row) for row in cursor.fetchall()]

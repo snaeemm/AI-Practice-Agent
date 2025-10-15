@@ -6,7 +6,8 @@ load_dotenv()
 
 from agent.tools import (
     tool_qualify_rfp,
-    tool_plan_bid_sections
+    tool_plan_bid_sections,
+    tool_generate_client_brief
 )
 from agent.prompts import SYSTEM_PROMPT
 from agent.database.database_agent import database_agent
@@ -62,7 +63,8 @@ root_agent = LlmAgent(
     instruction=SYSTEM_PROMPT,
     tools=[
         tool_qualify_rfp,
-        tool_plan_bid_sections
+        tool_plan_bid_sections,
+        tool_generate_client_brief
     ],
     sub_agents=[
         database_agent
