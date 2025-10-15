@@ -730,6 +730,18 @@ class DatabaseManager:
                 conn.commit()
                 return cursor.fetchone()[0]
 
+    def get_capabilities_match(self, rfp_id: str) -> Optional[Dict[str, Any]]:
+        """Get capabilities match data for a specific RFP"""
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT * FROM capabilities_match
+                    WHERE rfp_id = %s
+                    ORDER BY analysis_date DESC LIMIT 1
+                """, (rfp_id,))
+                row = cursor.fetchone()
+                return dict(row) if row else None
+
     # ==================== Bid History Insights ====================
 
     def save_bid_insight(self, rfp_id: str, insight_data: Dict[str, Any]) -> int:

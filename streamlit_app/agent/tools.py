@@ -11,6 +11,7 @@ load_dotenv()
 from agent.database.db_singleton import get_db
 from agent.database.db_manager import DatabaseManager # Added for fetching data
 import io # Added for byte stream handling
+from agent.config.settings import settings # Import settings
 
 db = get_db()
 
@@ -943,10 +944,10 @@ def tool_generate_client_brief(context: Optional[str] = None, file_path: Optiona
         print("🔍 Fetching Granite capabilities and partners...")
         db_manager = DatabaseManager()
 
-        granite_caps_data = db.get_capabilities_data()
+        granite_caps_data = settings.get_capabilities_data()
         granite_capabilities = granite_caps_data.get('granite_mena', []) if granite_caps_data else []
 
-        partners_caps_data = db.get_capabilities_data()
+        partners_caps_data = settings.get_capabilities_data()
         partners_data = partners_caps_data.get('partners', []) if partners_caps_data else []
 
         print(f"📊 Extracting client brief from {len(meeting_notes)} characters of notes...")
