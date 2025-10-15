@@ -143,6 +143,32 @@ else:
                 else:
                     st.warning("❌ No Bid Plan Data")
 
+                st.markdown("---")
+                st.markdown("#### 🗑️ Delete RFP")
+                if st.button("🗑️ Delete This RFP", key=f"delete_{rfp_id}", type="secondary", use_container_width=True):
+                    if 'confirm_delete' not in st.session_state:
+                        st.session_state.confirm_delete = {}
+                    st.session_state.confirm_delete[rfp_id] = True
+
+                if st.session_state.get('confirm_delete', {}).get(rfp_id, False):
+                    st.warning("⚠️ **Are you sure?** This will permanently delete all qualification data, bid plans, and reports.")
+                    col_d1, col_d2 = st.columns(2)
+                    with col_d1:
+                        if st.button("✅ Yes, Delete", key=f"confirm_delete_{rfp_id}", type="primary"):
+                            with st.spinner("Deleting RFP..."):
+                                result = db.delete_rfp_document(rfp_id)
+                                if result.get('success'):
+                                    st.success(f"✅ {result.get('message')}")
+                                    if 'confirm_delete' in st.session_state:
+                                        st.session_state.confirm_delete.pop(rfp_id, None)
+                                    st.rerun()
+                                else:
+                                    st.error(f"❌ {result.get('message')}")
+                    with col_d2:
+                        if st.button("❌ Cancel", key=f"cancel_delete_{rfp_id}"):
+                            st.session_state.confirm_delete.pop(rfp_id, None)
+                            st.rerun()
+
             st.markdown("---")
 
 st.markdown("### 📊 Report Types")

@@ -204,12 +204,28 @@ def render_chat(session):
 
     if st.session_state.get('show_uploader', False):
         with st.expander("📤 Upload Document", expanded=True):
+
+            # Inject CSS to make uploader label white
+            st.markdown(
+                """
+                <style>
+                    /* Make file uploader label white */
+                    div[data-testid="stFileUploader"] label {
+                        color: white !important;
+                    }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
             uploader_key = st.session_state.get('uploader_key', 0)
+
             uploaded_file = st.file_uploader(
                 "Choose a file (PDF, DOCX, XLSX, etc.)",
                 type=['pdf', 'docx', 'xlsx', 'txt', 'pptx'],
                 key=f"file_uploader_{uploader_key}"
             )
+
 
             if uploaded_file:
                 st.session_state.pending_file = uploaded_file

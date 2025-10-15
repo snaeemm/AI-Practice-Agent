@@ -163,7 +163,8 @@ def tool_plan_bid_sections(context: Optional[str] = None, pdf_path: Optional[str
 
     Priority:
     1. Context (preferred): Pre-extracted document text from UI or user-provided text
-    2. PDF path (legacy): For existing FILES_DIR PDFs only
+    2. RFP ID: Fetch document from database using rfp_id
+    3. PDF path (legacy): For existing FILES_DIR PDFs only
 
     Args:
         context: Pre-extracted RFP text content (preferred method)
@@ -179,12 +180,29 @@ def tool_plan_bid_sections(context: Optional[str] = None, pdf_path: Optional[str
         from .processors.new_rfp_qualifier import UserContext
 
         # Validate that at least one input is provided
-        if not context and not pdf_path:
+        if not context and not pdf_path and not rfp_id:
             return {
                 'success': False,
                 'error': 'Missing input',
-                'message': 'Either context or pdf_path must be provided'
+                'message': 'Either context, pdf_path, or rfp_id must be provided'
             }
+
+        # If only rfp_id is provided, fetch context from database
+        if rfp_id and not context and not pdf_path:
+            print(f"🔍 Fetching RFP document from database: {rfp_id}")
+            from .database.db_manager import DatabaseManager
+            db_manager = DatabaseManager()
+            raw_text = db_manager.get_raw_document_text(rfp_id)
+
+            if not raw_text:
+                return {
+                    'success': False,
+                    'error': 'RFP document not found',
+                    'message': f'No document text found for rfp_id: {rfp_id}. The RFP may not have been qualified yet, or the document was not saved to the database.'
+                }
+
+            context = raw_text
+            print(f"✅ Retrieved {len(raw_text)} characters from database")
 
         # Prioritize context over pdf_path
         user_context = None

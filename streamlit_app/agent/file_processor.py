@@ -1,12 +1,12 @@
 import os
 from pathlib import Path
 from typing import Dict, Any
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 SUPPORTED_EXTENSIONS = ['.pdf', '.docx', '.xlsx', '.pptx', '.txt', '.doc', '.xls', '.ppt']
 MAX_FILE_SIZE_MB = 15
@@ -64,10 +64,10 @@ def extract_document_text(file_path: str) -> Dict[str, Any]:
             }
 
         print(f"📤 Uploading {path.name} to Gemini File API...")
-        uploaded_file = genai.upload_file(str(path))
+        uploaded_file = client.files.upload(file=str(path))
 
         print(f"🤖 Extracting text from {path.name}...")
-        model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-2.5-flash"))
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
         prompt = """Extract ALL text content from this document.
 
@@ -80,12 +80,15 @@ Instructions:
 
 Output the complete text content:"""
 
-        response = model.generate_content([uploaded_file, prompt])
+        response = client.models.generate_content(
+            model=model_name,
+            contents=[prompt, uploaded_file]
+        )
 
         extracted_text = response.text if response and hasattr(response, 'text') else ""
 
         if not extracted_text.strip():
-            genai.delete_file(uploaded_file.name)
+            client.files.delete(name=uploaded_file.name)
             return {
                 'status': 'failed',
                 'error': 'No text could be extracted from the document',
@@ -118,7 +121,7 @@ def cleanup_gemini_file(file_uri: str):
     """
     try:
         if file_uri:
-            genai.delete_file(file_uri)
+            client.files.delete(name=file_uri)
             print(f"🗑️ Cleaned up Gemini file: {file_uri}")
     except Exception as e:
         print(f"⚠️ Failed to cleanup Gemini file {file_uri}: {e}")

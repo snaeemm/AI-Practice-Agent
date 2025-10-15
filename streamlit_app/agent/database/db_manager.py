@@ -204,6 +204,51 @@ class DatabaseManager:
                 """, (status, rfp_id))
                 conn.commit()
 
+    def delete_rfp_document(self, rfp_id: str) -> Dict[str, Any]:
+        """
+        Delete RFP document and all related data (CASCADE).
+
+        This will delete:
+        - rfp_documents (main record)
+        - rfp_raw_data
+        - qualification_results
+        - rfp_deliverables
+        - rfp_assignments
+        - rfp_lookup
+        - generated_files
+        - rfp_session_rfps associations
+
+        Args:
+            rfp_id: The RFP ID to delete
+
+        Returns:
+            Dict with success status and count of deleted records
+        """
+        with self._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT rfp_id, client_name, project_title FROM rfp_documents WHERE rfp_id = %s", (rfp_id,))
+                rfp_record = cursor.fetchone()
+
+                if not rfp_record:
+                    return {
+                        'success': False,
+                        'error': 'RFP not found',
+                        'message': f'No RFP found with ID: {rfp_id}'
+                    }
+
+                _, client_name, project_title = rfp_record
+
+                cursor.execute("DELETE FROM rfp_documents WHERE rfp_id = %s", (rfp_id,))
+                conn.commit()
+
+                return {
+                    'success': True,
+                    'rfp_id': rfp_id,
+                    'client_name': client_name,
+                    'project_title': project_title,
+                    'message': f'Successfully deleted RFP: {rfp_id} ({client_name})'
+                }
+
     # ==================== RFP Raw Data (Complete RFPData model) ====================
 
     def save_rfp_raw_data(self, rfp_id: str, rfp_data: Dict[str, Any]) -> int:

@@ -24,7 +24,7 @@ Systematically analyze RFPs, qualify opportunities for **maximum ROI**, and deve
 **Core Processing:**
 - `list_available_rfps()` - List RFP files (show ONLY number, filename, size - NO paths)
 - `tool_qualify_rfp(context, pdf_path)` - Qualify RFP against strategic matrix (GO/NO-GO decision)
-- `tool_plan_bid_sections(context, pdf_path, rfp_id)` - Create bid plan with assignments (ALWAYS pass rfp_id from qualification)
+- `tool_plan_bid_sections(context, pdf_path, rfp_id)` - Create bid plan with assignments (ALWAYS pass BOTH context AND rfp_id from qualification)
 
 **Database Agent (Complete Access):**
 - `database_manager` - Your specialized database agent with FULL access to all RFP data
@@ -50,6 +50,7 @@ Systematically analyze RFPs, qualify opportunities for **maximum ROI**, and deve
 
 **STEP 2: Qualification**
 1. **ONLY AFTER user confirms**: Call `tool_qualify_rfp(context=<user_message>)`
+   - **CRITICAL**: Save the RFP context (user message with document content) for bid planning
 2. **Query History**: Call `database_manager` to retrieve historical insights for this client/industry
 3. **Present Results**: Show GO/NO-GO decision with qualification summary and historical insights
 
@@ -58,7 +59,9 @@ Systematically analyze RFPs, qualify opportunities for **maximum ROI**, and deve
 2. **WAIT for explicit user confirmation**
 
 **STEP 4: Bid Planning**
-1. **ONLY AFTER user confirms**: Call `tool_plan_bid_sections(rfp_id=<from_qualification>)`
+1. **ONLY AFTER user confirms**: Call `tool_plan_bid_sections(context=<saved_rfp_context>, rfp_id=<from_qualification>)`
+   - **CRITICAL**: Pass the SAME context used in qualification (contains full RFP document text)
+   - The context parameter is REQUIRED - do not omit it
 2. **Synthesize**: Provide 3-5 key differentiators, recommended pricing model, high-risk dependencies
 
 **For Strategic Questions:**
