@@ -10,6 +10,7 @@ from components.report_viewers import (
 from agent.database.db_manager import DatabaseManager
 from styles import apply_custom_styles
 from auth import require_auth
+from datetime import timezone, timedelta
 
 st.set_page_config(
     page_title="RFP Dashboard - GRANITE",
@@ -64,7 +65,11 @@ if not st.session_state.selected_rfp:
             # Format date
             if processed_date:
                 try:
-                    date_str = processed_date.strftime("%B %d, %Y at %H:%M")
+                    uae_tz = timezone(timedelta(hours=4))
+                    if processed_date.tzinfo is None:
+                        processed_date = processed_date.replace(tzinfo=timezone.utc)
+                    uae_date = processed_date.astimezone(uae_tz)
+                    date_str = uae_date.strftime("%B %d, %Y at %H:%M")
                 except:
                     date_str = str(processed_date)
             else:

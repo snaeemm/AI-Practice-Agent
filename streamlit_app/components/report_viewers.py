@@ -1,6 +1,7 @@
 import streamlit as st
 from typing import Dict, Any, Optional, List
 import pandas as pd
+from datetime import datetime, timezone, timedelta
 
 def render_star_rating(score: int, max_score: int = 4) -> str:
     """Convert numeric score to star rating"""
@@ -441,7 +442,11 @@ def render_overview_tab(complete_data: Dict[str, Any]):
     with col2:
         processed_date = document.get('processed_date')
         if processed_date:
-            st.metric("Processed Date", processed_date.strftime("%Y-%m-%d"))
+            uae_tz = timezone(timedelta(hours=4))
+            if processed_date.tzinfo is None:
+                processed_date = processed_date.replace(tzinfo=timezone.utc)
+            uae_date = processed_date.astimezone(uae_tz)
+            st.metric("Processed Date", uae_date.strftime("%Y-%m-%d"))
         else:
             st.metric("Processed Date", "—")
 

@@ -7,7 +7,7 @@ from agent.tools import (
     generate_bid_plan_excel_bytes,
     generate_assignment_excel_bytes
 )
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from styles import apply_custom_styles
 from auth import require_auth
 
@@ -46,7 +46,11 @@ else:
 
         if processed_date:
             try:
-                date_str = processed_date.strftime("%Y-%m-%d %H:%M")
+                uae_tz = timezone(timedelta(hours=4))
+                if processed_date.tzinfo is None:
+                    processed_date = processed_date.replace(tzinfo=timezone.utc)
+                uae_date = processed_date.astimezone(uae_tz)
+                date_str = uae_date.strftime("%Y-%m-%d %H:%M")
             except:
                 date_str = str(processed_date)
         else:
