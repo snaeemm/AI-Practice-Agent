@@ -8,18 +8,10 @@ load_dotenv()
 from agent.tools import (
     tool_qualify_rfp,
     tool_plan_bid_sections,
-    tool_query_database,
-    tool_save_bid_insight,
-    tool_get_bid_plan_data,
-    tool_get_qualification_data,
-    tool_update_qualification,
-    tool_update_deliverable,
-    tool_update_assignment,
-    tool_add_deliverable,
-    tool_remove_deliverable,
     tool_generate_report
 )
 from agent.prompts import SYSTEM_PROMPT
+from agent.database.database_agent import database_agent
 
 def list_available_rfps() -> dict:
     """
@@ -74,15 +66,10 @@ root_agent = LlmAgent(
         list_available_rfps,
         tool_qualify_rfp,
         tool_plan_bid_sections,
-        tool_query_database,
-        tool_save_bid_insight,
-        tool_get_bid_plan_data,
-        tool_get_qualification_data,
-        tool_update_qualification,
-        tool_update_deliverable,
-        tool_update_assignment,
-        tool_add_deliverable,
-        tool_remove_deliverable,
+        # database_agent removed from tools
         tool_generate_report
+    ],
+    sub_agents=[
+        database_agent # 🔑 Add the agent here to make it a Subagent
     ]
 )
