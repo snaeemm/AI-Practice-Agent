@@ -286,4 +286,90 @@ section[data-testid="stSidebar"] hr {
     padding: 4px 0 !important;
 }
 
+/* Improve alert boxes text readability while preserving colors */
+[data-testid="stAlert"] {
+    padding: 1rem !important;
+    border-radius: 8px !important;
+}
+
+[data-testid="stAlert"] > div {
+    color: #ffffff !important;
+}
+
+[data-testid="stAlert"] p,
+[data-testid="stAlert"] span,
+[data-testid="stAlert"] div {
+    color: #ffffff !important;
+}
+
+/* Info boxes - blue with light text */
+[data-testid="stAlert"][data-testid*="info"],
+.stAlert-info {
+    background-color: rgba(29, 77, 127, 0.9) !important;
+}
+
+[data-testid="stAlert"][data-testid*="info"] [data-testid="stMarkdownContainer"] p,
+.stAlert-info p {
+    color: #e8f1ff !important;
+    font-weight: 500;
+}
+
+/* Success boxes - keep green */
+[data-testid="stAlert"][data-testid*="success"],
+.stAlert-success {
+    background-color: rgba(39, 114, 60, 0.9) !important;
+    border: 1px solid rgba(76, 175, 80, 0.3) !important;
+}
+
+[data-testid="stAlert"][data-testid*="success"] p,
+.stAlert-success p {
+    color: #c8e6c9 !important;
+    font-weight: 500;
+}
+
+[data-testid="stAlert"][data-testid*="success"] svg,
+.stAlert-success svg {
+    fill: #4caf50 !important;
+}
+
+/* Warning boxes - keep yellow/orange */
+[data-testid="stAlert"][data-testid*="warning"],
+.stAlert-warning {
+    background-color: rgba(120, 81, 17, 0.9) !important;
+    border: 1px solid rgba(255, 193, 7, 0.3) !important;
+}
+
+[data-testid="stAlert"][data-testid*="warning"] p,
+.stAlert-warning p {
+    color: #ffe082 !important;
+    font-weight: 500;
+}
+
+[data-testid="stAlert"][data-testid*="warning"] svg,
+.stAlert-warning svg {
+    fill: #ffc107 !important;
+}
+
+/* Error boxes - keep red */
+[data-testid="stAlert"][data-testid*="error"],
+.stAlert-error {
+    background-color: rgba(120, 29, 29, 0.9) !important;
+    border: 1px solid rgba(244, 67, 54, 0.3) !important;
+}
+
+[data-testid="stAlert"][data-testid*="error"] p,
+.stAlert-error p {
+    color: #ffcdd2 !important;
+    font-weight: 500;
+}
+
+[data-testid="stAlert"][data-testid*="error"] svg,
+.stAlert-error svg {
+    fill: #f44336 !important;
+}
+
+[data-testid="stAlert"] svg {
+    color: #ffffff !important;
+}
+
 </style>""", unsafe_allow_html=True)

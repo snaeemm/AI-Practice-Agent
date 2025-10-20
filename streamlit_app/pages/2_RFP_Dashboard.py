@@ -7,10 +7,19 @@ from components.report_viewers import (
     render_assignments_view,
     render_overview_tab
 )
+from components.edit_components import (
+    render_edit_metadata,
+    render_edit_button,
+    render_qualification_edit_form,
+    render_deliverables_edit_form,
+    render_assignments_edit_form
+)
 from agent.database.db_manager import DatabaseManager
+from agent.database.ui_operations import UIOperations
 from styles import apply_custom_styles
 from auth import require_auth
 from datetime import timezone, timedelta
+import json
 
 st.set_page_config(
     page_title="RFP Dashboard - Granetic",
@@ -26,12 +35,19 @@ if not require_auth():
 
 render_sidebar("dashboard")
 
-# Initialize database
+# Initialize database and UI operations
 db = DatabaseManager()
+ui_ops = UIOperations(db)
 
-# Session state for navigation
+# Session state for navigation and edit modes
 if 'selected_rfp' not in st.session_state:
     st.session_state.selected_rfp = None
+if 'edit_mode_qual' not in st.session_state:
+    st.session_state.edit_mode_qual = False
+if 'edit_mode_deliv' not in st.session_state:
+    st.session_state.edit_mode_deliv = False
+if 'edit_mode_assign' not in st.session_state:
+    st.session_state.edit_mode_assign = False
 
 # Main Dashboard View
 if not st.session_state.selected_rfp:
@@ -150,7 +166,69 @@ else:
     # Tab 2: Qualification
     with tabs[1]:
         if has_qual:
-            render_qualification_view(qualification)
+            # Get edit metadata
+            edit_history = db.get_qualification_edit_history(rfp_id)
+
+            if not st.session_state.edit_mode_qual:
+                # View mode
+                render_qualification_view(qualification)
+
+                # Show edit metadata
+                if edit_history:
+                    st.divider()
+                    render_edit_metadata(
+                        edit_history.get('last_edited_by'),
+                        edit_history.get('last_edited_at')
+                    )
+
+                # Edit button
+                st.divider()
+                if st.button("✏️ Edit Qualification", key="edit_qual_btn"):
+                    st.session_state.edit_mode_qual = True
+                    st.rerun()
+            else:
+                # Edit mode
+                report = qualification.get('qualification_report', {})
+                analyses = report.get('analyses', [])
+                threshold = report.get('threshold', 2.5)
+                max_score = report.get('max_score', 4)
+
+                updated_analyses, updated_threshold, save_clicked = render_qualification_edit_form(
+                    analyses,
+                    threshold,
+                    max_score
+                )
+
+                if save_clicked:
+                    # Prepare updated report
+                    updated_report = dict(report)
+                    updated_report['analyses'] = updated_analyses
+                    updated_report['threshold'] = updated_threshold
+
+                    # Recalculate scores
+                    for analysis in updated_report['analyses']:
+                        weight = analysis.get('weight', 1)
+                        score = analysis.get('score', 0)
+                        analysis['weighted_score'] = (score / max_score) * weight
+
+                    total_score = sum(a.get('weighted_score', 0) for a in updated_report['analyses'])
+                    updated_report['total_score'] = total_score
+                    updated_report['qualifies'] = total_score >= updated_threshold
+
+                    # Save to database
+                    username = st.session_state.user.get('username', 'Unknown')
+                    result = ui_ops.update_qualification_full(
+                        rfp_id,
+                        updated_report,
+                        username
+                    )
+
+                    if result['success']:
+                        st.session_state.edit_mode_qual = False
+                        st.success("✅ Qualification updated successfully!")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ Failed to save: {result.get('message')}")
         else:
             st.warning("❌ This RFP has not been qualified yet.")
             st.info("💡 Upload the RFP document and run qualification to see results here.")
@@ -158,7 +236,66 @@ else:
     # Tab 3: Bid Plan
     with tabs[2]:
         if has_bid:
-            render_bid_plan_view(deliverables)
+            # Get edit metadata
+            edit_history = db.get_deliverables_edit_history(rfp_id)
+
+            if not st.session_state.edit_mode_deliv:
+                # View mode
+                render_bid_plan_view(deliverables)
+
+                # Show edit metadata
+                if edit_history:
+                    st.divider()
+                    render_edit_metadata(
+                        edit_history.get('last_edited_by'),
+                        edit_history.get('last_edited_at')
+                    )
+
+                # Edit button
+                st.divider()
+                if st.button("✏️ Edit Bid Plan", key="edit_deliv_btn"):
+                    st.session_state.edit_mode_deliv = True
+                    st.rerun()
+            else:
+                # Edit mode - load owners list from capabilities
+                try:
+                    capabilities = db.get_config_file('capabilities.json')
+                    owners_list = []
+                    if capabilities:
+                        owners_list.append("Granite MENA")
+                        if 'partners' in capabilities:
+                            for partner in capabilities.get('partners', []):
+                                owners_list.append(partner.get('partner_name', 'Unknown'))
+                    if not owners_list:
+                        owners_list = ["Granite MENA", "Partner A", "Partner B"]
+                except:
+                    owners_list = ["Granite MENA", "Partner A", "Partner B"]
+
+                tech_deliv = deliverables.get('technical_deliverables', [])
+                comm_deliv = deliverables.get('commercial_deliverables', [])
+
+                updated_tech, updated_comm, save_clicked = render_deliverables_edit_form(
+                    tech_deliv,
+                    comm_deliv,
+                    owners_list
+                )
+
+                if save_clicked:
+                    # Save to database
+                    username = st.session_state.user.get('username', 'Unknown')
+                    result = ui_ops.update_deliverables_full(
+                        rfp_id,
+                        updated_tech,
+                        updated_comm,
+                        username
+                    )
+
+                    if result['success']:
+                        st.session_state.edit_mode_deliv = False
+                        st.success("✅ Deliverables updated successfully!")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ Failed to save: {result.get('message')}")
         else:
             st.warning("❌ Bid plan has not been created yet.")
             if has_qual:
@@ -169,7 +306,77 @@ else:
     # Tab 4: Assignments
     with tabs[3]:
         if assignments:
-            render_assignments_view(assignments)
+            # Get edit metadata
+            edit_history = db.get_assignments_edit_history(rfp_id)
+
+            if not st.session_state.edit_mode_assign:
+                # View mode
+                render_assignments_view(assignments)
+
+                # Show edit metadata
+                if edit_history:
+                    st.divider()
+                    render_edit_metadata(
+                        edit_history.get('last_edited_by'),
+                        edit_history.get('last_edited_at')
+                    )
+
+                # Edit button
+                st.divider()
+                if st.button("✏️ Edit Assignments", key="edit_assign_btn"):
+                    st.session_state.edit_mode_assign = True
+                    st.rerun()
+            else:
+                # Edit mode - load owners list from capabilities
+                try:
+                    capabilities = db.get_config_file('capabilities.json')
+                    owners_list = []
+                    if capabilities:
+                        owners_list.append("Granite MENA")
+                        if 'partners' in capabilities:
+                            for partner in capabilities.get('partners', []):
+                                owners_list.append(partner.get('partner_name', 'Unknown'))
+                    if not owners_list:
+                        owners_list = ["Granite MENA", "Partner A", "Partner B"]
+                except:
+                    owners_list = ["Granite MENA", "Partner A", "Partner B"]
+
+                report = assignments.get('assignment_report', {})
+                assignment_list = report.get('assignments', [])
+
+                updated_assignments, save_clicked = render_assignments_edit_form(
+                    assignment_list,
+                    owners_list
+                )
+
+                if save_clicked:
+                    # Prepare updated report
+                    updated_report = dict(report)
+                    updated_report['assignments'] = updated_assignments
+
+                    # Recalculate counts
+                    granite_count = sum(
+                        1 for a in updated_report['assignments']
+                        if 'Granite' in a.get('assigned_owner', '')
+                    )
+                    partner_count = len(updated_report['assignments']) - granite_count
+                    updated_report['granite_assigned'] = granite_count
+                    updated_report['partner_assigned'] = partner_count
+
+                    # Save to database
+                    username = st.session_state.user.get('username', 'Unknown')
+                    result = ui_ops.update_assignments_full(
+                        rfp_id,
+                        updated_report,
+                        username
+                    )
+
+                    if result['success']:
+                        st.session_state.edit_mode_assign = False
+                        st.success("✅ Assignments updated successfully!")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ Failed to save: {result.get('message')}")
         else:
             st.warning("❌ No assignment data available.")
             if has_bid:

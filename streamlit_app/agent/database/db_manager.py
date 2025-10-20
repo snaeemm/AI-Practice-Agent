@@ -1006,3 +1006,77 @@ class DatabaseManager:
                     LIMIT %s
                 """, (f'%{client_name}%', limit))
                 return [dict(row) for row in cursor.fetchall()]
+
+    # ==================== Edit History & Audit Trail ====================
+
+    def get_qualification_edit_history(self, rfp_id: str) -> Optional[List[Dict[str, Any]]]:
+        """Get edit history for qualification results"""
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT edit_history, last_edited_by, last_edited_at
+                    FROM qualification_results
+                    WHERE rfp_id = %s
+                """, (rfp_id,))
+                row = cursor.fetchone()
+                if row:
+                    return {
+                        'edit_history': row.get('edit_history', []),
+                        'last_edited_by': row.get('last_edited_by'),
+                        'last_edited_at': row.get('last_edited_at')
+                    }
+                return None
+
+    def get_deliverables_edit_history(self, rfp_id: str) -> Optional[Dict[str, Any]]:
+        """Get edit history for deliverables"""
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT edit_history, last_edited_by, last_edited_at
+                    FROM rfp_deliverables
+                    WHERE rfp_id = %s
+                """, (rfp_id,))
+                row = cursor.fetchone()
+                if row:
+                    return {
+                        'edit_history': row.get('edit_history', []),
+                        'last_edited_by': row.get('last_edited_by'),
+                        'last_edited_at': row.get('last_edited_at')
+                    }
+                return None
+
+    def get_assignments_edit_history(self, rfp_id: str) -> Optional[Dict[str, Any]]:
+        """Get edit history for assignments"""
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT edit_history, last_edited_by, last_edited_at
+                    FROM rfp_assignments
+                    WHERE rfp_id = %s
+                """, (rfp_id,))
+                row = cursor.fetchone()
+                if row:
+                    return {
+                        'edit_history': row.get('edit_history', []),
+                        'last_edited_by': row.get('last_edited_by'),
+                        'last_edited_at': row.get('last_edited_at')
+                    }
+                return None
+
+    def get_brief_edit_history(self, brief_id: int) -> Optional[Dict[str, Any]]:
+        """Get edit history for client brief"""
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT edit_history, last_edited_by, last_edited_at
+                    FROM client_briefs
+                    WHERE id = %s
+                """, (brief_id,))
+                row = cursor.fetchone()
+                if row:
+                    return {
+                        'edit_history': row.get('edit_history', []),
+                        'last_edited_by': row.get('last_edited_by'),
+                        'last_edited_at': row.get('last_edited_at')
+                    }
+                return None
