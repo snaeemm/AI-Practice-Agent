@@ -12,7 +12,7 @@ from styles import apply_custom_styles
 from auth import require_auth
 
 st.set_page_config(
-    page_title="Download Reports - GRANITE",
+    page_title="Download Reports - Granetic",
     page_icon="📥",
     layout="wide",
     initial_sidebar_state="expanded"

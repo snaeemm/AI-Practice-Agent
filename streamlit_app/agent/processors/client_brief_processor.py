@@ -134,9 +134,27 @@ def extract_client_brief_from_notes(
             context_info += f"- {partner.get('name')} ({partner.get('category')}): {', '.join(partner.get('capabilities', []))}\n"
 
     if past_rfps:
-        context_info += "\n\n### PAST RFPS WITH THIS CLIENT:\n"
+        context_info += "\n\n### PAST ENGAGEMENT HISTORY:\n"
         for rfp in past_rfps[:5]:
-            context_info += f"- {rfp.get('project_title')} (Status: {rfp.get('status', 'Unknown')})\n"
+            title = rfp.get('project_title', 'Unknown')
+            status = rfp.get('status', 'Unknown')
+            qualifies = rfp.get('qualifies', False)
+            score = rfp.get('qualification_score', 0)
+            budget = rfp.get('estimated_budget', 'Unknown')
+            requirements = rfp.get('key_requirements', '')
+
+            # Build summary line
+            summary = f"- {title} | Status: {status} | Won: {qualifies}"
+            if score > 0:
+                summary += f" | Score: {score}"
+            if budget != 'Unknown':
+                summary += f" | Budget: {budget}"
+            if requirements:
+                # Limit requirements to first few items
+                req_list = [r.strip() for r in requirements.split(',')[:3]]
+                summary += f" | Key needs: {', '.join(req_list)}"
+
+            context_info += summary + "\n"
 
     prompt = f"""You are an expert business analyst. Extract structured client brief information from meeting notes.
 

@@ -972,13 +972,37 @@ class DatabaseManager:
                 return cursor.rowcount > 0
 
     def get_client_past_rfps(self, client_name: str, limit: int = 10) -> List[Dict[str, Any]]:
-        """Get past RFPs for a specific client"""
+        """Get past RFPs for a specific client with enriched context (qualification, budget, requirements)"""
         with self._get_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute("""
-                    SELECT rfp_id, client_name, project_title, status, submission_deadline, processed_date
-                    FROM rfp_documents
-                    WHERE client_name ILIKE %s
-                    ORDER BY processed_date DESC LIMIT %s
+                    SELECT
+                        rd.rfp_id,
+                        rd.client_name,
+                        rd.project_title,
+                        rd.status,
+                        rd.submission_deadline,
+                        rd.processed_date,
+                        COALESCE(qr.qualifies, FALSE) as qualifies,
+                        COALESCE(qr.total_score::INTEGER, 0) as qualification_score,
+                        COALESCE(rrd.rfp_data->>'estimated_contract_value', 'Unknown') as estimated_budget,
+                        COALESCE(
+                            ARRAY_TO_STRING(
+                                ARRAY_AGG(DISTINCT (deliverable->>'requirement_text'))
+                                FILTER (WHERE deliverable IS NOT NULL),
+                                ', '
+                            ),
+                            ''
+                        ) as key_requirements
+                    FROM rfp_documents rd
+                    LEFT JOIN qualification_results qr ON rd.rfp_id = qr.rfp_id
+                    LEFT JOIN rfp_raw_data rrd ON rd.rfp_id = rrd.rfp_id
+                    LEFT JOIN rfp_deliverables deliv ON rd.rfp_id = deliv.rfp_id,
+                    JSONB_ARRAY_ELEMENTS(COALESCE(deliv.technical_deliverables, '[]'::jsonb)) as deliverable
+                    WHERE rd.client_name ILIKE %s
+                    GROUP BY rd.rfp_id, rd.client_name, rd.project_title, rd.status, rd.submission_deadline,
+                             rd.processed_date, qr.qualifies, qr.total_score, rrd.rfp_data
+                    ORDER BY rd.processed_date DESC
+                    LIMIT %s
                 """, (f'%{client_name}%', limit))
                 return [dict(row) for row in cursor.fetchall()]

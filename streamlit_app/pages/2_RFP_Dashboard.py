@@ -13,7 +13,7 @@ from auth import require_auth
 from datetime import timezone, timedelta
 
 st.set_page_config(
-    page_title="RFP Dashboard - GRANITE",
+    page_title="RFP Dashboard - Granetic",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"

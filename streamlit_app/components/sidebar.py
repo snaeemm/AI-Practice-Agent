@@ -133,7 +133,7 @@ def render_sidebar(page_context="default"):
         page_context: "agent", "dashboard", "download", "help"
     """
     with st.sidebar:
-        st.title("🎯 Bid Assistant")
+        st.title("⚙️ Granetic")
 
         username = render_user_section()
 

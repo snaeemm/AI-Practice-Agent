@@ -1,6 +1,6 @@
 import streamlit as st
 from agent.agent import root_agent
-from agent.file_processor import extract_document_text, cleanup_gemini_file, extract_rfp_title
+from agent.file_processor import extract_document_text, cleanup_gemini_file, extract_document_metadata, detect_document_type
 from agent.database.db_manager import DatabaseManager
 from google.adk.runners import Runner
 from google.adk.sessions import DatabaseSessionService
@@ -256,37 +256,72 @@ def render_chat(session):
                 st.session_state.uploading_in_progress = False  # NEW: Unlock chat
 
                 if extraction_result and extraction_result['status'] == 'success':
-                    # Extract title and check database
-                    with st.spinner("🔍 Checking for duplicates..."):
+                    # Detect document type and extract metadata
+                    with st.spinner("🔍 Analyzing document..."):
                         db = DatabaseManager()
-                        existing_rfps = db.list_recent_rfps(limit=100)
 
-                        extraction = extract_rfp_title(extraction_result['text'], existing_rfps=existing_rfps)
-                        rfp_title = extraction['title']
-                        matching_rfp_id = extraction['matching_rfp_id']
+                        # Get document type (from PDF extraction or detect from text)
+                        document_type = extraction_result.get('document_type')
+                        if not document_type:
+                            document_type = detect_document_type(extraction_result['text'])
 
-                        print(f"🔍 Extracted title: {rfp_title}")
-                        print(f"🔄 Matching RFP ID: {matching_rfp_id}")
+                        # Fetch appropriate duplicates based on document type
+                        existing_rfps = []
+                        existing_briefs = []
+                        if document_type == "RFP":
+                            existing_rfps = db.list_recent_rfps(limit=100)
+                        elif document_type == "Meeting Notes":
+                            existing_briefs = db.list_client_briefs(limit=100)
+
+                        # Extract metadata with duplicate checking
+                        metadata = extract_document_metadata(
+                            extraction_result['text'],
+                            document_type,
+                            existing_rfps=existing_rfps,
+                            existing_briefs=existing_briefs
+                        )
+
+                        title = metadata['title']
+                        matching_id = metadata['matching_id']
+                        entity_type = metadata['entity_type']
+                        has_qualification = metadata['has_qualification']
+                        has_bid_plan = metadata['has_bid_plan']
+
+                        print(f"🔍 Document type: {document_type}")
+                        print(f"🔍 Extracted title: {title}")
+                        print(f"🔄 Matching {entity_type} ID: {matching_id}")
 
                         # Get status using the matched ID or by title
-                        if matching_rfp_id:
-                            rfp_doc = db.get_rfp_document(matching_rfp_id)
-                            qual = db.get_qualification_results(matching_rfp_id)
-                            deliverables = db.get_rfp_deliverables(matching_rfp_id)
+                        status = {
+                            'exists': False,
+                            'matching_id': None,
+                            'entity_type': entity_type,
+                            'title': None,
+                            'has_qualification': False,
+                            'has_bid_plan': False
+                        }
+
+                        if matching_id and document_type == "RFP":
+                            rfp_doc = db.get_rfp_document(matching_id)
+                            qual = db.get_qualification_results(matching_id)
+                            deliverables = db.get_rfp_deliverables(matching_id)
 
                             status = {
                                 'exists': True,
-                                'rfp_id': matching_rfp_id,
-                                'title': rfp_doc.get('project_title') if rfp_doc else rfp_title,
+                                'matching_id': matching_id,
+                                'entity_type': 'rfp',
+                                'title': rfp_doc.get('project_title') if rfp_doc else title,
                                 'client_name': rfp_doc.get('client_name') if rfp_doc else None,
                                 'has_qualification': bool(qual),
                                 'has_bid_plan': bool(deliverables)
                             }
-                        else:
+                        elif matching_id and document_type == "Meeting Notes":
+                            brief_doc = db.get_client_brief(matching_id)
                             status = {
-                                'exists': False,
-                                'rfp_id': None,
-                                'title': None,
+                                'exists': True,
+                                'matching_id': matching_id,
+                                'entity_type': 'brief',
+                                'title': brief_doc.get('client_name') if brief_doc else title,
                                 'has_qualification': False,
                                 'has_bid_plan': False
                             }
@@ -297,28 +332,33 @@ def render_chat(session):
                         'filename': extraction_result['filename'],
                         'text': extraction_result['text'],
                         'file_uri': extraction_result.get('file_uri'),
-                        'rfp_title': rfp_title,
-                        'existing_rfp_id': status.get('rfp_id'),
+                        'document_type': document_type,
+                        'title': title,
+                        'matching_id': status.get('matching_id'),
+                        'entity_type': entity_type,
                         'has_qualification': status.get('has_qualification', False),
                         'has_bid_plan': status.get('has_bid_plan', False)
                     }
 
-                    print(f"💾 Pending extraction data: rfp_title={rfp_title}, existing_rfp_id={status.get('rfp_id')}, has_qual={status.get('has_qualification')}, has_bid={status.get('has_bid_plan')}")
+                    print(f"💾 Pending extraction data: doc_type={document_type}, title={title}, matching_id={status.get('matching_id')}, entity_type={entity_type}")
 
                     st.success(f"✅ Document processed: {extraction_result['filename']}")
 
-                    # Show status if RFP exists
+                    # Show status based on document type
                     if status.get('exists'):
-                        st.warning(f"⚠️ This RFP already exists: **{rfp_title}**")
-                        status_parts = []
-                        if status.get('has_qualification'):
-                            status_parts.append("✓ Qualification")
-                        if status.get('has_bid_plan'):
-                            status_parts.append("✓ Bid Plan")
-                        if status_parts:
-                            st.info(f"Status: {', '.join(status_parts)}")
+                        if entity_type == 'rfp':
+                            st.warning(f"⚠️ This RFP already exists: **{title}**")
+                            status_parts = []
+                            if status.get('has_qualification'):
+                                status_parts.append("✓ Qualification")
+                            if status.get('has_bid_plan'):
+                                status_parts.append("✓ Bid Plan")
+                            if status_parts:
+                                st.info(f"Status: {', '.join(status_parts)}")
+                        elif entity_type == 'brief':
+                            st.warning(f"⚠️ Client brief already exists for: **{title}**")
 
-                    st.info("💬 Add your instructions below and send")
+                    st.info(f"📋 Document type: {document_type} | 💬 Add your instructions below and send")
                 else:
                     error_msg = extraction_result.get('error', 'Unknown error') if extraction_result else 'Unknown error'
                     st.error(f"⚠️ Extraction failed after {max_retries} attempts: {error_msg}")
@@ -344,12 +384,33 @@ def render_chat(session):
                 extraction = st.session_state.pending_extraction
                 st.session_state.show_uploader = False
 
-                # Build metadata section
-                metadata = f"""[RFP_METADATA]
-rfp_title: {extraction.get('rfp_title', 'Unknown')}
-existing_rfp_id: {extraction.get('existing_rfp_id', 'null')}
+                # Build metadata section based on document type
+                document_type = extraction.get('document_type', 'Other')
+                entity_type = extraction.get('entity_type', 'other')
+
+                if document_type == "RFP" or entity_type == "rfp":
+                    metadata = f"""[RFP_METADATA]
+document_type: RFP
+rfp_title: {extraction.get('title', 'Unknown')}
+existing_rfp_id: {extraction.get('matching_id', 'null')}
 has_qualification: {extraction.get('has_qualification', False)}
 has_bid_plan: {extraction.get('has_bid_plan', False)}
+[/RFP_METADATA]"""
+                elif document_type == "Meeting Notes" or entity_type == "brief":
+                    metadata = f"""[RFP_METADATA]
+document_type: Meeting Notes
+rfp_title: {extraction.get('title', 'Unknown')}
+existing_rfp_id: {extraction.get('matching_id', 'null')}
+has_qualification: false
+has_bid_plan: false
+[/RFP_METADATA]"""
+                else:  # Other
+                    metadata = f"""[RFP_METADATA]
+document_type: Other
+rfp_title: {extraction.get('title', 'Unknown')}
+existing_rfp_id: null
+has_qualification: false
+has_bid_plan: false
 [/RFP_METADATA]"""
 
                 # Debug: Print metadata being sent
