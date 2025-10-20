@@ -126,11 +126,39 @@ def render_dashboard_sidebar(username):
         st.info("No RFPs found")
 
 
+def render_client_brief_sidebar(username):
+    """Sidebar for Client Brief page - shows search and filter options"""
+    from agent.database.db_manager import DatabaseManager
+
+    st.markdown("### 📋 Search & Filter")
+
+    # Search input
+    search_client = st.text_input(
+        "🔍 Filter by client name",
+        placeholder="Enter client name...",
+        value=st.session_state.get('brief_search', ''),
+        key="sidebar_brief_search"
+    )
+
+    # Store in session state
+    st.session_state.brief_search = search_client
+
+    # Limit input
+    st.session_state.brief_limit = st.number_input(
+        "Limit",
+        min_value=10,
+        max_value=100,
+        value=st.session_state.get('brief_limit', 50),
+        step=10,
+        key="sidebar_brief_limit"
+    )
+
+
 def render_sidebar(page_context="default"):
     """Render sidebar based on page context
 
     Args:
-        page_context: "agent", "dashboard", "download", "help"
+        page_context: "agent", "dashboard", "client_brief", "download", "help"
     """
     with st.sidebar:
         st.title("⚙️ Granetic")
@@ -143,6 +171,13 @@ def render_sidebar(page_context="default"):
         if page_context == "dashboard":
             # Dashboard: Show RFP quick nav
             render_dashboard_sidebar(username)
+            st.divider()
+            render_user_actions()
+            return None
+
+        elif page_context == "client_brief":
+            # Client Brief: Show search and filter
+            render_client_brief_sidebar(username)
             st.divider()
             render_user_actions()
             return None
