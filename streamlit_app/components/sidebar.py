@@ -159,35 +159,37 @@ def render_client_brief_sidebar(username):
         briefs = db.list_client_briefs(limit=limit)
 
     if briefs:
-        st.markdown("**Available Briefs:**")
         for brief in briefs:
             brief_id = brief.get('id')
             client_name = brief.get('client_name', 'Unknown')
             created_date = brief.get('created_date')
 
-            # Format date
+            # Format date for caption
             try:
                 from datetime import timezone, timedelta
                 uae_tz = timezone(timedelta(hours=4))
                 if created_date.tzinfo is None:
                     created_date = created_date.replace(tzinfo=timezone.utc)
                 uae_date = created_date.astimezone(uae_tz)
-                date_str = uae_date.strftime("%b %d")
+                date_str = uae_date.strftime("%b %d, %Y at %H:%M")
             except:
                 date_str = str(created_date)[:10] if created_date else "N/A"
 
-            # Create compact button with truncated name
-            button_label = client_name[:25] + "..." if len(client_name) > 25 else client_name
+            # Create button with truncated name (single line)
+            button_label = client_name[:30] + "..." if len(client_name) > 30 else client_name
             if st.button(
-                f"📋 {button_label}\n{date_str}",
+                f"📋 {button_label}",
                 key=f"brief_{brief_id}",
                 use_container_width=True,
                 help=client_name
             ):
                 st.session_state.selected_brief_id = brief_id
                 st.rerun()
+
+            # Show date/time as caption below button
+            st.caption(f"Created: {date_str}")
     else:
-        st.info("No client briefs found. Generate one using the 'Generate New Brief' tab or ask the agent.")
+        st.info("No client briefs found. Ask the agent to generate one.")
 
 
 def render_sidebar(page_context="default"):

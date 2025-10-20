@@ -37,6 +37,47 @@ st.markdown("""
 
 ---
 
+## 📋 Creating Client Briefs
+
+### Generating Client Briefs
+Client briefs help you capture and organize information about clients for business development and proposal preparation. You can generate briefs from meeting notes.
+
+#### How to Generate a Client Brief
+1. **Go to the Agent page** (using the sidebar navigation)
+2. **Paste your meeting notes** directly into the chat input field
+3. **Alternatively, upload a document** (.txt, .docx, .pdf) containing your meeting notes
+4. **Instruct the agent** to generate a client brief. For example, type:
+   ```
+   Generate a client brief from these meeting notes
+   ```
+5. The agent will process your notes, extract key information, and automatically save the structured brief to the database
+
+#### What Information Gets Captured
+The agent will extract and organize:
+- **Client Overview:** Organization details, industry, size, digital maturity, business model
+- **Context & News:** Business context and recent news
+- **Stakeholders:** Key decision-makers and their influence levels
+- **Business Goals:** Client's strategic priorities and objectives
+- **Challenges:** Current pain points and obstacles
+- **KPIs:** Key performance indicators and success measures
+- **Competitive Landscape:** Industry leaders and competing vendors
+- **Budget & Procurement:** Budget owners, procurement processes, approvers
+- **Risks & Blockers:** Potential obstacles and mitigation strategies
+- **Granite Opportunity:** How Granite can add value, quick wins, long-term opportunities, and differentiators
+
+#### Viewing Briefs
+1. Navigate to the **📋 Client Brief** page
+2. Select a client brief from the sidebar to view its details
+3. Use the search bar to filter briefs by client name
+4. Click the **🔙 Back** button to return to the brief list
+
+#### Deleting Briefs
+1. Open a brief you want to delete
+2. Click the **🗑️ Delete** button at the bottom
+3. The brief will be permanently removed
+
+---
+
 ## 📝 Working with RFPs
 
 ### Sessions
