@@ -127,10 +127,10 @@ def render_dashboard_sidebar(username):
 
 
 def render_client_brief_sidebar(username):
-    """Sidebar for Client Brief page - shows search and filter options"""
+    """Sidebar for Client Brief page - shows search and brief list for quick navigation"""
     from agent.database.db_manager import DatabaseManager
 
-    st.markdown("### 📋 Search & Filter")
+    st.markdown("### 📋 Client Briefs")
 
     # Search input
     search_client = st.text_input(
@@ -146,6 +146,48 @@ def render_client_brief_sidebar(username):
     # Set default limit (not exposed in UI)
     if 'brief_limit' not in st.session_state:
         st.session_state.brief_limit = 50
+
+    st.divider()
+
+    # Fetch and display briefs
+    db = DatabaseManager()
+    limit = st.session_state.brief_limit
+
+    if search_client:
+        briefs = db.list_client_briefs(client_name=search_client, limit=limit)
+    else:
+        briefs = db.list_client_briefs(limit=limit)
+
+    if briefs:
+        st.markdown("**Available Briefs:**")
+        for brief in briefs:
+            brief_id = brief.get('id')
+            client_name = brief.get('client_name', 'Unknown')
+            created_date = brief.get('created_date')
+
+            # Format date
+            try:
+                from datetime import timezone, timedelta
+                uae_tz = timezone(timedelta(hours=4))
+                if created_date.tzinfo is None:
+                    created_date = created_date.replace(tzinfo=timezone.utc)
+                uae_date = created_date.astimezone(uae_tz)
+                date_str = uae_date.strftime("%b %d")
+            except:
+                date_str = str(created_date)[:10] if created_date else "N/A"
+
+            # Create compact button with truncated name
+            button_label = client_name[:25] + "..." if len(client_name) > 25 else client_name
+            if st.button(
+                f"📋 {button_label}\n{date_str}",
+                key=f"brief_{brief_id}",
+                use_container_width=True,
+                help=client_name
+            ):
+                st.session_state.selected_brief_id = brief_id
+                st.rerun()
+    else:
+        st.info("No client briefs found. Generate one using the 'Generate New Brief' tab or ask the agent.")
 
 
 def render_sidebar(page_context="default"):

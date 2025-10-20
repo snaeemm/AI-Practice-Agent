@@ -23,32 +23,32 @@ st.title("📋 Client Brief Generator")
 
 db_manager = DatabaseManager()
 
+# Initialize session state for brief selection
+if 'selected_brief_id' not in st.session_state:
+    st.session_state.selected_brief_id = None
+
 tab1, tab2 = st.tabs(["📝 View Briefs", "➕ Generate New Brief"])
 
 with tab1:
-    st.subheader("📝 View Client Briefs")
-
-    # Get search values from sidebar (stored in session state)
-    search_client = st.session_state.get('brief_search', '')
-    limit = st.session_state.get('brief_limit', 50)
-
-    if search_client:
-        briefs = db_manager.list_client_briefs(client_name=search_client, limit=limit)
+    # View selected brief or show prompt
+    if not st.session_state.selected_brief_id:
+        st.markdown("## 📋 Select a Client Brief")
+        st.info("👈 Select a client brief from the sidebar to view its details")
     else:
-        briefs = db_manager.list_client_briefs(limit=limit)
+        brief_id = st.session_state.selected_brief_id
 
-    if not briefs:
-        st.info("No client briefs found. Generate one using the 'Generate New Brief' tab or ask the agent to create one.")
-    else:
-        brief_options = {f"{b['client_name']} (ID: {b['id']}) - {b['created_date'].strftime("%Y-%m-%d %H:%M")}": b for b in briefs}
-        selected_brief_option = st.selectbox(
-            "Select a Client Brief to view",
-            options=list(brief_options.keys()),
-            format_func=lambda x: x.split(' (')[0] # Display only client name in dropdown
-        )
+        # Back button
+        if st.button("🔙 Back to Briefs"):
+            st.session_state.selected_brief_id = None
+            st.rerun()
 
-        if selected_brief_option:
-            selected_brief = brief_options[selected_brief_option]
+        # Fetch the brief details
+        briefs = db_manager.list_client_briefs(limit=100)
+        selected_brief = next((b for b in briefs if b['id'] == brief_id), None)
+
+        if not selected_brief:
+            st.error(f"Brief {brief_id} not found")
+        else:
             brief_id = selected_brief['id']
             client_name = selected_brief['client_name']
             created_date = selected_brief['created_date'].strftime("%Y-%m-%d %H:%M") if selected_brief['created_date'] else "N/A"
