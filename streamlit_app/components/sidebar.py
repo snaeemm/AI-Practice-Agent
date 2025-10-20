@@ -143,15 +143,9 @@ def render_client_brief_sidebar(username):
     # Store in session state
     st.session_state.brief_search = search_client
 
-    # Limit input
-    st.session_state.brief_limit = st.number_input(
-        "Limit",
-        min_value=10,
-        max_value=100,
-        value=st.session_state.get('brief_limit', 50),
-        step=10,
-        key="sidebar_brief_limit"
-    )
+    # Set default limit (not exposed in UI)
+    if 'brief_limit' not in st.session_state:
+        st.session_state.brief_limit = 50
 
 
 def render_sidebar(page_context="default"):
