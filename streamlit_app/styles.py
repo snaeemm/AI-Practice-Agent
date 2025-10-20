@@ -372,4 +372,102 @@ section[data-testid="stSidebar"] hr {
     color: #ffffff !important;
 }
 
+/* Slide Viewer Styling */
+.slide-container {
+    background: linear-gradient(135deg, #1a3a52 0%, #1a4d6d 100%) !important;
+    border-radius: 16px !important;
+    padding: 30px !important;
+    margin: 20px 0 !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+    min-height: 450px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.slide-inner {
+    width: 100% !important;
+    background: linear-gradient(135deg, #0a1828 0%, #0f2a3f 100%) !important;
+    border-radius: 12px !important;
+    padding: 50px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(41, 128, 185, 0.3) !important;
+}
+
+.slide-title-slide {
+    text-align: center !important;
+    padding: 80px 50px !important;
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%) !important;
+    color: #ffffff !important;
+    border-radius: 12px !important;
+}
+
+.slide-title-slide h1 {
+    font-size: 56px !important;
+    font-weight: 700 !important;
+    margin: 0 0 30px 0 !important;
+    line-height: 1.2 !important;
+    color: #ffffff !important;
+}
+
+.slide-title-slide h3 {
+    font-size: 28px !important;
+    font-weight: 300 !important;
+    margin: 30px 0 !important;
+    opacity: 0.95 !important;
+    color: #ffffff !important;
+}
+
+.slide-title-slide .brand {
+    font-size: 16px !important;
+    margin-top: 60px !important;
+    letter-spacing: 3px !important;
+    opacity: 0.8 !important;
+    color: #ffffff !important;
+}
+
+.slide-content-slide h2 {
+    font-size: 48px !important;
+    color: #66b3ff !important;
+    margin: 0 0 20px 0 !important;
+    padding-bottom: 20px !important;
+    border-bottom: 4px solid #3498db !important;
+}
+
+.slide-content-slide .bullet {
+    font-size: 20px !important;
+    color: #e8f1ff !important;
+    margin: 20px 0 !important;
+    padding-left: 30px !important;
+    position: relative !important;
+    line-height: 1.6 !important;
+}
+
+.slide-content-slide .bullet:before {
+    content: "▸" !important;
+    position: absolute !important;
+    left: 0 !important;
+    color: #66b3ff !important;
+    font-size: 24px !important;
+    font-weight: bold !important;
+}
+
+/* Nested Bullet Styling */
+.slide-content-slide .bullet-nested {
+    font-size: 17px !important;
+    color: #b3d9ff !important;
+    margin: 12px 0 !important;
+    padding-left: 25px !important;
+    position: relative !important;
+    line-height: 1.5 !important;
+}
+
+.slide-content-slide .bullet-nested:before {
+    content: "◦" !important;
+    position: absolute !important;
+    left: 5px !important;
+    color: #99ccff !important;
+    font-size: 16px !important;
+}
+
 </style>""", unsafe_allow_html=True)

@@ -715,169 +715,613 @@ def tool_download_qualification_report(rfp_id: str) -> Dict[str, Any]:
 
 
 def tool_download_bid_plan_report(rfp_id: str) -> Dict[str, Any]:
+
+
     """
+
+
     Generate bid plan Excel reports (bid_plan + assignment) and save to database.
+
+
     Files will appear in the downloads panel for all users.
 
+
+
+
+
     Args:
+
+
         rfp_id: The RFP ID
 
+
+
+
+
     Returns:
+
+
         Dictionary with success status and file count
 
+
+
+
+
     Example:
+
+
         tool_download_bid_plan_report("context_rfp_20251009_194115_af2fc196")
+
+
     """
+
+
     try:
+
+
         print(f"\n🔧 [BID PLAN DOWNLOAD] Generating reports for: {rfp_id}")
 
+
+
+
+
         # Generate bid plan bytes
+
+
         bid_plan_bytes = generate_bid_plan_excel_bytes(rfp_id)
 
+
+
+
+
         if not bid_plan_bytes:
+
+
             print(f"❌ [BID PLAN DOWNLOAD] No bid plan data found")
+
+
             return {
+
+
                 'success': False,
+
+
                 'error': 'No bid plan data found',
+
+
                 'message': f'No bid plan data found for {rfp_id}. Run bid planning first.'
+
+
             }
+
+
+
+
 
         print(f"✅ [BID PLAN DOWNLOAD] Generated {len(bid_plan_bytes)} bytes for bid plan")
 
+
+
+
+
         # Generate assignment bytes
+
+
         assignment_bytes = generate_assignment_excel_bytes(rfp_id)
 
+
+
+
+
         db_manager = DatabaseManager()
+
+
         saved_files = []
 
+
+
+
+
         # Save bid plan
+
+
         bid_plan_file_name = f'{rfp_id}_bid_plan.xlsx'
+
+
         file_id = db_manager.save_generated_file(
+
+
             session_id=None,
+
+
             file_name=bid_plan_file_name,
+
+
             file_type='bid_plan',
+
+
             file_data=bid_plan_bytes,
+
+
             rfp_id=rfp_id
+
+
         )
+
+
         saved_files.append(bid_plan_file_name)
+
+
         print(f"✅ Saved {bid_plan_file_name} (ID: {file_id})")
 
+
+
+
+
         # Save assignment if generated
+
+
         if assignment_bytes:
+
+
             assignment_file_name = f'{rfp_id}_assignment_report.xlsx'
+
+
             file_id = db_manager.save_generated_file(
+
+
                 session_id=None,
+
+
                 file_name=assignment_file_name,
+
+
                 file_type='assignment',
+
+
                 file_data=assignment_bytes,
+
+
                 rfp_id=rfp_id
+
+
             )
+
+
             saved_files.append(assignment_file_name)
+
+
             print(f"✅ Saved {assignment_file_name} (ID: {file_id})")
+
+
             message = f'✅ Generated 2 reports: {bid_plan_file_name} and {assignment_file_name}. Check downloads!'
+
+
         else:
+
+
             message = f'✅ Generated {bid_plan_file_name}. Check downloads!'
 
+
+
+
+
         return {
+
+
             'success': True,
+
+
             'rfp_id': rfp_id,
+
+
             'files_saved': len(saved_files),
+
+
             'file_names': saved_files,
+
+
             'message': message
+
+
         }
 
+
+
+
+
     except Exception as e:
+
+
         print(f"❌ [BID PLAN DOWNLOAD] Error: {e}")
+
+
         return {
+
+
             'success': False,
+
+
             'error': str(e),
+
+
             'message': f'Failed to generate bid plan reports: {str(e)}'
+
+
         }
+
+
+
+
+
+
+
+
+# ==================== Presentation Tools ====================
+
+
+
+
+
+from agent.ppt_agent.ppt_tools import tool_save_presentation_structure, tool_generate_presentation_from_db
+
+
+
+
+
+def tool_save_presentation_structure_wrapper(
+    presentation_title: str,
+    slides: List[Dict[str, Any]],
+    presentation_description: str = None,
+
+
+) -> Dict[str, Any]:
+
+
+    """
+
+
+    Wrapper for tool_save_presentation_structure.
+
+
+    Saves the structured presentation outline to the database.
+
+
+
+
+
+    Args:
+
+
+        presentation_title: The unique title for this presentation.
+
+
+        slides: A list of slides, where each slide is a dictionary with "title" and "points".
+        presentation_description: Optional description of the presentation.
+
+
+    Returns:
+
+
+        A dictionary with the success status.
+
+
+    """
+
+
+    return tool_save_presentation_structure(presentation_title, slides, presentation_description)
+
+
+
+
+
+def tool_generate_presentation_from_db_wrapper(
+
+
+    rfp_id: str,
+
+
+    file_name: str
+
+
+) -> Dict[str, Any]:
+
+
+    """
+
+
+    Wrapper for tool_generate_presentation_from_db.
+
+
+    Generates a PowerPoint presentation from a structured outline stored in the database.
+
+
+
+
+
+    Args:
+
+
+        rfp_id: The ID of the RFP associated with the presentation.
+
+
+        file_name: The desired name for the generated PowerPoint file.
+
+
+
+
+
+    Returns:
+
+
+        A dictionary with the success status and the presentation content as bytes.
+
+
+    """
+
+
+    return tool_generate_presentation_from_db(rfp_id, file_name)
+
+
+
+
+
+
 
 
 # def tool_generate_report(
+
+
 #     rfp_id: str,
+
+
 #     report_type: str
+
+
 # ) -> Dict[str, Any]:
+
+
 #     """
+
+
 #     Generate Excel reports on demand from stored data.
+
+
 #     Uses the LATEST data including all agent/user edits.
 
+
+
+
+
 #     Args:
+
+
 #         rfp_id: The RFP ID
+
+
 #         report_type: Type of report - "qualification", "bid_plan", "assignment", or "all"
 
+
+
+
+
 #     Returns:
+
+
 #         Dictionary with file paths to generated reports
 
+
+
+
+
 #     Examples:
+
+
 #         # Generate qualification report only
+
+
 #         tool_generate_report("KHDA_2024", "qualification")
 
+
+
+
+
 #         # Generate all reports at once
+
+
 #         tool_generate_report("KHDA_2024", "all")
+
+
 #     """
+
+
 #     try:
+
+
 #         from .report_generators.excel_reports import (
+
+
 #             generate_qualification_excel,
+
+
 #             generate_bid_plan_excel,
+
+
 #             generate_assignment_excel,
+
+
 #             generate_all_reports
+
+
 #         )
 
+
+
+
+
 #         if report_type == "qualification":
+
+
 #             file_path = generate_qualification_excel(rfp_id)
+
+
 #             return {
+
+
 #                 'success': True,
+
+
 #                 'rfp_id': rfp_id,
+
+
 #                 'report_type': report_type,
+
+
 #                 'file_path': file_path,
+
+
 #                 'message': f'Generated qualification report: {file_path}'
+
+
 #             }
+
+
+
+
 
 #         elif report_type == "bid_plan":
+
+
 #             file_path = generate_bid_plan_excel(rfp_id)
+
+
 #             return {
+
+
 #                 'success': True,
+
+
 #                 'rfp_id': rfp_id,
+
+
 #                 'report_type': report_type,
+
+
 #                 'file_path': file_path,
+
+
 #                 'message': f'Generated bid plan: {file_path}'
+
+
 #             }
+
+
+
+
 
 #         elif report_type == "assignment":
+
+
 #             file_path = generate_assignment_excel(rfp_id)
+
+
 #             return {
+
+
 #                 'success': True,
+
+
 #                 'rfp_id': rfp_id,
+
+
 #                 'report_type': report_type,
+
+
 #                 'file_path': file_path,
+
+
 #                 'message': f'Generated assignment report: {file_path}'
+
+
 #             }
+
+
+
+
 
 #         elif report_type == "all":
+
+
 #             reports = generate_all_reports(rfp_id)
+
+
 #             return {
+
+
 #                 'success': True,
+
+
 #                 'rfp_id': rfp_id,
+
+
 #                 'report_type': report_type,
+
+
 #                 'reports': reports,
+
+
 #                 'message': f'Generated all reports for {rfp_id}'
+
+
 #             }
+
+
+
+
 
 #         else:
+
+
 #             return {
+
+
 #                 'success': False,
+
+
 #                 'error': 'Invalid report_type',
+
+
 #                 'message': f'report_type must be "qualification", "bid_plan", "assignment", or "all", got: {report_type}'
+
+
 #             }
 
+
+
+
+
 #     except Exception as e:
+
+
 #         return {
+
+
 #             'success': False,
+
+
 #             'error': str(e),
+
+
 #             'message': f'Failed to generate report: {str(e)}'
+
+
 #         }
+
+
+
+
+
+
 
 
 def tool_generate_client_brief(context: Optional[str] = None, file_path: Optional[str] = None) -> Dict[str, Any]:

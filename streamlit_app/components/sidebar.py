@@ -192,6 +192,74 @@ def render_client_brief_sidebar(username):
         st.info("No client briefs found. Ask the agent to generate one.")
 
 
+def render_presentations_sidebar(username):
+    """Sidebar for Presentations page - shows search and presentation list for quick navigation"""
+    from agent.database.db_manager import DatabaseManager
+
+    st.markdown("### 📊 Presentations")
+
+    # Search input
+    search_title = st.text_input(
+        "🔍 Filter by title",
+        placeholder="Enter presentation title...",
+        value=st.session_state.get('pres_search', ''),
+        key="sidebar_pres_search"
+    )
+
+    # Store in session state
+    st.session_state.pres_search = search_title
+
+    # Set default limit (not exposed in UI)
+    if 'pres_limit' not in st.session_state:
+        st.session_state.pres_limit = 50
+
+    st.divider()
+
+    # Fetch and display presentations
+    db = DatabaseManager()
+    limit = st.session_state.pres_limit
+
+    presentations = db.list_presentations(limit=limit)
+
+    # Filter presentations if search is active
+    if search_title:
+        presentations = [p for p in presentations if search_title.lower() in p.get('presentation_title', '').lower()]
+
+    if presentations:
+        for pres in presentations:
+            pres_id = pres.get('id')
+            title = pres.get('presentation_title', 'Untitled')
+            slide_count = pres.get('slide_count', 0)
+            updated_at = pres.get('updated_at')
+
+            # Format date for caption
+            try:
+                from datetime import timezone, timedelta
+                uae_tz = timezone(timedelta(hours=4))
+                if updated_at.tzinfo is None:
+                    updated_at = updated_at.replace(tzinfo=timezone.utc)
+                uae_date = updated_at.astimezone(uae_tz)
+                date_str = uae_date.strftime("%b %d, %Y at %H:%M")
+            except:
+                date_str = str(updated_at)[:10] if updated_at else "N/A"
+
+            # Create button with truncated name (single line)
+            button_label = title[:30] + "..." if len(title) > 30 else title
+            if st.button(
+                f"📊 {button_label}",
+                key=f"pres_{pres_id}",
+                use_container_width=True,
+                help=title
+            ):
+                st.session_state.selected_presentation_id = pres_id
+                st.rerun()
+
+            # Show date and slide count as caption below button
+            st.caption(f"📄 {slide_count} slides • {date_str}")
+    else:
+        st.info("No presentations found. Ask the agent to create one.")
+
+
 def render_sidebar(page_context="default"):
     """Render sidebar based on page context
 
@@ -199,7 +267,7 @@ def render_sidebar(page_context="default"):
         page_context: "agent", "dashboard", "client_brief", "download", "help"
     """
     with st.sidebar:
-        st.title("⚙️ Granetic")
+        st.title("⚙️ Granite")
 
         username = render_user_section()
 
@@ -216,6 +284,13 @@ def render_sidebar(page_context="default"):
         elif page_context == "client_brief":
             # Client Brief: Show search and filter
             render_client_brief_sidebar(username)
+            st.divider()
+            render_user_actions()
+            return None
+
+        elif page_context == "presentations":
+            # Presentations: Show search and filter
+            render_presentations_sidebar(username)
             st.divider()
             render_user_actions()
             return None

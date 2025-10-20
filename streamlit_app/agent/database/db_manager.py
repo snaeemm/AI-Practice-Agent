@@ -911,6 +911,95 @@ class DatabaseManager:
                     return bytes(row[0])
                 return None
 
+    # ==================== Presentations ====================
+
+    def save_presentation_structure(self, rfp_id: str, presentation_structure: Dict[str, Any]) -> int:
+        """
+        DEPRECATED: Use save_presentation_by_title() instead.
+        Legacy method for backward compatibility - saves by rfp_id.
+        """
+        with self._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO presentations (rfp_id, presentation_title, presentation_structure)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (presentation_title)
+                    DO UPDATE SET
+                        presentation_structure = EXCLUDED.presentation_structure,
+                        updated_at = CURRENT_TIMESTAMP
+                    RETURNING id
+                """, (rfp_id, f"Presentation_{rfp_id}", Json(presentation_structure)))
+                conn.commit()
+                return cursor.fetchone()[0]
+
+    def get_presentation_structure(self, rfp_id: str) -> Optional[Dict[str, Any]]:
+        """
+        DEPRECATED: Use get_presentation_by_title() instead.
+        Legacy method for backward compatibility - retrieves by rfp_id.
+        """
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT presentation_structure FROM presentations
+                    WHERE rfp_id = %s
+                """, (rfp_id,))
+                row = cursor.fetchone()
+                return dict(row)['presentation_structure'] if row else None
+
+    def list_presentations(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """List all presentations with metadata including slide count."""
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT
+                        id,
+                        presentation_title,
+                        presentation_description,
+                        rfp_id,
+                        presentation_structure,
+                        created_at,
+                        updated_at
+                    FROM presentations
+                    ORDER BY updated_at DESC
+                    LIMIT %s
+                """, (limit,))
+                rows = cursor.fetchall()
+                presentations = []
+                for row in rows:
+                    row_dict = dict(row)
+                    # Calculate slide count from structure
+                    structure = row_dict.get('presentation_structure', {})
+                    slides = structure.get('slides', [])
+                    row_dict['slide_count'] = len(slides)
+                    presentations.append(row_dict)
+                return presentations
+
+    def get_presentation_by_title(self, title: str) -> Optional[Dict[str, Any]]:
+        """Get presentation by title."""
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT * FROM presentations
+                    WHERE presentation_title = %s
+                """, (title,))
+                row = cursor.fetchone()
+                return dict(row) if row else None
+
+    def delete_presentation(self, presentation_id: int) -> bool:
+        """Delete a presentation by ID."""
+        try:
+            with self._get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute("""
+                        DELETE FROM presentations
+                        WHERE id = %s
+                    """, (presentation_id,))
+                    conn.commit()
+                    return cursor.rowcount > 0
+        except Exception as e:
+            print(f"Error deleting presentation: {e}")
+            return False
+
     # ==================== Client Briefs ====================
 
     def save_client_brief(

@@ -47,9 +47,55 @@ if st.session_state.selected_brief_id:
             st.rerun()
     st.markdown("---")
 
-# View selected brief or show prompt
+# View selected brief or dashboard
 if not st.session_state.selected_brief_id:
-    st.info("👈 Select a client brief from the sidebar to view its details")
+    st.markdown("View and manage all your client briefs")
+    st.markdown("---")
+
+    # Fetch all briefs
+    briefs = db_manager.list_client_briefs(limit=100)
+
+    if not briefs:
+        st.info("📭 No client briefs found. Create one from the sidebar!")
+    else:
+        st.markdown(f"## 📋 Available Client Briefs ({len(briefs)})")
+
+        # Display briefs as cards
+        for brief in briefs:
+            brief_id = brief.get('id')
+            client_name = brief.get('client_name', 'Unknown Client')
+            created_date = brief.get('created_date')
+            created_by = brief.get('created_by', 'Unknown')
+
+            # Format date
+            if created_date:
+                try:
+                    from datetime import timezone, timedelta
+                    uae_tz = timezone(timedelta(hours=4))
+                    if created_date.tzinfo is None:
+                        created_date = created_date.replace(tzinfo=timezone.utc)
+                    uae_date = created_date.astimezone(uae_tz)
+                    date_str = uae_date.strftime("%B %d, %Y at %H:%M")
+                except:
+                    date_str = str(created_date)
+            else:
+                date_str = "Unknown date"
+
+            # Create card
+            with st.container():
+                col1, col2 = st.columns([4, 1])
+
+                with col1:
+                    st.markdown(f"#### 🏢 {client_name}")
+                    st.caption(f"📅 Created: {date_str} by {created_by}")
+                    st.caption(f"📌 ID: `{brief_id}`")
+
+                with col2:
+                    if st.button("View Details →", key=f"view_{brief_id}", use_container_width=True):
+                        st.session_state.selected_brief_id = brief_id
+                        st.rerun()
+
+                st.markdown("---")
 else:
     brief_id = st.session_state.selected_brief_id
 
