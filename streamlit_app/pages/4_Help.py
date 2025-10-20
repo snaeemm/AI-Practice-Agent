@@ -13,7 +13,7 @@ if not require_auth():
 render_sidebar("help")
 
 st.title("❓ Help & User Guide")
-st.markdown("### Welcome to Granetic - Granite's Process Automation Agent")
+st.markdown("### Welcome to Granetic")
 
 st.divider()
 

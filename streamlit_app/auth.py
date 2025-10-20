@@ -154,7 +154,7 @@ def logout():
 
 def render_login_page():
     """Render the login page"""
-    st.title("🔐 Granetic - Process Automation")
+    st.title("🔐 Granetic")
     st.subheader("Please log in to continue")
 
     with st.form("login_form"):
