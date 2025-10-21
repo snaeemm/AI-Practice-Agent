@@ -320,13 +320,22 @@ section[data-testid="stSidebar"] details[open] button {
 
 /* Smaller font for RFP dashboard sidebar navigation buttons */
 section[data-testid="stSidebar"] button[data-testid="baseButton-secondary"] {
-    font-size: 0.8rem !important;
-    padding: 0.4rem 0.6rem !important;
+    font-size: 0.85rem !important;
+    padding: 0.5rem 0.7rem !important;
     white-space: normal !important;
     word-wrap: break-word !important;
-    line-height: 1.3 !important;
-    min-height: 2rem !important;
+    line-height: 1.4 !important;
+    min-height: 2.2rem !important;
     height: auto !important;
+    margin-bottom: 0.25rem !important;
+}
+
+/* Caption below sidebar buttons */
+section[data-testid="stSidebar"] .stCaption {
+    margin-top: -0.25rem !important;
+    margin-bottom: 0.5rem !important;
+    font-size: 0.75rem !important;
+    opacity: 0.8 !important;
 }
 
 section[data-testid="stSidebar"] div[data-testid="stInfo"] {

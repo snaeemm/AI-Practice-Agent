@@ -118,10 +118,23 @@ def render_dashboard_sidebar(username):
             rfp_id = rfp.get('rfp_id')
             project_title = rfp.get('project_title', 'No Title')
 
-            # Create button with full title (no truncation)
-            if st.button(project_title, key=f"nav_{rfp_id}", use_container_width=True):
+            # Split title at "-" for better display
+            if " - " in project_title:
+                parts = project_title.split(" - ", 1)
+                button_label = parts[0].strip()
+                caption_text = parts[1].strip()
+            else:
+                button_label = project_title
+                caption_text = None
+
+            # Create button with main title
+            if st.button(button_label, key=f"nav_{rfp_id}", use_container_width=True):
                 st.session_state.selected_rfp = rfp_id
                 st.rerun()
+
+            # Show caption if exists
+            if caption_text:
+                st.caption(caption_text)
     else:
         st.info("No RFPs found")
 
