@@ -458,17 +458,10 @@ button[data-testid*="download"]:hover {
 
 /* Removed ripple effect - was covering content */
 
-/* Loading spinner enhancement */
+/* Loading spinner - removed animation */
 [data-testid="stSpinner"] > div {
     border-color: rgba(102, 179, 255, 0.3) !important;
     border-top-color: #66b3ff !important;
-    animation: spin 0.8s linear infinite !important;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 /* Progress bars */
