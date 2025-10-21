@@ -57,27 +57,6 @@ button span[class*="material"] {
 [class*="icon"],
 [class*="Icon"],
 span[class*="st"] {
-    -webkit-font-feature-settings: 'liga' !important;
-    -moz-font-feature-settings: 'liga' !important;
-    font-feature-settings: 'liga' !important;
-}
-
-/* Target Streamlit's internal icon elements */
-[data-testid*="icon"] span,
-[data-testid*="Icon"] span,
-[class*="StyledIcon"] span,
-[class*="icon"] span,
-svg + span,
-button span,
-a span {
-    font-family: 'Material Icons' !important;
-    -webkit-font-feature-settings: 'liga' !important;
-    -moz-font-feature-settings: 'liga' !important;
-    font-feature-settings: 'liga' !important;
-}
-
-/* Ensure all spans use ligatures for icon rendering */
-span {
     -webkit-font-feature-settings: 'liga';
     -moz-font-feature-settings: 'liga';
     font-feature-settings: 'liga';
@@ -584,63 +563,4 @@ section[data-testid="stSidebar"] hr {
     font-size: 16px !important;
 }
 
-</style>
-
-<script>
-// Replace keyboard_double_arrow_right text with arrow emoji (mobile only)
-(function() {
-    // Only run on mobile devices
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-                    || window.innerWidth <= 768;
-
-    if (!isMobile) {
-        return; // Skip on desktop
-    }
-
-    function fixIconText() {
-        const walker = document.createTreeWalker(
-            document.body,
-            NodeFilter.SHOW_TEXT,
-            null,
-            false
-        );
-
-        let node;
-        const nodes = [];
-        while(node = walker.nextNode()) {
-            // Only process text nodes that EXACTLY match icon names (trimmed)
-            const text = node.textContent.trim();
-            if (text === 'keyboard_double_arrow_right' ||
-                text === 'keyboard_double_arrow_left' ||
-                text === 'keyboard_double_arrow') {
-                nodes.push(node);
-            }
-        }
-
-        nodes.forEach(node => {
-            const text = node.textContent.trim();
-            if (text === 'keyboard_double_arrow_right') {
-                node.textContent = '➡️';
-            } else if (text === 'keyboard_double_arrow_left') {
-                node.textContent = '⬅️';
-            } else if (text === 'keyboard_double_arrow') {
-                node.textContent = '⇄';
-            }
-        });
-    }
-
-    // Run on load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', fixIconText);
-    } else {
-        fixIconText();
-    }
-
-    // Watch for dynamic content changes (Streamlit updates)
-    const observer = new MutationObserver(function(mutations) {
-        fixIconText();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-})();
-</script>
-""", unsafe_allow_html=True)
+</style>""", unsafe_allow_html=True)
