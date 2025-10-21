@@ -8,17 +8,15 @@ def apply_custom_styles():
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
-/* --- Global Font Application --- */
-* {
-    font-family: 'Montserrat', sans-serif !important;
-}
-
-/* --- Material Icons Support --- */
+/* --- Material Icons Support (MUST come before global font) --- */
 .material-icons,
 .material-icons-outlined,
 .material-icons-round,
 .material-icons-sharp,
-.material-icons-two-tone {
+.material-icons-two-tone,
+[class*="material-icons"],
+span[class*="material"],
+i[class*="material"] {
     font-family: 'Material Icons' !important;
     font-weight: normal !important;
     font-style: normal !important;
@@ -34,6 +32,11 @@ def apply_custom_styles():
     text-rendering: optimizeLegibility !important;
     -moz-osx-font-smoothing: grayscale !important;
     font-feature-settings: 'liga' !important;
+}
+
+/* --- Global Font Application (excludes Material Icons) --- */
+*:not([class*="material-icons"]):not([class*="material"]) {
+    font-family: 'Montserrat', sans-serif !important;
 }
 
 /* Hide text fallback for Material Icons when font is loading */
