@@ -34,9 +34,9 @@ i[class*="material"] {
     font-feature-settings: 'liga' !important;
 }
 
-/* --- Global Font Application (excludes Material Icons) --- */
-*:not([class*="material-icons"]):not([class*="material"]) {
-    font-family: 'Montserrat', sans-serif !important;
+/* --- Global Font Application --- */
+body, html {
+    font-family: 'Montserrat', sans-serif;
 }
 
 /* Hide text fallback for Material Icons when font is loading */
