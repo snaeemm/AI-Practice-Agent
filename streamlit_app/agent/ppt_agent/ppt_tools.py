@@ -2,15 +2,23 @@
 from typing import Dict, Any, List, Optional
 from pptx import Presentation
 from pptx.util import Inches, Pt
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.dml.color import RGBColor
 import io
 from psycopg2.extras import Json
+from pathlib import Path
 
 from agent.database.db_manager import DatabaseManager
 from agent.database.db_singleton import get_db
 
 db = get_db()
+
+
+def _get_logo_path() -> Path:
+    """Get the path to the company logo file."""
+    # Get the path relative to this file
+    logo_path = Path(__file__).parent.parent.parent / "company_logo_vertical.png"
+    return logo_path
 
 def _is_title_slide(slide_data: Dict[str, Any]) -> bool:
     """Intelligently detect if a slide should be a title slide."""
@@ -69,30 +77,29 @@ def _create_presentation_bytes(slides: List[Dict[str, Any]]) -> bytes:
     for idx, slide_data in enumerate(slides):
         title = slide_data.get("title", "Untitled")
         points = slide_data.get("points", [])
-        is_title = idx == 0 and _is_title_slide(slide_data)
+        is_title = idx == 0  # First slide is always a title slide
 
         if is_title:
             # Create a completely custom title slide with no template constraints
             slide_layout = prs.slide_layouts[6]  # Blank layout
             slide = prs.slides.add_slide(slide_layout)
 
-            # Adaptive font size based on title length - be aggressive to avoid wrapping
+            # Adaptive font size based on title length
             title_length = len(title)
             if title_length < 15:
-                title_font_size = 54
+                title_font_size = 48
             elif title_length < 25:
-                title_font_size = 44
+                title_font_size = 40
             elif title_length < 35:
-                title_font_size = 36
+                title_font_size = 34
             elif title_length < 50:
-                title_font_size = 28
+                title_font_size = 32
             else:
-                title_font_size = 24
+                title_font_size = 32  # Minimum 32pt for title slide
 
-            # Calculate vertical center: slide height is 5.625 inches
-            vertical_center = 5.625 / 2  # 2.8125 inches
-            title_height_estimate = 1.5
-            title_top = vertical_center - (title_height_estimate / 2)  # Center vertically
+            # Position title with proper spacing from top
+            title_top = 0.5  # Closer to top for title slides
+            title_height_estimate = 1.2
 
             # Title text box - CENTERED
             title_box = slide.shapes.add_textbox(
@@ -103,7 +110,7 @@ def _create_presentation_bytes(slides: List[Dict[str, Any]]) -> bytes:
             )
             title_frame = title_box.text_frame
             title_frame.word_wrap = True
-            title_frame.vertical_anchor = 1  # Middle vertical anchor
+            title_frame.vertical_anchor = MSO_ANCHOR.TOP
 
             p = title_frame.paragraphs[0]
             p.text = title
@@ -112,38 +119,86 @@ def _create_presentation_bytes(slides: List[Dict[str, Any]]) -> bytes:
             p.font.color.rgb = GRANITE_BLUE
             p.alignment = PP_ALIGN.CENTER
 
-            # Subtitle - below title
-            if len(points) == 1:
-                subtitle_text = str(points[0])
-                subtitle_box = slide.shapes.add_textbox(
-                    Inches(0.5),
-                    Inches(title_top + title_height_estimate + 0.3),
-                    Inches(9),
-                    Inches(0.8)
+            # Content/bullet points area - below title
+            if points:
+                content_top = title_top + title_height_estimate + 0.3
+                content_height = 5.625 - content_top - 0.4  # Leave room for footer
+
+                content_box = slide.shapes.add_textbox(
+                    Inches(0.7),
+                    Inches(content_top),
+                    Inches(8.6),
+                    Inches(content_height)
                 )
-                subtitle_frame = subtitle_box.text_frame
-                subtitle_frame.word_wrap = True
+                content_frame = content_box.text_frame
+                content_frame.word_wrap = True
+                content_frame.vertical_anchor = MSO_ANCHOR.TOP
 
-                sub_p = subtitle_frame.paragraphs[0]
-                sub_p.text = subtitle_text
-                sub_p.font.size = Pt(28)
-                sub_p.font.color.rgb = DARK_TEXT
-                sub_p.alignment = PP_ALIGN.CENTER
+                # Calculate font size based on bullet count
+                total_bullets = _flatten_bullets(points)
+                font_size = _calculate_font_size(total_bullets)
 
-            # Granite branding at bottom
-            brand_box = slide.shapes.add_textbox(
-                Inches(0.5),
-                Inches(5.1),
-                Inches(9),
-                Inches(0.4)
-            )
-            brand_frame = brand_box.text_frame
+                for point_idx, point in enumerate(points):
+                    if isinstance(point, dict):
+                        # Main bullet with nested structure
+                        if point_idx == 0:
+                            cp = content_frame.paragraphs[0]
+                        else:
+                            cp = content_frame.add_paragraph()
 
-            brand_p = brand_frame.paragraphs[0]
-            brand_p.text = "Granite"
-            brand_p.font.size = Pt(16)
-            brand_p.font.color.rgb = ACCENT_LIGHT
-            brand_p.alignment = PP_ALIGN.CENTER
+                        cp.text = "• " + point.get("text", "")
+                        cp.level = 0
+                        cp.font.size = Pt(font_size)
+                        cp.font.bold = True
+                        cp.font.color.rgb = GRANITE_BLUE
+
+                        # Add sub-points
+                        sub_points = point.get("sub_points", [])
+                        for sub_point in sub_points:
+                            sub_p = content_frame.add_paragraph()
+                            sub_p.text = "◦ " + sub_point
+                            sub_p.level = 1
+                            sub_p.font.size = Pt(font_size - 2)
+                            sub_p.font.color.rgb = DARK_TEXT
+
+                    else:
+                        # Simple string bullet
+                        if point_idx == 0:
+                            cp = content_frame.paragraphs[0]
+                        else:
+                            cp = content_frame.add_paragraph()
+
+                        cp.text = "• " + point
+                        cp.level = 0
+                        cp.font.size = Pt(font_size)
+                        cp.font.color.rgb = DARK_TEXT
+
+            # Add logo watermark at mid right with background
+            logo_path = _get_logo_path()
+            if logo_path.exists():
+                try:
+                    # Add a subtle dark background rectangle behind logo
+                    bg_shape = slide.shapes.add_shape(
+                        1,  # Rectangle shape type
+                        Inches(9.505),  # Slightly left of logo
+                        Inches(2.4),  # Mid-right vertical position
+                        Inches(.4),  # Width to accommodate logo
+                        Inches(0.9)   # Height to accommodate logo
+                    )
+                    # Style the background
+                    bg_shape.fill.solid()
+                    bg_shape.fill.fore_color.rgb = RGBColor(44, 62, 80)  # Dark gray/blue
+                    bg_shape.line.fill.background()  # No border
+
+                    # Position logo on top of background
+                    logo_pic = slide.shapes.add_picture(
+                        str(logo_path),
+                        Inches(9.6),  # Right side
+                        Inches(2.5),  # Mid-right vertical position
+                        height=Inches(0.7)  # Small watermark size
+                    )
+                except Exception as e:
+                    pass  # Silently fail if logo can't be added
 
         else:
             # Use title and content layout
@@ -207,6 +262,33 @@ def _create_presentation_bytes(slides: List[Dict[str, Any]]) -> bytes:
                         p.level = 0
                         p.font.size = Pt(font_size)
                         p.font.color.rgb = DARK_TEXT
+
+            # Add logo watermark at mid right with background
+            logo_path = _get_logo_path()
+            if logo_path.exists():
+                try:
+                    # Add a subtle dark background rectangle behind logo
+                    bg_shape = slide.shapes.add_shape(
+                        1,  # Rectangle shape type
+                        Inches(9.505),  # Slightly left of logo
+                        Inches(2.4),  # Mid-right vertical position
+                        Inches(.4),  # Width to accommodate logo
+                        Inches(0.9)   # Height to accommodate logo
+                    )
+                    # Style the background
+                    bg_shape.fill.solid()
+                    bg_shape.fill.fore_color.rgb = RGBColor(44, 62, 80)  # Dark gray/blue
+                    bg_shape.line.fill.background()  # No border
+
+                    # Position logo on top of background
+                    logo_pic = slide.shapes.add_picture(
+                        str(logo_path),
+                        Inches(9.6),  # Right side
+                        Inches(2.5),  # Mid-right vertical position
+                        height=Inches(0.7)  # Small watermark size
+                    )
+                except Exception as e:
+                    pass  # Silently fail if logo can't be added
 
             # Add footer with slide number
             if len(slide.placeholders) > 2:
