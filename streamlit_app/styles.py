@@ -57,6 +57,27 @@ button span[class*="material"] {
 [class*="icon"],
 [class*="Icon"],
 span[class*="st"] {
+    -webkit-font-feature-settings: 'liga' !important;
+    -moz-font-feature-settings: 'liga' !important;
+    font-feature-settings: 'liga' !important;
+}
+
+/* Target Streamlit's internal icon elements */
+[data-testid*="icon"] span,
+[data-testid*="Icon"] span,
+[class*="StyledIcon"] span,
+[class*="icon"] span,
+svg + span,
+button span,
+a span {
+    font-family: 'Material Icons' !important;
+    -webkit-font-feature-settings: 'liga' !important;
+    -moz-font-feature-settings: 'liga' !important;
+    font-feature-settings: 'liga' !important;
+}
+
+/* Ensure all spans use ligatures for icon rendering */
+span {
     -webkit-font-feature-settings: 'liga';
     -moz-font-feature-settings: 'liga';
     font-feature-settings: 'liga';
@@ -563,4 +584,46 @@ section[data-testid="stSidebar"] hr {
     font-size: 16px !important;
 }
 
-</style>""", unsafe_allow_html=True)
+</style>
+
+<script>
+// Replace keyboard_double_arrow_right text with arrow emoji
+(function() {
+    function fixIconText() {
+        const walker = document.createTreeWalker(
+            document.body,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+
+        let node;
+        const nodes = [];
+        while(node = walker.nextNode()) {
+            if (node.textContent && node.textContent.includes('keyboard_double_arrow')) {
+                nodes.push(node);
+            }
+        }
+
+        nodes.forEach(node => {
+            node.textContent = node.textContent.replace(/keyboard_double_arrow_right/g, '➡️');
+            node.textContent = node.textContent.replace(/keyboard_double_arrow_left/g, '⬅️');
+            node.textContent = node.textContent.replace(/keyboard_double_arrow/g, '⇄');
+        });
+    }
+
+    // Run on load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fixIconText);
+    } else {
+        fixIconText();
+    }
+
+    // Watch for dynamic content changes (Streamlit updates)
+    const observer = new MutationObserver(function(mutations) {
+        fixIconText();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+""", unsafe_allow_html=True)
