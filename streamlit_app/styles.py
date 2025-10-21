@@ -93,31 +93,6 @@ img {
     background: linear-gradient(135deg, #0a1828 0%, #102d47 50%, #0a1828 100%) !important;
     color: #ffffff !important;
     font-family: 'Montserrat', sans-serif !important;
-    position: relative !important;
-    overflow-x: hidden !important;
-}
-
-/* Animated background gradient */
-.stApp::before {
-    content: '' !important;
-    position: fixed !important;
-    top: -50% !important;
-    left: -50% !important;
-    width: 200% !important;
-    height: 200% !important;
-    background: radial-gradient(circle, rgba(41, 128, 185, 0.05) 0%, transparent 50%) !important;
-    animation: rotateBackground 30s linear infinite !important;
-    pointer-events: none !important;
-    z-index: 0 !important;
-}
-
-@keyframes rotateBackground {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
 }
 
 [data-testid="stHeader"] {
@@ -481,26 +456,7 @@ button[data-testid*="download"]:hover {
     animation: bounce 0.6s ease !important;
 }
 
-/* Ripple effect for buttons */
-button[kind="primary"]::before,
-button::before {
-    content: '' !important;
-    position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    width: 0 !important;
-    height: 0 !important;
-    border-radius: 50% !important;
-    background: rgba(255, 255, 255, 0.3) !important;
-    transform: translate(-50%, -50%) !important;
-    transition: width 0.6s, height 0.6s !important;
-}
-
-button[kind="primary"]:active::before,
-button:active::before {
-    width: 300px !important;
-    height: 300px !important;
-}
+/* Removed ripple effect - was covering content */
 
 /* Loading spinner enhancement */
 [data-testid="stSpinner"] > div {
