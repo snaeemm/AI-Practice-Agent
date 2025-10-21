@@ -42,6 +42,15 @@ render_page_header_logo()
 db = DatabaseManager()
 ui_ops = UIOperations(db)
 
+# Cached function for RFP detail data (60 second TTL)
+@st.cache_data(ttl=60)
+def get_cached_complete_rfp_data(rfp_id: str):
+    """
+    Cached version of get_complete_rfp_data with 60-second TTL.
+    Prevents refetching when navigating between detail views.
+    """
+    return db.get_complete_rfp_data(rfp_id)
+
 # Session state for navigation and edit modes
 if 'selected_rfp' not in st.session_state:
     st.session_state.selected_rfp = None
@@ -135,8 +144,8 @@ else:
         st.session_state.selected_rfp = None
         st.rerun()
 
-    # Fetch complete data
-    complete_data = db.get_complete_rfp_data(rfp_id)
+    # Fetch complete data (cached for 60 seconds)
+    complete_data = get_cached_complete_rfp_data(rfp_id)
 
     document = complete_data.get('document', {})
     qualification = complete_data.get('qualification')

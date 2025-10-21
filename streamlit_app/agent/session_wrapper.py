@@ -1,16 +1,22 @@
 """
 Session Wrapper for ADK Agent
 Transparently saves conversation history to PostgreSQL without exposing session management to the agent
+
+OPTIMIZED: Uses cached session manager for performance.
 """
 
 from typing import Optional
 from agent.database.db_singleton import get_db
 from agent.database.session_manager import SessionManager
+from agent.database.cached_session_manager import CachedSessionManager
+from agent.database.session_cache import SessionCache
 
 
 class SessionContext:
     """
     Context manager that wraps ADK agent interactions and persists to PostgreSQL
+
+    OPTIMIZED: Uses CachedSessionManager for performance.
 
     Usage:
         # Create or load session
@@ -22,10 +28,30 @@ class SessionContext:
         # Conversation is automatically saved to PostgreSQL
     """
 
+    # Class-level cache instance (set by chat.py)
+    _cache: Optional[SessionCache] = None
+
+    @classmethod
+    def set_cache(cls, cache: SessionCache):
+        """Set the global cache instance (called by chat.py on startup)"""
+        cls._cache = cache
+
     def __init__(self, session_id: str):
         self.session_id = session_id
         self.db = get_db()
-        self.session_mgr = SessionManager(self.db)
+
+        # Use regular SessionManager
+        session_manager = SessionManager(self.db)
+
+        # Wrap with cache if available, otherwise use uncached
+        if self._cache is not None:
+            self.session_mgr = CachedSessionManager(
+                session_manager=session_manager,
+                cache=self._cache
+            )
+        else:
+            # Fallback to uncached (for backwards compatibility)
+            self.session_mgr = session_manager
 
         # Verify session exists
         self.session = self.session_mgr.get_session(session_id)

@@ -48,7 +48,7 @@ def tool_query_database(
                     'message': f'No RFP found with ID: {rfp_id}'
                 }
 
-            extracted_data = db.get_rfp_extracted_data(rfp_id)
+            extracted_data = db.get_rfp_raw_data(rfp_id)
             qualification = db.get_qualification_results(rfp_id)
 
             return {

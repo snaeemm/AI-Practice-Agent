@@ -278,15 +278,16 @@ Output format:
         }
 
 
-def extract_document_metadata(text: str, document_type: str, existing_rfps: list = None, existing_briefs: list = None) -> Dict[str, Any]:
+def extract_document_metadata(text: str, document_type: str, db=None, existing_rfps: list = None, existing_briefs: list = None) -> Dict[str, Any]:
     """
     Extract metadata from document text based on its type using Gemini, and check for duplicates.
 
     Args:
         text: The document text
         document_type: "RFP", "Meeting Notes", or "Other"
-        existing_rfps: List of existing RFPs from database with rfp_id, client_name, project_title
-        existing_briefs: List of existing client briefs from database with id, client_name, created_date
+        db: DatabaseManager instance (OPTIMIZED - preferred method for duplicate detection)
+        existing_rfps: DEPRECATED - Use db parameter instead for better performance
+        existing_briefs: DEPRECATED - Use db parameter instead for better performance
 
     Returns:
         Dictionary with:
@@ -301,30 +302,19 @@ def extract_document_metadata(text: str, document_type: str, existing_rfps: list
         model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
         if document_type == "RFP":
-            # Build existing RFPs list for prompt
-            existing_list = ""
-            if existing_rfps:
-                existing_list = "\n\n### EXISTING RFPs IN DATABASE:\n"
-                for rfp in existing_rfps[:50]:  # Limit to 50 most recent
-                    existing_list += f"- ID: {rfp.get('rfp_id')} | Client: {rfp.get('client_name')} | Project: {rfp.get('project_title')}\n"
-
-            prompt = f"""Extract the RFP/project title from this document and check for duplicates.
+            # Optimized: Extract title first, then use database lookup
+            prompt = f"""Extract the RFP/project title from this document.
 
 Instructions:
 - Look for the main project title, RFP name, or opportunity name
 - If there's a client name and project, format as: "Client Name - Project Title"
 - Keep it concise (under 100 characters)
 
-{existing_list}
-
-**CRITICAL:** If this RFP matches ANY of the existing RFPs above (same client and project), return the matching RFP ID.
-
 Document text:
 {{text}}
 
 Response format:
-Title: [extracted title]
-Matching RFP ID: [rfp_id if duplicate, otherwise "None"]"""
+Title: [extracted title]"""
 
             response = client.models.generate_content(
                 model=model_name,
@@ -335,29 +325,28 @@ Matching RFP ID: [rfp_id if duplicate, otherwise "None"]"""
 
             # Parse response
             title = "Untitled RFP"
-            matching_id = None
-
             for line in response_text.split('\n'):
                 if line.startswith('Title:'):
                     title = line.replace('Title:', '').strip().replace('"', '').replace("'", "")
-                elif line.startswith('Matching RFP ID:'):
-                    match_value = line.replace('Matching RFP ID:', '').strip()
-                    if match_value.lower() not in ['none', 'null', '']:
-                        matching_id = match_value
+                    break
 
             print(f"📋 Extracted RFP title: {title}")
-            if matching_id:
-                print(f"🔄 Found duplicate RFP: {matching_id}")
 
-            # Check qualification and bid plan status
+            # Optimized duplicate detection using database-level normalized lookup
+            matching_id = None
             has_qualification = False
             has_bid_plan = False
-            if matching_id and existing_rfps:
-                for rfp in existing_rfps:
-                    if rfp.get('rfp_id') == matching_id:
-                        has_qualification = bool(rfp.get('has_qualification'))
-                        has_bid_plan = bool(rfp.get('has_bid_plan'))
-                        break
+
+            if db:
+                # Use optimized database method (much faster than loading all RFPs)
+                matching_id = db.find_rfp_by_normalized_title(title)
+                if matching_id:
+                    print(f"🔄 Found duplicate RFP: {matching_id}")
+                    # Get status using optimized single-query method
+                    rfp_data = db.get_rfp_upload_status(matching_id)
+                    if rfp_data:
+                        has_qualification = rfp_data.get('has_qualification', False)
+                        has_bid_plan = rfp_data.get('has_bid_plan', False)
 
             return {
                 'document_type': document_type,
@@ -369,14 +358,8 @@ Matching RFP ID: [rfp_id if duplicate, otherwise "None"]"""
             }
 
         elif document_type == "Meeting Notes":
-            # Extract client name and meeting subject
-            existing_list = ""
-            if existing_briefs:
-                existing_list = "\n\n### EXISTING CLIENT BRIEFS IN DATABASE:\n"
-                for brief in existing_briefs[:50]:  # Limit to 50 most recent
-                    existing_list += f"- ID: {brief.get('id')} | Client: {brief.get('client_name')} | Date: {brief.get('created_date')}\n"
-
-            prompt = f"""Extract the client name and meeting subject from these meeting notes and check for duplicates.
+            # Optimized: Extract client name first, then use database lookup
+            prompt = f"""Extract the client name and meeting subject from these meeting notes.
 
 Instructions:
 - Extract the client/organization name
@@ -384,16 +367,12 @@ Instructions:
 - Format as: "Client Name - Meeting Subject"
 - Keep it concise (under 100 characters)
 
-{existing_list}
-
-**CRITICAL:** If these notes match ANY of the existing client briefs above (same client, likely same or similar meeting), return the matching brief ID.
-
 Meeting notes text:
 {{text}}
 
 Response format:
 Title: [client name - meeting subject]
-Matching Brief ID: [brief_id if duplicate, otherwise "None"]"""
+Client Name: [just the client/organization name]"""
 
             response = client.models.generate_content(
                 model=model_name,
@@ -404,19 +383,23 @@ Matching Brief ID: [brief_id if duplicate, otherwise "None"]"""
 
             # Parse response
             title = "Untitled Meeting Notes"
-            matching_id = None
+            client_name = None
 
             for line in response_text.split('\n'):
                 if line.startswith('Title:'):
                     title = line.replace('Title:', '').strip().replace('"', '').replace("'", "")
-                elif line.startswith('Matching Brief ID:'):
-                    match_value = line.replace('Matching Brief ID:', '').strip()
-                    if match_value.lower() not in ['none', 'null', '']:
-                        matching_id = match_value
+                elif line.startswith('Client Name:'):
+                    client_name = line.replace('Client Name:', '').strip().replace('"', '').replace("'", "")
 
             print(f"📝 Extracted meeting subject: {title}")
-            if matching_id:
-                print(f"🔄 Found duplicate brief: {matching_id}")
+
+            # Optimized duplicate detection using database-level normalized lookup
+            matching_id = None
+            if db and client_name:
+                # Use optimized database method (much faster than loading all briefs)
+                matching_id = db.find_brief_by_normalized_title(client_name)
+                if matching_id:
+                    print(f"🔄 Found duplicate brief: {matching_id}")
 
             return {
                 'document_type': document_type,

@@ -10,6 +10,12 @@ import traceback
 from pathlib import Path
 from dotenv import load_dotenv
 
+# Import caching components
+from agent.database.session_cache import SessionCache
+from agent.database.background_sync import create_background_sync
+from agent.database.db_singleton import get_db
+import agent.database.cached_database_tools as cached_db_tools
+
 load_dotenv()
 
 APP_NAME = "bid_planner_app"
@@ -29,7 +35,37 @@ def get_session_service():
         pool_pre_ping=True
     )
 
+@st.cache_resource
+def get_cache_and_sync():
+    """
+    Create singleton cache and background sync thread.
+    Returns (SessionCache, BackgroundSyncThread)
+    """
+    print("🚀 Initializing performance cache and background sync...")
+
+    # Create cache instance
+    cache = SessionCache(default_ttl_seconds=300)  # 5 min TTL for RFP data
+
+    # Initialize cached database tools
+    cached_db_tools.set_global_cache(cache)
+
+    # Create and start background sync thread
+    db_manager = get_db()
+    sync_thread = create_background_sync(
+        cache=cache,
+        db_manager=db_manager,
+        flush_interval_seconds=2.0  # Flush every 2 seconds
+    )
+
+    print("✅ Cache and background sync initialized!")
+    return cache, sync_thread
+
 session_service = get_session_service()
+cache, sync_thread = get_cache_and_sync()
+
+# Initialize SessionContext with cache
+from agent.session_wrapper import SessionContext
+SessionContext.set_cache(cache)
 
 runner = Runner(
     agent=root_agent,
@@ -56,49 +92,18 @@ def get_mime_type(file_path: str) -> str:
     return mime_types.get(ext, 'application/octet-stream')
 
 def ensure_adk_session_sync(user_id: str, session_id: str):
-    """Ensure ADK session exists using direct database insert (with caching)"""
+    """
+    Ensure ADK session exists.
 
+    NOTE: This is handled by Google's ADK DatabaseSessionService automatically.
+    We just track in local cache to avoid redundant checks.
+    """
     if session_id in _synced_sessions:
         return True
 
-    import psycopg2
-
-    conn = None
-    cursor = None
-    try:
-        db_url = os.getenv("DATABASE_URL")
-        conn = psycopg2.connect(db_url)
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT id FROM sessions
-            WHERE app_name = %s AND user_id = %s AND id = %s
-        """, (APP_NAME, user_id, session_id))
-
-        if cursor.fetchone() is None:
-            cursor.execute("""
-                INSERT INTO sessions (app_name, user_id, id, state, create_time, update_time)
-                VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            """, (APP_NAME, user_id, session_id, '{}'))
-            conn.commit()
-
-        _synced_sessions.add(session_id)
-        return True
-    except Exception as e:
-        print(f"⚠️ Error ensuring ADK session: {e}")
-        print(traceback.format_exc())
-        return False
-    finally:
-        if cursor:
-            try:
-                cursor.close()
-            except:
-                pass
-        if conn:
-            try:
-                conn.close()
-            except:
-                pass
+    # Mark as synced - ADK's DatabaseSessionService handles the actual DB sync
+    _synced_sessions.add(session_id)
+    return True
 
 
 def send_message(session, user_input: str, display_message: str = None):
@@ -265,20 +270,13 @@ def render_chat(session):
                         if not document_type:
                             document_type = detect_document_type(extraction_result['text'])
 
-                        # Fetch appropriate duplicates based on document type
-                        existing_rfps = []
-                        existing_briefs = []
-                        if document_type == "RFP":
-                            existing_rfps = db.list_recent_rfps(limit=100)
-                        elif document_type == "Meeting Notes":
-                            existing_briefs = db.list_client_briefs(limit=100)
-
+                        # Optimized: No longer fetch all records for duplicate detection
+                        # The new database methods handle this directly
                         # Extract metadata with duplicate checking
                         metadata = extract_document_metadata(
                             extraction_result['text'],
                             document_type,
-                            existing_rfps=existing_rfps,
-                            existing_briefs=existing_briefs
+                            db=db  # Pass db instance for optimized lookups
                         )
 
                         title = metadata['title']
@@ -302,18 +300,17 @@ def render_chat(session):
                         }
 
                         if matching_id and document_type == "RFP":
-                            rfp_doc = db.get_rfp_document(matching_id)
-                            qual = db.get_qualification_results(matching_id)
-                            deliverables = db.get_rfp_deliverables(matching_id)
+                            # Optimized: Single query with LEFT JOINs instead of 3 separate queries
+                            rfp_data = db.get_rfp_upload_status(matching_id)
 
                             status = {
                                 'exists': True,
                                 'matching_id': matching_id,
                                 'entity_type': 'rfp',
-                                'title': rfp_doc.get('project_title') if rfp_doc else title,
-                                'client_name': rfp_doc.get('client_name') if rfp_doc else None,
-                                'has_qualification': bool(qual),
-                                'has_bid_plan': bool(deliverables)
+                                'title': rfp_data.get('project_title') if rfp_data else title,
+                                'client_name': rfp_data.get('client_name') if rfp_data else None,
+                                'has_qualification': rfp_data.get('has_qualification', False) if rfp_data else False,
+                                'has_bid_plan': rfp_data.get('has_bid_plan', False) if rfp_data else False
                             }
                         elif matching_id and document_type == "Meeting Notes":
                             brief_doc = db.get_client_brief(matching_id)

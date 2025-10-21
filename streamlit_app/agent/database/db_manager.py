@@ -275,6 +275,105 @@ class DatabaseManager:
                 """, (limit,))
                 return [dict(row) for row in cursor.fetchall()]
 
+    def get_rfp_upload_status(self, rfp_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get RFP document with qualification and bid plan status in ONE optimized query.
+        Eliminates N+1 query problem during document upload by using LEFT JOINs.
+
+        Returns:
+            Dictionary with RFP document data and status flags, or None if not found
+        """
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT
+                        rd.*,
+                        CASE WHEN qr.id IS NOT NULL THEN true ELSE false END as has_qualification,
+                        qr.qualification_report->>'qualifies' as qualifies,
+                        qr.qualification_report->'qualification_report'->>'total_score' as qualification_score,
+                        CASE WHEN del.id IS NOT NULL THEN true ELSE false END as has_bid_plan,
+                        CASE WHEN assign.id IS NOT NULL THEN true ELSE false END as has_assignments
+                    FROM rfp_documents rd
+                    LEFT JOIN (
+                        SELECT DISTINCT ON (rfp_id) id, rfp_id, qualification_report
+                        FROM qualification_results
+                        ORDER BY rfp_id, qualified_date DESC
+                    ) qr ON rd.rfp_id = qr.rfp_id
+                    LEFT JOIN (
+                        SELECT DISTINCT ON (rfp_id) id, rfp_id
+                        FROM rfp_deliverables
+                        ORDER BY rfp_id, extracted_date DESC
+                    ) del ON rd.rfp_id = del.rfp_id
+                    LEFT JOIN (
+                        SELECT DISTINCT ON (rfp_id) id, rfp_id
+                        FROM rfp_assignments
+                        ORDER BY rfp_id, analysis_date DESC
+                    ) assign ON rd.rfp_id = assign.rfp_id
+                    WHERE rd.rfp_id = %s
+                """, (rfp_id,))
+                result = cursor.fetchone()
+                return dict(result) if result else None
+
+    def find_rfp_by_normalized_title(self, title: str) -> Optional[str]:
+        """
+        Find existing RFP by normalized title match (case-insensitive, trimmed).
+        Returns RFP ID if found, None otherwise.
+
+        This is much more efficient than loading all RFPs and doing string matching.
+
+        Args:
+            title: The title to search for (will be normalized: trimmed and lowercased)
+
+        Returns:
+            rfp_id if match found, None otherwise
+        """
+        if not title:
+            return None
+
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                # Normalize: lowercase, trim whitespace, remove extra spaces
+                cursor.execute(r"""
+                    SELECT rfp_id
+                    FROM rfp_documents
+                    WHERE LOWER(TRIM(REGEXP_REPLACE(project_title, '\s+', ' ', 'g')))
+                        = LOWER(TRIM(REGEXP_REPLACE(%s, '\s+', ' ', 'g')))
+                    ORDER BY processed_date DESC
+                    LIMIT 1
+                """, (title,))
+                result = cursor.fetchone()
+                return result['rfp_id'] if result else None
+
+    def find_brief_by_normalized_title(self, client_name: str) -> Optional[int]:
+        """
+        Find existing client brief by normalized client name (case-insensitive, trimmed).
+        Returns brief ID if found, None otherwise.
+
+        This is much more efficient than loading all briefs and doing string matching.
+
+        Args:
+            client_name: The client name to search for (will be normalized)
+
+        Returns:
+            brief id if match found, None otherwise
+        """
+        if not client_name:
+            return None
+
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                # Normalize: lowercase, trim whitespace, remove extra spaces
+                cursor.execute(r"""
+                    SELECT id
+                    FROM client_briefs
+                    WHERE LOWER(TRIM(REGEXP_REPLACE(client_name, '\s+', ' ', 'g')))
+                        = LOWER(TRIM(REGEXP_REPLACE(%s, '\s+', ' ', 'g')))
+                    ORDER BY created_date DESC
+                    LIMIT 1
+                """, (client_name,))
+                result = cursor.fetchone()
+                return result['id'] if result else None
+
     def update_rfp_status(self, rfp_id: str, status: str):
         """Update RFP status"""
         with self._get_connection() as conn:

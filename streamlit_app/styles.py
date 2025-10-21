@@ -644,6 +644,39 @@ section[data-testid="stSidebar"] hr {
 [data-testid="stChatInput"] {
     padding-bottom: 0rem !important;
     margin-bottom: -2rem !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Remove the wrapper box/container background */
+[data-testid="stChatInput"] > div {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Chat input field styling - clean and minimal */
+[data-testid="stChatInput"] input,
+[data-testid="stChatInput"] textarea {
+    color: #1a1a1a !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(102, 179, 255, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-testid="stChatInput"] input:focus,
+[data-testid="stChatInput"] textarea:focus {
+    background-color: #ffffff !important;
+    border-color: rgba(102, 179, 255, 0.6) !important;
+    box-shadow: 0 0 10px rgba(102, 179, 255, 0.15) !important;
+    outline: none !important;
+}
+
+[data-testid="stChatInput"] input::placeholder,
+[data-testid="stChatInput"] textarea::placeholder {
+    color: rgba(26, 26, 26, 0.5) !important;
 }
 
 .main .block-container {
