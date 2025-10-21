@@ -239,6 +239,42 @@ class DatabaseManager:
                 """, (limit,))
                 return [dict(row) for row in cursor.fetchall()]
 
+    def list_rfps_with_status(self, limit: int = 100) -> List[Dict[str, Any]]:
+        """
+        List recent RFPs with qualification and deliverable status in ONE query.
+        Eliminates N+1 query problem by using LEFT JOINs.
+        Returns RFPs with has_qualification, qualifies, has_bid_plan, has_assignments flags.
+        """
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT
+                        rd.*,
+                        CASE WHEN qr.id IS NOT NULL THEN true ELSE false END as has_qualification,
+                        qr.qualification_report->>'qualifies' as qualifies,
+                        CASE WHEN del.id IS NOT NULL THEN true ELSE false END as has_bid_plan,
+                        CASE WHEN assign.id IS NOT NULL THEN true ELSE false END as has_assignments
+                    FROM rfp_documents rd
+                    LEFT JOIN (
+                        SELECT DISTINCT ON (rfp_id) id, rfp_id, qualification_report
+                        FROM qualification_results
+                        ORDER BY rfp_id, qualified_date DESC
+                    ) qr ON rd.rfp_id = qr.rfp_id
+                    LEFT JOIN (
+                        SELECT DISTINCT ON (rfp_id) id, rfp_id
+                        FROM rfp_deliverables
+                        ORDER BY rfp_id, extracted_date DESC
+                    ) del ON rd.rfp_id = del.rfp_id
+                    LEFT JOIN (
+                        SELECT DISTINCT ON (rfp_id) id, rfp_id
+                        FROM rfp_assignments
+                        ORDER BY rfp_id, analysis_date DESC
+                    ) assign ON rd.rfp_id = assign.rfp_id
+                    ORDER BY rd.processed_date DESC
+                    LIMIT %s
+                """, (limit,))
+                return [dict(row) for row in cursor.fetchall()]
+
     def update_rfp_status(self, rfp_id: str, status: str):
         """Update RFP status"""
         with self._get_connection() as conn:

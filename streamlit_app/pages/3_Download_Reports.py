@@ -30,7 +30,8 @@ render_sidebar("download")
 
 db = DatabaseManager()
 
-rfps = db.list_recent_rfps(limit=50)
+# Fetch RFPs with status (OPTIMIZED: single query with JOINs)
+rfps = db.list_rfps_with_status(limit=50)
 
 if not rfps:
     st.markdown("# 📥 Download Reports")
@@ -61,13 +62,9 @@ else:
         else:
             date_str = "Unknown date"
 
-        # Check available reports
-        qual_data = db.get_qualification_results(rfp_id)
-        deliverables_data = db.get_rfp_deliverables(rfp_id)
-        assignments_data = db.get_rfp_assignments(rfp_id)
-
-        has_qual = bool(qual_data)
-        has_bid = bool(deliverables_data and assignments_data)
+        # Status flags come from JOIN query (no extra queries needed!)
+        has_qual = rfp.get('has_qualification', False)
+        has_bid = rfp.get('has_bid_plan', False) and rfp.get('has_assignments', False)
 
         # Create card
         with st.container():
@@ -81,8 +78,8 @@ else:
                 badge_col1, badge_col2 = st.columns(2)
                 with badge_col1:
                     if has_qual:
-                        qual_report = qual_data.get('qualification_report', {})
-                        qualifies = qual_report.get('qualifies', False)
+                        # qualifies flag comes from JOIN query (no extra DB call!)
+                        qualifies = rfp.get('qualifies') == 'true' if rfp.get('qualifies') else False
                         if qualifies:
                             st.success("✅ Qualified - PURSUE")
                         else:

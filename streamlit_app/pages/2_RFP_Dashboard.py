@@ -54,8 +54,8 @@ if 'edit_mode_assign' not in st.session_state:
 
 # Main Dashboard View
 if not st.session_state.selected_rfp:
-    # Fetch all RFPs
-    rfps = db.list_recent_rfps(limit=100)
+    # Fetch all RFPs with status (OPTIMIZED: single query with JOINs)
+    rfps = db.list_rfps_with_status(limit=100)
 
     if not rfps:
         st.markdown("# 📊 RFP Dashboard")
@@ -75,12 +75,9 @@ if not st.session_state.selected_rfp:
             processed_date = rfp.get('processed_date')
             status = rfp.get('status', 'unknown')
 
-            # Check if qualification and bid plan exist
-            qual_data = db.get_qualification_results(rfp_id)
-            deliverables_data = db.get_rfp_deliverables(rfp_id)
-
-            has_qual = bool(qual_data)
-            has_bid = bool(deliverables_data)
+            # Status flags now come from JOIN query (no extra queries needed!)
+            has_qual = rfp.get('has_qualification', False)
+            has_bid = rfp.get('has_bid_plan', False)
 
             # Format date
             if processed_date:
@@ -107,8 +104,8 @@ if not st.session_state.selected_rfp:
                     badge_col1, badge_col2 = st.columns(2)
                     with badge_col1:
                         if has_qual:
-                            qual_report = qual_data.get('qualification_report', {})
-                            qualifies = qual_report.get('qualifies', False)
+                            # qualifies flag comes from JOIN query (no extra DB call!)
+                            qualifies = rfp.get('qualifies') == 'true' if rfp.get('qualifies') else False
                             if qualifies:
                                 st.success("✅ Qualified - PURSUE")
                             else:
