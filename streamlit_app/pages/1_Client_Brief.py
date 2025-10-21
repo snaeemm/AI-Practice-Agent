@@ -94,7 +94,7 @@ if not st.session_state.selected_brief_id:
                     st.caption(f"📌 ID: `{brief_id}`")
 
                 with col2:
-                    if st.button("View Details ➡️", key=f"view_{brief_id}", use_container_width=True):
+                    if st.button("View Details →", key=f"view_{brief_id}", use_container_width=True):
                         st.session_state.selected_brief_id = brief_id
                         st.rerun()
 

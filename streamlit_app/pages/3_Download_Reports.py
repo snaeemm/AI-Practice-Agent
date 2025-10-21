@@ -96,7 +96,7 @@ else:
                         st.warning("⏳ Bid Plan Pending")
 
             with col2:
-                if st.button("📥 Downloads ➡️", key=f"view_downloads_{rfp_id}", use_container_width=True):
+                if st.button("📥 Downloads →", key=f"view_downloads_{rfp_id}", use_container_width=True):
                     st.session_state[f"show_downloads_{rfp_id}"] = not st.session_state.get(f"show_downloads_{rfp_id}", False)
                     st.rerun()
 

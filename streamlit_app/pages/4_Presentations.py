@@ -87,7 +87,7 @@ if not st.session_state.selected_presentation_id:
                         st.caption(f"📝 {description}")
 
                 with col2:
-                    if st.button("View Details ➡️", key=f"view_{pres_id}", use_container_width=True):
+                    if st.button("View Details →", key=f"view_{pres_id}", use_container_width=True):
                         st.session_state.selected_presentation_id = pres_id
                         st.rerun()
 
