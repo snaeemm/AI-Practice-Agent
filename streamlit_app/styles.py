@@ -318,6 +318,12 @@ section[data-testid="stSidebar"] details[open] button {
     margin-top: 0.75rem !important;
 }
 
+/* Smaller font for RFP dashboard sidebar navigation buttons */
+section[data-testid="stSidebar"] button[data-testid="baseButton-secondary"] {
+    font-size: 0.85rem !important;
+    padding: 0.4rem 0.6rem !important;
+}
+
 section[data-testid="stSidebar"] div[data-testid="stInfo"] {
     background-color: rgba(29,77,127,0.9) !important;
     padding: 0.6rem 0.75rem !important;
