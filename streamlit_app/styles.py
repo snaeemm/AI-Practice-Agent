@@ -78,6 +78,14 @@ img {
     image-rendering: high-quality !important;
     image-rendering: -webkit-optimize-contrast !important;
     -ms-interpolation-mode: bicubic !important;
+    transition: all 0.3s ease !important;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) !important;
+}
+
+[data-testid="stImage"] img:hover,
+.stImage img:hover {
+    transform: scale(1.02) !important;
+    filter: drop-shadow(0 8px 16px rgba(102, 179, 255, 0.4)) !important;
 }
 
 /* --- Main Background --- */
@@ -91,6 +99,8 @@ img {
     background: linear-gradient(135deg, #0c223b 0%, #123a61 50%, #1a527f 100%) !important;
     border-bottom: 1px solid rgba(120,180,255,0.2);
     color: #ffffff !important;
+    backdrop-filter: blur(10px) !important;
+    animation: slideInRight 0.6s ease-out !important;
 }
 
 .stMarkdown p,
@@ -107,7 +117,24 @@ h1, h2, h3, h4, h5, h6 {
     color: #ffffff !important;
 }
 
-/* st.metric styling */
+/* Animated headings */
+h1, .stMarkdown h1 {
+    animation: fadeInUp 0.6s ease-out !important;
+    text-shadow: 0 2px 10px rgba(102, 179, 255, 0.3) !important;
+    font-weight: 700 !important;
+}
+
+h2, .stMarkdown h2 {
+    animation: fadeInUp 0.7s ease-out !important;
+    text-shadow: 0 1px 8px rgba(102, 179, 255, 0.2) !important;
+}
+
+h3, .stMarkdown h3,
+h4, .stMarkdown h4 {
+    animation: fadeInUp 0.8s ease-out !important;
+}
+
+/* st.metric styling with animations */
 [data-testid="stMetricLabel"],
 [data-testid="stMetricValue"],
 [data-testid="stMetricDelta"] {
@@ -117,6 +144,27 @@ h1, h2, h3, h4, h5, h6 {
 [data-testid="stMetricLabel"] > div,
 [data-testid="stMetricValue"] > div {
     color: #ffffff !important;
+}
+
+/* Animate metric values */
+[data-testid="stMetricValue"] {
+    animation: scaleUp 0.5s ease-out !important;
+    font-weight: 700 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Metric container hover effect */
+[data-testid="stMetric"] {
+    transition: all 0.3s ease !important;
+    padding: 1rem !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+[data-testid="stMetric"]:hover {
+    background: rgba(255, 255, 255, 0.06) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 16px rgba(41, 128, 185, 0.2) !important;
 }
 
 /* Caption text */
@@ -170,10 +218,27 @@ section[data-testid="stSidebar"] textarea {
     border-radius: 6px !important;
     padding: 0.4rem 0.6rem !important;
     width: 100% !important;
+    transition: all 0.3s ease !important;
 }
 
 section[data-testid="stSidebar"] input::placeholder {
     color: rgba(50, 50, 50, 0.7) !important;
+}
+
+/* Enhanced input focus states */
+section[data-testid="stSidebar"] input[type="text"]:focus,
+section[data-testid="stSidebar"] textarea:focus {
+    animation: glow 2s ease-in-out infinite !important;
+    outline: none !important;
+}
+
+/* Main content input fields with glow */
+.main input[type="text"]:focus,
+.main textarea:focus,
+.main select:focus {
+    animation: glow 2s ease-in-out infinite !important;
+    outline: none !important;
+    border-color: rgba(102, 179, 255, 0.6) !important;
 }
 
 section[data-testid="stSidebar"] details[open] code {
@@ -261,10 +326,26 @@ section[data-testid="stSidebar"] [data-baseweb="select"] div[data-baseweb="input
     border-radius: 10px !important;
     padding: 10px 16px !important;
     color: #ffffff !important;
+    animation: fadeInUp 0.4s ease-out !important;
+    transition: all 0.3s ease !important;
 }
+
+[data-testid="stChatMessageContent"]:hover {
+    background-color: rgba(255,255,255,0.08) !important;
+    transform: translateX(5px) !important;
+}
+
 [data-testid="stChatMessageContent"] code {
     background-color: rgba(255,255,255,0.1) !important;
     color: #a0e6ff !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stChatMessageContent"] code:hover {
+    background-color: rgba(255,255,255,0.15) !important;
+    color: #c0f0ff !important;
 }
 
 .stTabs [data-baseweb="tab"] {
@@ -354,6 +435,66 @@ section[data-testid="stSidebar"] .stCaption {
     border-color: rgba(102, 179, 255, 0.3) !important;
     background: rgba(255, 255, 255, 0.04) !important;
     box-shadow: 0 4px 20px rgba(41, 128, 185, 0.15) !important;
+}
+
+/* --- DOWNLOAD BUTTONS & SPECIAL EFFECTS --- */
+
+/* Primary download buttons */
+button[kind="primary"],
+button[data-testid*="download"] {
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%) !important;
+    border: none !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+button[kind="primary"]:hover,
+button[data-testid*="download"]:hover {
+    background: linear-gradient(135deg, #3498db 0%, #5dade2 100%) !important;
+    animation: bounce 0.6s ease !important;
+}
+
+/* Ripple effect for buttons */
+button[kind="primary"]::before,
+button::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.6s, height 0.6s !important;
+}
+
+button[kind="primary"]:active::before,
+button:active::before {
+    width: 300px !important;
+    height: 300px !important;
+}
+
+/* Loading spinner enhancement */
+[data-testid="stSpinner"] > div {
+    border-color: rgba(102, 179, 255, 0.3) !important;
+    border-top-color: #66b3ff !important;
+    animation: spin 0.8s linear infinite !important;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Progress bars */
+[data-testid="stProgress"] > div > div {
+    background: linear-gradient(90deg, #2980b9, #3498db, #5dade2) !important;
+    background-size: 200% 100% !important;
+    animation: gradientShift 2s ease infinite !important;
 }
 
 section[data-testid="stSidebar"] div[data-testid="stInfo"] {
@@ -524,6 +665,63 @@ html {
     }
     100% {
         background-position: 1000px 0;
+    }
+}
+
+/* Animated gradient background */
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Glow effect for focus states */
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(102, 179, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(102, 179, 255, 0.6), 0 0 30px rgba(102, 179, 255, 0.4);
+    }
+}
+
+/* Bounce animation for interactive elements */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Slide in from right */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Scale up animation */
+@keyframes scaleUp {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
     }
 }
 
