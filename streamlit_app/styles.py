@@ -600,15 +600,24 @@ section[data-testid="stSidebar"] hr {
         let node;
         const nodes = [];
         while(node = walker.nextNode()) {
-            if (node.textContent && node.textContent.includes('keyboard_double_arrow')) {
+            // Only process text nodes that EXACTLY match icon names (trimmed)
+            const text = node.textContent.trim();
+            if (text === 'keyboard_double_arrow_right' ||
+                text === 'keyboard_double_arrow_left' ||
+                text === 'keyboard_double_arrow') {
                 nodes.push(node);
             }
         }
 
         nodes.forEach(node => {
-            node.textContent = node.textContent.replace(/keyboard_double_arrow_right/g, '➡️');
-            node.textContent = node.textContent.replace(/keyboard_double_arrow_left/g, '⬅️');
-            node.textContent = node.textContent.replace(/keyboard_double_arrow/g, '⇄');
+            const text = node.textContent.trim();
+            if (text === 'keyboard_double_arrow_right') {
+                node.textContent = '➡️';
+            } else if (text === 'keyboard_double_arrow_left') {
+                node.textContent = '⬅️';
+            } else if (text === 'keyboard_double_arrow') {
+                node.textContent = '⇄';
+            }
         });
     }
 
