@@ -34,30 +34,9 @@ i[class*="material"] {
     font-feature-settings: 'liga' !important;
 }
 
-/* --- Global Font Application --- */
-body {
-    font-family: 'Montserrat', sans-serif;
-}
-
-html,
-h1, h2, h3, h4, h5, h6,
-p, div, button, input, textarea, select,
-a, label, li, td, th {
-    font-family: 'Montserrat', sans-serif;
-}
-
-/* All elements support ligatures by default */
-* {
-    -webkit-font-feature-settings: 'liga';
-    -moz-font-feature-settings: 'liga';
-    font-feature-settings: 'liga';
-}
-
-/* Ensure Material Icons elements use correct font */
-*[class*="material"],
-*[class*="icon"],
-span[aria-hidden="true"] {
-    font-family: 'Material Icons' !important;
+/* --- Global Font Application (excludes Material Icons) --- */
+*:not([class*="material-icons"]):not([class*="material"]) {
+    font-family: 'Montserrat', sans-serif !important;
 }
 
 /* Hide text fallback for Material Icons when font is loading */
@@ -81,19 +60,9 @@ button span[class*="material"] {
 [class*="icon"],
 [class*="Icon"],
 span[class*="st"] {
-    -webkit-font-feature-settings: 'liga' !important;
-    -moz-font-feature-settings: 'liga' !important;
-    font-feature-settings: 'liga' !important;
-}
-
-/* Target spans in buttons - likely where icon text appears */
-button span,
-a span,
-[role="button"] span {
-    font-family: 'Material Icons' !important;
-    -webkit-font-feature-settings: 'liga' !important;
-    -moz-font-feature-settings: 'liga' !important;
-    font-feature-settings: 'liga' !important;
+    -webkit-font-feature-settings: 'liga';
+    -moz-font-feature-settings: 'liga';
+    font-feature-settings: 'liga';
 }
 
 /* --- High Quality Image Rendering --- */
