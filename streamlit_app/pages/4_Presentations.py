@@ -23,12 +23,13 @@ render_sidebar("presentations")
 
 render_page_header_logo()
 
-db = DatabaseManager()
-
 @st.cache_data(ttl=60)  # Cache for 60 seconds
 def get_cached_presentation(presentation_id: int):
     """Fetch presentation with caching for performance."""
+    db = DatabaseManager()
     return db.get_presentation_by_id(presentation_id)
+
+db = DatabaseManager()
 
 # Initialize session state for presentation selection
 if 'selected_presentation_id' not in st.session_state:
