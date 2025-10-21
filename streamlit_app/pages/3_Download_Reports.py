@@ -28,18 +28,19 @@ render_page_header_logo()
 
 render_sidebar("download")
 
-st.title("📥 Download Reports")
-st.markdown("Generate and download analysis reports for your RFPs")
-st.markdown("---")
-
 db = DatabaseManager()
 
 rfps = db.list_recent_rfps(limit=50)
 
 if not rfps:
+    st.markdown("# 📥 Download Reports")
+    st.markdown("Generate and download analysis reports for your RFPs")
+    st.markdown("---")
     st.info("📭 No RFPs found in the database. Process an RFP first to generate reports.")
 else:
-    st.markdown(f"## 📋 Available RFPs ({len(rfps)})")
+    st.markdown(f"# 📥 Download Reports")
+    st.markdown(f"Generate and download analysis reports for your RFPs ({len(rfps)})")
+    st.markdown("---")
 
     for rfp in rfps:
         rfp_id = rfp.get('rfp_id')
