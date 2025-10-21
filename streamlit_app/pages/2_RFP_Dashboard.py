@@ -123,7 +123,7 @@ if not st.session_state.selected_rfp:
                             st.warning("⏳ Bid Plan Pending")
 
                 with col2:
-                    if st.button("View Details →", key=f"view_{rfp_id}", use_container_width=True):
+                    if st.button("View Details ➡️", key=f"view_{rfp_id}", use_container_width=True):
                         st.session_state.selected_rfp = rfp_id
                         st.rerun()
 
