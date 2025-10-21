@@ -587,8 +587,16 @@ section[data-testid="stSidebar"] hr {
 </style>
 
 <script>
-// Replace keyboard_double_arrow_right text with arrow emoji
+// Replace keyboard_double_arrow_right text with arrow emoji (mobile only)
 (function() {
+    // Only run on mobile devices
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                    || window.innerWidth <= 768;
+
+    if (!isMobile) {
+        return; // Skip on desktop
+    }
+
     function fixIconText() {
         const walker = document.createTreeWalker(
             document.body,
