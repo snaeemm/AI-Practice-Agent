@@ -3,13 +3,19 @@ import streamlit as st
 
 def apply_custom_styles():
     st.markdown("""<style>
-/* --- Font Import for Logo --- */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap');
+/* --- Font Import --- */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
+/* --- Global Font Application --- */
+* {
+    font-family: 'Montserrat', sans-serif !important;
+}
 
 /* --- Main Background --- */
 .main, .stApp {
     background: linear-gradient(135deg, #0a1828 0%, #102d47 50%, #0a1828 100%) !important;
     color: #ffffff !important;
+    font-family: 'Montserrat', sans-serif !important;
 }
 
 [data-testid="stHeader"] {
