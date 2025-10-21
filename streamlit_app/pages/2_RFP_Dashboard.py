@@ -37,8 +37,6 @@ if not require_auth():
 render_sidebar("dashboard")
 
 render_page_header_logo()
-st.title("📊 RFP Dashboard")
-st.markdown("---")
 
 # Initialize database and UI operations
 db = DatabaseManager()
@@ -56,17 +54,18 @@ if 'edit_mode_assign' not in st.session_state:
 
 # Main Dashboard View
 if not st.session_state.selected_rfp:
-    st.markdown("# 📊 RFP Dashboard")
-    st.markdown("View and analyze all your processed RFPs")
-    st.markdown("---")
-
     # Fetch all RFPs
     rfps = db.list_recent_rfps(limit=100)
 
     if not rfps:
+        st.markdown("# 📊 RFP Dashboard")
+        st.markdown("View and analyze all your processed RFPs")
+        st.markdown("---")
         st.info("📭 No RFPs found. Process an RFP to see it here!")
     else:
-        st.markdown(f"## 📋 Available RFPs ({len(rfps)})")
+        st.markdown(f"# 📊 RFP Dashboard")
+        st.markdown(f"View and analyze all your processed RFPs ({len(rfps)})")
+        st.markdown("---")
 
         # Display RFPs as cards
         for rfp in rfps:

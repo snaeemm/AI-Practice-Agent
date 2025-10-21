@@ -50,16 +50,18 @@ if st.session_state.selected_brief_id:
 
 # View selected brief or dashboard
 if not st.session_state.selected_brief_id:
-    st.markdown("View and manage all your client briefs")
-    st.markdown("---")
-
     # Fetch all briefs
     briefs = db_manager.list_client_briefs(limit=100)
 
     if not briefs:
+        st.markdown("# 📋 Client Briefs")
+        st.markdown("View and manage all your client briefs")
+        st.markdown("---")
         st.info("📭 No client briefs found. Create one from the sidebar!")
     else:
-        st.markdown(f"## 📋 Available Client Briefs ({len(briefs)})")
+        st.markdown(f"# 📋 Client Briefs")
+        st.markdown(f"View and manage all your client briefs ({len(briefs)})")
+        st.markdown("---")
 
         # Display briefs as cards
         for brief in briefs:
