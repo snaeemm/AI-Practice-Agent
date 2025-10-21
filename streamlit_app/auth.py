@@ -2,6 +2,7 @@ import streamlit as st
 import bcrypt
 from typing import Optional, Dict
 from pathlib import Path
+from components.branding import render_page_header_logo
 
 _migration_checked = False
 
@@ -154,7 +155,7 @@ def logout():
 
 def render_login_page():
     """Render the login page"""
-    st.title("🔐 Granetic")
+    render_page_header_logo(width_pct=10, max_width=300)
     st.subheader("Please log in to continue")
 
     with st.form("login_form"):

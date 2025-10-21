@@ -1,5 +1,6 @@
 import streamlit as st
 from components.sidebar import render_sidebar
+from components.branding import render_page_header_logo
 from components.report_viewers import (
     render_status_badge,
     render_qualification_view,
@@ -22,7 +23,7 @@ from datetime import timezone, timedelta
 import json
 
 st.set_page_config(
-    page_title="RFP Dashboard - Granetic",
+    page_title="RFP Dashboard - Granite",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -34,6 +35,10 @@ if not require_auth():
     st.stop()
 
 render_sidebar("dashboard")
+
+render_page_header_logo()
+st.title("📊 RFP Dashboard")
+st.markdown("---")
 
 # Initialize database and UI operations
 db = DatabaseManager()

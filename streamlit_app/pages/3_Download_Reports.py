@@ -1,5 +1,6 @@
 import streamlit as st
 from components.sidebar import render_sidebar
+from components.branding import render_page_header_logo
 from agent.database.db_manager import DatabaseManager
 from agent.tools import (
     generate_and_download_qualification_excel,
@@ -12,7 +13,7 @@ from styles import apply_custom_styles
 from auth import require_auth
 
 st.set_page_config(
-    page_title="Download Reports - Granetic",
+    page_title="Download Reports - Granite",
     page_icon="📥",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -22,6 +23,8 @@ apply_custom_styles()
 
 if not require_auth():
     st.stop()
+
+render_page_header_logo()
 
 render_sidebar("download")
 

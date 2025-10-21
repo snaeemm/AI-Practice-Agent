@@ -5,6 +5,8 @@ CSS is defined in styles.py for proper integration with dark theme.
 
 import streamlit as st
 from typing import List, Dict, Any
+from pathlib import Path
+import base64
 
 
 def _is_title_slide(slide_data: Dict[str, Any]) -> bool:
@@ -19,6 +21,15 @@ def _is_title_slide(slide_data: Dict[str, Any]) -> bool:
     return False
 
 
+def _get_logo_base64() -> str:
+    """Load and encode the vertical logo as base64."""
+    logo_path = Path(__file__).parent.parent / "company_logo_vertical.png"
+    if logo_path.exists():
+        with open(logo_path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return ""
+
+
 def render_slide_viewer(slides: List[Dict[str, Any]]) -> None:
     """
     Render an interactive slide viewer with beautiful HTML/CSS styling.
@@ -29,6 +40,10 @@ def render_slide_viewer(slides: List[Dict[str, Any]]) -> None:
     if not slides:
         st.info("No slides to display")
         return
+
+    # Get logo as base64
+    logo_base64 = _get_logo_base64()
+    logo_html = f'<img src="data:image/png;base64,{logo_base64}" alt="Logo" />' if logo_base64 else 'GRANITE'
 
     # Initialize session state for slide navigation
     if "current_slide" not in st.session_state:
@@ -59,8 +74,8 @@ def render_slide_viewer(slides: List[Dict[str, Any]]) -> None:
             <div class="slide-inner slide-title-slide">
                 <h1>{title}</h1>
                 {subtitle_html}
-                <div class="brand">GRANITE</div>
             </div>
+            <div class="slide-watermark">{logo_html}</div>
         </div>
         """
     else:
@@ -92,6 +107,7 @@ def render_slide_viewer(slides: List[Dict[str, Any]]) -> None:
                 <h2>{title}</h2>
                 {bullets_html}
             </div>
+            <div class="slide-watermark">{logo_html}</div>
         </div>
         """
 

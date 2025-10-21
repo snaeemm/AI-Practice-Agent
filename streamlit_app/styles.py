@@ -3,6 +3,9 @@ import streamlit as st
 
 def apply_custom_styles():
     st.markdown("""<style>
+/* --- Font Import for Logo --- */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap');
+
 /* --- Main Background --- */
 .main, .stApp {
     background: linear-gradient(135deg, #0a1828 0%, #102d47 50%, #0a1828 100%) !important;
@@ -383,6 +386,24 @@ section[data-testid="stSidebar"] hr {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    position: relative !important;
+}
+
+.slide-watermark {
+    position: absolute !important;
+    top: 50% !important;
+    right: 10px !important;
+    transform: translateY(-50%) !important;
+    transform-origin: center !important;
+    max-width: 80px !important;
+    height: auto !important;
+}
+
+.slide-watermark img {
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    filter: brightness(0) invert(1) opacity(1) !important;
 }
 
 .slide-inner {

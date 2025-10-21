@@ -1,6 +1,7 @@
 
 import streamlit as st
 from components.sidebar import render_sidebar
+from components.branding import render_page_header_logo
 from components.slide_viewer import render_slide_viewer
 from agent.database.db_manager import DatabaseManager
 from styles import apply_custom_styles
@@ -20,6 +21,7 @@ if not require_auth():
 
 render_sidebar("presentations")
 
+render_page_header_logo()
 st.title("📊 Presentations")
 st.markdown("Create, view, and edit structured presentations for Gamma.app")
 st.markdown("---")

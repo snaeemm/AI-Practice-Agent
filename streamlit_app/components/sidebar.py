@@ -1,5 +1,6 @@
 import streamlit as st
 from agent.session_wrapper import create_session, load_session, list_sessions
+from .branding import render_sidebar_logo
 
 
 def render_user_section():
@@ -267,7 +268,7 @@ def render_sidebar(page_context="default"):
         page_context: "agent", "dashboard", "client_brief", "download", "help"
     """
     with st.sidebar:
-        st.title("⚙️ Granite")
+        render_sidebar_logo()
 
         username = render_user_section()
 

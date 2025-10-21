@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from agent.database.db_manager import DatabaseManager
 from agent.database.ui_operations import UIOperations
 from components.sidebar import render_sidebar
+from components.branding import render_page_header_logo
 from components.edit_components import render_edit_metadata
 from components.client_brief_edit import (
     render_client_overview_edit_form,
@@ -25,6 +26,7 @@ if not require_auth():
 
 render_sidebar("client_brief")
 
+render_page_header_logo()
 st.title("📋 Client Brief")
 
 db_manager = DatabaseManager()
