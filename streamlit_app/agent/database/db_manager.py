@@ -985,6 +985,24 @@ class DatabaseManager:
                 row = cursor.fetchone()
                 return dict(row) if row else None
 
+    def get_presentation_by_id(self, presentation_id: int) -> Optional[Dict[str, Any]]:
+        """Get presentation by ID (optimized single-row query)."""
+        with self._get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT * FROM presentations
+                    WHERE id = %s
+                """, (presentation_id,))
+                row = cursor.fetchone()
+                if row:
+                    row_dict = dict(row)
+                    # Calculate slide count from structure
+                    structure = row_dict.get('presentation_structure', {})
+                    slides = structure.get('slides', [])
+                    row_dict['slide_count'] = len(slides)
+                    return row_dict
+                return None
+
     def delete_presentation(self, presentation_id: int) -> bool:
         """Delete a presentation by ID."""
         try:

@@ -25,6 +25,11 @@ render_page_header_logo()
 
 db = DatabaseManager()
 
+@st.cache_data(ttl=60)  # Cache for 60 seconds
+def get_cached_presentation(presentation_id: int):
+    """Fetch presentation with caching for performance."""
+    return db.get_presentation_by_id(presentation_id)
+
 # Initialize session state for presentation selection
 if 'selected_presentation_id' not in st.session_state:
     st.session_state.selected_presentation_id = None
@@ -97,9 +102,8 @@ if not st.session_state.selected_presentation_id:
 else:
     pres_id = st.session_state.selected_presentation_id
 
-    # Fetch the presentation details
-    presentations = db.list_presentations(limit=100)
-    selected_pres = next((p for p in presentations if p['id'] == pres_id), None)
+    # Fetch the presentation details (optimized single-row query with caching)
+    selected_pres = get_cached_presentation(pres_id)
 
     if not selected_pres:
         st.error(f"Presentation {pres_id} not found")

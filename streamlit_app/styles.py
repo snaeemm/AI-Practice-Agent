@@ -964,7 +964,53 @@ section[data-testid="stSidebar"] {
     transform: translateY(-2px) !important;
 }
 
-/* Slide Viewer Styling */
+/* Slide Viewer Styling with Enhanced Transitions */
+
+/* Slide transition animations */
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutToLeft {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-100px);
+    }
+}
+
+@keyframes slideOutToRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+}
+
 .slide-container {
     background: linear-gradient(135deg, #1a3a52 0%, #1a4d6d 100%) !important;
     border-radius: 16px !important;
@@ -976,7 +1022,12 @@ section[data-testid="stSidebar"] {
     align-items: center !important;
     justify-content: center !important;
     position: relative !important;
-    animation: fadeInUp 0.6s ease-out !important;
+    animation: slideInFromRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Smooth transition on slide changes */
+.slide-container, .slide-inner {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .slide-watermark {

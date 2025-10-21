@@ -21,8 +21,9 @@ def _is_title_slide(slide_data: Dict[str, Any]) -> bool:
     return False
 
 
+@st.cache_data
 def _get_logo_base64() -> str:
-    """Load and encode the vertical logo as base64."""
+    """Load and encode the vertical logo as base64 (cached for performance)."""
     logo_path = Path(__file__).parent.parent / "company_logo_vertical.png"
     if logo_path.exists():
         with open(logo_path, "rb") as f:
@@ -48,9 +49,12 @@ def render_slide_viewer(slides: List[Dict[str, Any]]) -> None:
     # Initialize session state for slide navigation
     if "current_slide" not in st.session_state:
         st.session_state.current_slide = 0
+    if "previous_slide_idx" not in st.session_state:
+        st.session_state.previous_slide_idx = 0
 
     # Current slide with bounds checking
     current_idx = st.session_state.current_slide
+    previous_idx = st.session_state.previous_slide_idx
 
     # Reset to 0 if index is out of bounds (e.g., after deletion)
     if current_idx >= len(slides):
@@ -114,6 +118,21 @@ def render_slide_viewer(slides: List[Dict[str, Any]]) -> None:
     # Render the slide
     st.markdown(slide_html, unsafe_allow_html=True)
 
+    # Add keyboard navigation support
+    keyboard_script = f"""
+    <script>
+    document.addEventListener('keydown', function(e) {{
+        if (e.key === 'ArrowLeft') {{
+            document.querySelector('[data-testid="baseButton-secondary"][key="prev_slide"]')?.click();
+        }} else if (e.key === 'ArrowRight' || e.key === ' ') {{
+            e.preventDefault();
+            document.querySelector('[data-testid="baseButton-secondary"][key="next_slide"]')?.click();
+        }}
+    }});
+    </script>
+    """
+    st.markdown(keyboard_script, unsafe_allow_html=True)
+
     # Navigation controls
     st.markdown("---")
 
@@ -121,6 +140,7 @@ def render_slide_viewer(slides: List[Dict[str, Any]]) -> None:
 
     with col_prev:
         if st.button("⬅️ Prev", key="prev_slide", use_container_width=True):
+            st.session_state.previous_slide_idx = current_idx
             if current_idx > 0:
                 st.session_state.current_slide -= 1
             else:
@@ -142,6 +162,7 @@ def render_slide_viewer(slides: List[Dict[str, Any]]) -> None:
 
     with col_next:
         if st.button("Next ➡️", key="next_slide", use_container_width=True):
+            st.session_state.previous_slide_idx = current_idx
             if current_idx < len(slides) - 1:
                 st.session_state.current_slide += 1
             else:
