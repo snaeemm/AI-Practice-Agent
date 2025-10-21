@@ -6,6 +6,7 @@ def apply_custom_styles():
 /* --- Font Import --- */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
 /* --- Global Font Application --- */
 * {
@@ -13,21 +14,51 @@ def apply_custom_styles():
 }
 
 /* --- Material Icons Support --- */
-.material-icons {
+.material-icons,
+.material-icons-outlined,
+.material-icons-round,
+.material-icons-sharp,
+.material-icons-two-tone {
     font-family: 'Material Icons' !important;
-    font-weight: normal;
-    font-style: normal;
-    font-size: 24px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    display: inline-block;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    -webkit-font-smoothing: antialiased;
+    font-weight: normal !important;
+    font-style: normal !important;
+    font-size: 24px !important;
+    line-height: 1 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    display: inline-block !important;
+    white-space: nowrap !important;
+    word-wrap: normal !important;
+    direction: ltr !important;
+    -webkit-font-smoothing: antialiased !important;
+    text-rendering: optimizeLegibility !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    font-feature-settings: 'liga' !important;
+}
+
+/* Hide text fallback for Material Icons when font is loading */
+.material-icons:not(:empty),
+button .material-icons {
+    text-indent: 0 !important;
+    overflow: visible !important;
+}
+
+/* Fix Streamlit button icons on mobile */
+button span[class*="material"] {
+    font-family: 'Material Icons' !important;
+}
+
+/* Hide the literal text when Material Icons fail to render */
+*:not(input):not(textarea) {
     text-rendering: optimizeLegibility;
-    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Force Material Icons rendering for common icon containers */
+[class*="icon"],
+[class*="Icon"],
+span[class*="st"] {
+    -webkit-font-feature-settings: 'liga';
+    -moz-font-feature-settings: 'liga';
     font-feature-settings: 'liga';
 }
 
