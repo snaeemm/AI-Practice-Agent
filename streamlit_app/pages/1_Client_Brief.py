@@ -27,7 +27,6 @@ if not require_auth():
 render_sidebar("client_brief")
 
 render_page_header_logo()
-st.title("📋 Client Brief")
 
 db_manager = DatabaseManager()
 ui_ops = UIOperations(db_manager)
