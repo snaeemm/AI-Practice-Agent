@@ -93,6 +93,31 @@ img {
     background: linear-gradient(135deg, #0a1828 0%, #102d47 50%, #0a1828 100%) !important;
     color: #ffffff !important;
     font-family: 'Montserrat', sans-serif !important;
+    position: relative !important;
+    overflow-x: hidden !important;
+}
+
+/* Animated background gradient */
+.stApp::before {
+    content: '' !important;
+    position: fixed !important;
+    top: -50% !important;
+    left: -50% !important;
+    width: 200% !important;
+    height: 200% !important;
+    background: radial-gradient(circle, rgba(41, 128, 185, 0.05) 0%, transparent 50%) !important;
+    animation: rotateBackground 30s linear infinite !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+@keyframes rotateBackground {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 [data-testid="stHeader"] {
@@ -497,6 +522,163 @@ button:active::before {
     animation: gradientShift 2s ease infinite !important;
 }
 
+/* --- SKELETON LOADING SCREENS --- */
+
+/* Skeleton placeholder animation */
+.skeleton {
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0.05) 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0.05) 100%) !important;
+    background-size: 200% 100% !important;
+    animation: shimmer 1.5s ease-in-out infinite !important;
+    border-radius: 6px !important;
+}
+
+/* Skeleton for text lines */
+.skeleton-text {
+    height: 1rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* Skeleton for buttons */
+.skeleton-button {
+    height: 2.5rem !important;
+    width: 100px !important;
+}
+
+/* --- CUSTOM SCROLLBAR --- */
+
+/* For WebKit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    width: 10px !important;
+    height: 10px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(10, 24, 40, 0.5) !important;
+    border-radius: 10px !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%) !important;
+    border-radius: 10px !important;
+    transition: all 0.3s ease !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #3498db 0%, #5dade2 100%) !important;
+    box-shadow: 0 0 10px rgba(102, 179, 255, 0.5) !important;
+}
+
+/* For Firefox */
+* {
+    scrollbar-width: thin !important;
+    scrollbar-color: #3498db rgba(10, 24, 40, 0.5) !important;
+}
+
+/* --- TEXT SELECTION STYLING --- */
+
+::selection {
+    background: rgba(52, 152, 219, 0.4) !important;
+    color: #ffffff !important;
+    text-shadow: 0 0 8px rgba(102, 179, 255, 0.5) !important;
+}
+
+::-moz-selection {
+    background: rgba(52, 152, 219, 0.4) !important;
+    color: #ffffff !important;
+    text-shadow: 0 0 8px rgba(102, 179, 255, 0.5) !important;
+}
+
+/* --- ENHANCED TABLE STYLING --- */
+
+/* Data tables */
+[data-testid="stDataFrame"],
+.stDataFrame {
+    animation: fadeInUp 0.5s ease-out !important;
+}
+
+/* Table headers */
+[data-testid="stDataFrame"] thead th,
+.stDataFrame thead th {
+    background: linear-gradient(135deg, #1d4d7f 0%, #2a6fa3 100%) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    font-size: 0.85rem !important;
+    padding: 0.75rem !important;
+    border-bottom: 2px solid #66b3ff !important;
+}
+
+/* Table rows */
+[data-testid="stDataFrame"] tbody tr,
+.stDataFrame tbody tr {
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stDataFrame"] tbody tr:hover,
+.stDataFrame tbody tr:hover {
+    background: rgba(102, 179, 255, 0.1) !important;
+    transform: scale(1.01) !important;
+    box-shadow: 0 2px 8px rgba(41, 128, 185, 0.2) !important;
+}
+
+/* Table cells */
+[data-testid="stDataFrame"] tbody td,
+.stDataFrame tbody td {
+    padding: 0.6rem !important;
+    border-bottom: 1px solid rgba(102, 179, 255, 0.1) !important;
+}
+
+/* --- ENHANCED FORM ELEMENTS --- */
+
+/* Text areas */
+textarea {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(102, 179, 255, 0.2) !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    padding: 0.75rem !important;
+    transition: all 0.3s ease !important;
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+textarea:focus {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(102, 179, 255, 0.6) !important;
+    box-shadow: 0 0 20px rgba(102, 179, 255, 0.3) !important;
+}
+
+/* Checkboxes and radio buttons */
+input[type="checkbox"],
+input[type="radio"] {
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+input[type="checkbox"]:hover,
+input[type="radio"]:hover {
+    transform: scale(1.1) !important;
+}
+
+/* File uploader */
+[data-testid="stFileUploader"] {
+    border: 2px dashed rgba(102, 179, 255, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 2rem !important;
+    transition: all 0.3s ease !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+[data-testid="stFileUploader"]:hover {
+    border-color: rgba(102, 179, 255, 0.6) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 0 20px rgba(102, 179, 255, 0.2) !important;
+    transform: scale(1.01) !important;
+}
+
 section[data-testid="stSidebar"] div[data-testid="stInfo"] {
     background-color: rgba(29,77,127,0.9) !important;
     padding: 0.6rem 0.75rem !important;
@@ -571,58 +753,97 @@ section[data-testid="stSidebar"] hr {
     font-weight: 500;
 }
 
-/* Success boxes - keep green */
+/* Success boxes - keep green with enhanced animation */
 [data-testid="stAlert"][data-testid*="success"],
 .stAlert-success {
-    background-color: rgba(39, 114, 60, 0.9) !important;
-    border: 1px solid rgba(76, 175, 80, 0.3) !important;
+    background: linear-gradient(135deg, rgba(39, 114, 60, 0.9) 0%, rgba(56, 142, 60, 0.9) 100%) !important;
+    border: 1px solid rgba(76, 175, 80, 0.5) !important;
+    box-shadow: 0 4px 20px rgba(76, 175, 80, 0.2) !important;
+    animation: fadeInUp 0.4s ease-out, pulse 2s ease-in-out infinite !important;
 }
 
 [data-testid="stAlert"][data-testid*="success"] p,
 .stAlert-success p {
     color: #c8e6c9 !important;
-    font-weight: 500;
+    font-weight: 600 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
 }
 
 [data-testid="stAlert"][data-testid*="success"] svg,
 .stAlert-success svg {
     fill: #4caf50 !important;
+    filter: drop-shadow(0 2px 4px rgba(76, 175, 80, 0.5)) !important;
 }
 
-/* Warning boxes - keep yellow/orange */
+/* Success checkmark animation */
+@keyframes checkmark {
+    0% {
+        transform: scale(0) rotate(-45deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2) rotate(-45deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+[data-testid="stAlert"][data-testid*="success"] svg {
+    animation: checkmark 0.5s ease-out !important;
+}
+
+/* Warning boxes - keep yellow/orange with enhanced styling */
 [data-testid="stAlert"][data-testid*="warning"],
 .stAlert-warning {
-    background-color: rgba(120, 81, 17, 0.9) !important;
-    border: 1px solid rgba(255, 193, 7, 0.3) !important;
+    background: linear-gradient(135deg, rgba(120, 81, 17, 0.9) 0%, rgba(142, 95, 20, 0.9) 100%) !important;
+    border: 1px solid rgba(255, 193, 7, 0.5) !important;
+    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.2) !important;
+    animation: fadeInUp 0.4s ease-out !important;
 }
 
 [data-testid="stAlert"][data-testid*="warning"] p,
 .stAlert-warning p {
     color: #ffe082 !important;
-    font-weight: 500;
+    font-weight: 600 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
 }
 
 [data-testid="stAlert"][data-testid*="warning"] svg,
 .stAlert-warning svg {
     fill: #ffc107 !important;
+    filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.5)) !important;
+    animation: pulse 2s ease-in-out infinite !important;
 }
 
-/* Error boxes - keep red */
+/* Error boxes - keep red with shake animation */
 [data-testid="stAlert"][data-testid*="error"],
 .stAlert-error {
-    background-color: rgba(120, 29, 29, 0.9) !important;
-    border: 1px solid rgba(244, 67, 54, 0.3) !important;
+    background: linear-gradient(135deg, rgba(120, 29, 29, 0.9) 0%, rgba(183, 28, 28, 0.9) 100%) !important;
+    border: 1px solid rgba(244, 67, 54, 0.5) !important;
+    box-shadow: 0 4px 20px rgba(244, 67, 54, 0.3) !important;
+    animation: fadeInUp 0.4s ease-out, shake 0.5s ease-out !important;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 
 [data-testid="stAlert"][data-testid*="error"] p,
 .stAlert-error p {
     color: #ffcdd2 !important;
-    font-weight: 500;
+    font-weight: 600 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
 }
 
 [data-testid="stAlert"][data-testid*="error"] svg,
 .stAlert-error svg {
     fill: #f44336 !important;
+    filter: drop-shadow(0 2px 4px rgba(244, 67, 54, 0.5)) !important;
 }
 
 [data-testid="stAlert"] svg {
