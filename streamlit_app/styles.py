@@ -31,6 +31,21 @@ def apply_custom_styles():
     font-feature-settings: 'liga';
 }
 
+/* --- High Quality Image Rendering --- */
+img {
+    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: crisp-edges !important;
+    -ms-interpolation-mode: nearest-neighbor !important;
+}
+
+/* Override for logos - smooth high quality rendering */
+[data-testid="stImage"] img,
+.stImage img {
+    image-rendering: high-quality !important;
+    image-rendering: -webkit-optimize-contrast !important;
+    -ms-interpolation-mode: bicubic !important;
+}
+
 /* --- Main Background --- */
 .main, .stApp {
     background: linear-gradient(135deg, #0a1828 0%, #102d47 50%, #0a1828 100%) !important;

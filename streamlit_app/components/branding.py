@@ -29,7 +29,7 @@ def render_sidebar_logo() -> None:
     """Render horizontal logo in sidebar with Streamlit's native image display."""
     logo_path = _get_logo_path("horizontal")
     if logo_path.exists():
-        st.image(str(logo_path), width=150)
+        st.image(str(logo_path), width=150, output_format="PNG")
         st.markdown("")  # Add spacing
     else:
         st.write("⚙️ Granite")
@@ -47,7 +47,7 @@ def render_page_header_logo(width_pct: int = 80, max_width: int = 200) -> None:
         # Center the logo using columns
         col1, col2, col3 = st.columns([1, width_pct, 1])
         with col2:
-            st.image(str(logo_path), width=max_width)
+            st.image(str(logo_path), width=max_width, output_format="PNG")
         st.markdown("")  # Add spacing
     else:
         st.write("📊 Page Header")
