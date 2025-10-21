@@ -320,8 +320,13 @@ section[data-testid="stSidebar"] details[open] button {
 
 /* Smaller font for RFP dashboard sidebar navigation buttons */
 section[data-testid="stSidebar"] button[data-testid="baseButton-secondary"] {
-    font-size: 0.85rem !important;
+    font-size: 0.8rem !important;
     padding: 0.4rem 0.6rem !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    line-height: 1.3 !important;
+    min-height: 2rem !important;
+    height: auto !important;
 }
 
 section[data-testid="stSidebar"] div[data-testid="stInfo"] {

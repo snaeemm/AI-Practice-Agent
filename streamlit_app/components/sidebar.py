@@ -118,9 +118,8 @@ def render_dashboard_sidebar(username):
             rfp_id = rfp.get('rfp_id')
             project_title = rfp.get('project_title', 'No Title')
 
-            # Create compact button with truncated title
-            button_label = project_title[:20] + "..." if len(project_title) > 20 else project_title
-            if st.button(button_label, key=f"nav_{rfp_id}", use_container_width=True, help=project_title):
+            # Create button with full title (no truncation)
+            if st.button(project_title, key=f"nav_{rfp_id}", use_container_width=True):
                 st.session_state.selected_rfp = rfp_id
                 st.rerun()
     else:
