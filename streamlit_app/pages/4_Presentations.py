@@ -22,9 +22,6 @@ if not require_auth():
 render_sidebar("presentations")
 
 render_page_header_logo()
-st.title("📊 Presentations")
-st.markdown("Create, view, and edit structured presentations for Gamma.app")
-st.markdown("---")
 
 db = DatabaseManager()
 
@@ -50,9 +47,14 @@ presentations = db.list_presentations(limit=50)
 # View selected presentation or dashboard
 if not st.session_state.selected_presentation_id:
     if not presentations:
+        st.markdown("# 📊 Presentations")
+        st.markdown("Create, view, and edit structured presentations for Gamma.app")
+        st.markdown("---")
         st.info("📭 No presentations found. Ask the agent to create one!")
     else:
-        st.markdown(f"## 📊 Select a Presentation ({len(presentations)})")
+        st.markdown(f"# 📊 Presentations")
+        st.markdown(f"Create, view, and edit structured presentations for Gamma.app ({len(presentations)})")
+        st.markdown("---")
 
         # Display presentations as cards
         for pres in presentations:
