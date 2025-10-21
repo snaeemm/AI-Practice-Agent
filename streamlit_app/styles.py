@@ -338,6 +338,24 @@ section[data-testid="stSidebar"] .stCaption {
     opacity: 0.8 !important;
 }
 
+/* --- ENHANCED CARD STYLING --- */
+
+/* Add subtle border and shadow to containers */
+.main .block-container > div > div {
+    border: 1px solid rgba(41, 128, 185, 0.1) !important;
+    border-radius: 8px !important;
+    padding: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Enhanced card hover state */
+.main .block-container > div > div:hover {
+    border-color: rgba(102, 179, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    box-shadow: 0 4px 20px rgba(41, 128, 185, 0.15) !important;
+}
+
 section[data-testid="stSidebar"] div[data-testid="stInfo"] {
     background-color: rgba(29,77,127,0.9) !important;
     padding: 0.6rem 0.75rem !important;
@@ -470,6 +488,107 @@ section[data-testid="stSidebar"] hr {
     color: #ffffff !important;
 }
 
+/* --- ANIMATIONS & TRANSITIONS --- */
+
+/* Smooth scroll behavior */
+html {
+    scroll-behavior: smooth !important;
+}
+
+/* Fade-in animation for cards */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Pulsing animation for status badges */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Shimmer animation for loading states */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+/* Apply fade-in to containers */
+.main .block-container > div > div {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Smooth transitions for all interactive elements */
+button, a, [role="button"] {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Enhanced button hover effects */
+button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3) !important;
+}
+
+button:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Status badge animations */
+[data-testid="stAlert"] {
+    animation: fadeInUp 0.4s ease-out !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Success badges pulse gently */
+.stAlert-success, [data-baseweb="notification"] {
+    animation: fadeInUp 0.4s ease-out, pulse 2s ease-in-out infinite !important;
+}
+
+/* Card hover effects for containers */
+.main .block-container > div > div:hover {
+    transform: scale(1.01) !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Glassmorphism effect for sidebar */
+section[data-testid="stSidebar"] {
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Smooth expand/collapse for expanders */
+[data-testid="stExpander"] {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-testid="stExpander"][aria-expanded="true"] {
+    box-shadow: 0 4px 12px rgba(41, 128, 185, 0.2) !important;
+}
+
+/* Tab transition effects */
+.stTabs [data-baseweb="tab"] {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.stTabs [aria-selected="true"] {
+    transform: translateY(-2px) !important;
+}
+
 /* Slide Viewer Styling */
 .slide-container {
     background: linear-gradient(135deg, #1a3a52 0%, #1a4d6d 100%) !important;
@@ -482,6 +601,7 @@ section[data-testid="stSidebar"] hr {
     align-items: center !important;
     justify-content: center !important;
     position: relative !important;
+    animation: fadeInUp 0.6s ease-out !important;
 }
 
 .slide-watermark {
