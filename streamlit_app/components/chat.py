@@ -365,11 +365,147 @@ def render_chat(session):
     st.markdown("---")
 
     current_show_uploader = st.session_state.get('show_uploader', False)
-    if st.button("📎 Upload Document", help="Upload RFP or documents", key="upload_btn", use_container_width=True):
-        st.session_state.show_uploader = not current_show_uploader
-        st.rerun()
 
-    user_input = st.chat_input("Type your message here...", key="chat_input")
+    # Voice input button and chat input in columns
+    col1, col2 = st.columns([5, 1])
+
+    with col1:
+        if st.button("📎 Upload Document", help="Upload RFP or documents", key="upload_btn", use_container_width=True):
+            st.session_state.show_uploader = not current_show_uploader
+            st.rerun()
+
+    with col2:
+        if st.button("🎤", help="Record voice message", key="voice_btn", use_container_width=True):
+            st.session_state.show_voice_recorder = not st.session_state.get('show_voice_recorder', False)
+            st.rerun()
+
+    # Show voice recorder if toggled
+    if st.session_state.get('show_voice_recorder', False):
+        with st.container():
+            st.markdown("### 🎤 Voice Message")
+            audio_file = st.audio_input("Record your message", key="audio_input")
+
+            if audio_file and 'last_transcribed_audio' not in st.session_state:
+                with st.spinner("🎯 Transcribing audio..."):
+                    try:
+                        from vosk import Model, KaldiRecognizer
+                        import wave
+                        import json
+                        import tempfile
+                        import os as os_module
+                        import urllib.request
+                        import zipfile
+
+                        # Download and cache Vosk model
+                        @st.cache_resource
+                        def load_vosk_model():
+                            model_path = "/tmp/vosk-model-small-en-us-0.15"
+
+                            # Download model if not exists
+                            if not os.path.exists(model_path):
+                                model_url = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
+                                zip_path = "/tmp/vosk-model.zip"
+
+                                st.info("📥 Downloading speech recognition model (one-time, ~40MB)...")
+                                urllib.request.urlretrieve(model_url, zip_path)
+
+                                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                                    zip_ref.extractall("/tmp/")
+
+                                os_module.unlink(zip_path)
+
+                            return Model(model_path)
+
+                        model = load_vosk_model()
+
+                        # Save audio to temporary file
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
+                            tmp_file.write(audio_file.getbuffer())
+                            tmp_audio_path = tmp_file.name
+
+                        # Open WAV file and transcribe
+                        wf = wave.open(tmp_audio_path, "rb")
+
+                        # Check audio format
+                        if wf.getnchannels() != 1 or wf.getsampwidth() != 2:
+                            st.warning("⚠️ Audio format should be mono, 16-bit. Attempting transcription anyway...")
+
+                        recognizer = KaldiRecognizer(model, wf.getframerate())
+                        recognizer.SetWords(True)
+
+                        # Transcribe
+                        full_text = []
+                        while True:
+                            data = wf.readframes(4000)
+                            if len(data) == 0:
+                                break
+                            if recognizer.AcceptWaveform(data):
+                                result = json.loads(recognizer.Result())
+                                if 'text' in result and result['text']:
+                                    full_text.append(result['text'])
+
+                        # Get final result
+                        final_result = json.loads(recognizer.FinalResult())
+                        if 'text' in final_result and final_result['text']:
+                            full_text.append(final_result['text'])
+
+                        transcribed_text = " ".join(full_text).strip()
+
+                        # Clean up
+                        wf.close()
+                        os_module.unlink(tmp_audio_path)
+
+                        if not transcribed_text:
+                            st.warning("⚠️ No speech detected. Please try speaking more clearly.")
+                        else:
+                            # Store transcribed text
+                            st.session_state.transcribed_text = transcribed_text
+                            st.session_state.last_transcribed_audio = audio_file
+                            st.success("✅ Audio transcribed!")
+                            st.rerun()
+
+                    except Exception as e:
+                        st.error(f"❌ Transcription failed: {str(e)}")
+                        st.info("💡 Make sure `vosk` is installed: `pip install vosk`")
+                        import traceback
+                        st.code(traceback.format_exc())
+
+            # Show transcribed text if available
+            if 'transcribed_text' in st.session_state:
+                transcribed_text = st.text_area(
+                    "Transcribed text (you can edit before sending):",
+                    value=st.session_state.transcribed_text,
+                    height=100,
+                    key="transcribed_text_area"
+                )
+
+                col_send, col_cancel = st.columns(2)
+                with col_send:
+                    if st.button("📤 Send", key="send_voice", use_container_width=True, type="primary"):
+                        st.session_state.voice_message_to_send = transcribed_text
+                        # Clean up
+                        del st.session_state.transcribed_text
+                        del st.session_state.last_transcribed_audio
+                        st.session_state.show_voice_recorder = False
+                        st.rerun()
+
+                with col_cancel:
+                    if st.button("❌ Cancel", key="cancel_voice", use_container_width=True):
+                        # Clean up
+                        if 'transcribed_text' in st.session_state:
+                            del st.session_state.transcribed_text
+                        if 'last_transcribed_audio' in st.session_state:
+                            del st.session_state.last_transcribed_audio
+                        st.session_state.show_voice_recorder = False
+                        st.rerun()
+
+    # Check if we have a voice message to send
+    user_input = None
+    if 'voice_message_to_send' in st.session_state:
+        user_input = st.session_state.voice_message_to_send
+        del st.session_state.voice_message_to_send
+    else:
+        user_input = st.chat_input("Type your message here...", key="chat_input")
 
     if user_input:
         # Prevent accidental empty submits
