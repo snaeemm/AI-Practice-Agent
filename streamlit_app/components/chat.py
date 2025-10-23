@@ -153,6 +153,31 @@ def send_message(session, user_input: str, display_message: str = None):
         else:
             session.save_assistant_message(response_text)
 
+        # Generate TTS if last message was voice
+        if st.session_state.get('last_message_was_voice', False) and response_text:
+            try:
+                import pyttsx3
+                import tempfile
+
+                # Generate speech audio
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_audio:
+                    engine = pyttsx3.init()
+
+                    # Configure voice (optional - adjust speed/volume)
+                    engine.setProperty('rate', 150)  # Speed (words per minute)
+                    engine.setProperty('volume', 0.9)  # Volume (0.0 to 1.0)
+
+                    # Save to file
+                    engine.save_to_file(response_text, tmp_audio.name)
+                    engine.runAndWait()
+
+                    # Store audio path in session state for playback
+                    st.session_state.tts_audio_path = tmp_audio.name
+
+            except Exception as tts_error:
+                print(f"⚠️ TTS Error: {tts_error}")
+                # Don't fail the whole response if TTS fails
+
     except Exception as e:
         error_msg = str(e)
         full_trace = traceback.format_exc()
@@ -175,6 +200,23 @@ def send_message(session, user_input: str, display_message: str = None):
 
 def render_chat(session):
     st.markdown("### 💬 Chat")
+
+    # Auto-play TTS if available
+    if 'tts_audio_path' in st.session_state:
+        try:
+            with open(st.session_state.tts_audio_path, 'rb') as audio_file:
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format='audio/mp3', autoplay=True)
+
+            # Clean up
+            import os as os_module
+            os_module.unlink(st.session_state.tts_audio_path)
+            del st.session_state.tts_audio_path
+
+        except Exception as e:
+            print(f"⚠️ Error playing TTS audio: {e}")
+            if 'tts_audio_path' in st.session_state:
+                del st.session_state.tts_audio_path
 
     messages = session.get_history()
 
@@ -381,9 +423,22 @@ def render_chat(session):
 
     # Show voice recorder if toggled
     if st.session_state.get('show_voice_recorder', False):
+        # Add CSS for voice recorder to ensure white text
+        st.markdown("""
+        <style>
+        div[data-testid="stAudioInput"] label {
+            color: #ffffff !important;
+        }
+        div[data-testid="stAudioInput"] * {
+            color: #ffffff !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
         with st.container():
             st.markdown("### 🎤 Voice Message")
-            audio_file = st.audio_input("Record your message", key="audio_input")
+            st.caption("Record your message - it will be sent automatically after transcription")
+            audio_file = st.audio_input("Press to record", key="audio_input")
 
             if audio_file and 'last_transcribed_audio' not in st.session_state:
                 with st.spinner("🎯 Transcribing audio..."):
@@ -457,11 +512,16 @@ def render_chat(session):
 
                         if not transcribed_text:
                             st.warning("⚠️ No speech detected. Please try speaking more clearly.")
-                        else:
-                            # Store transcribed text
-                            st.session_state.transcribed_text = transcribed_text
+                            # Clear the audio so user can record again
                             st.session_state.last_transcribed_audio = audio_file
-                            st.success("✅ Audio transcribed!")
+                        else:
+                            # AUTO-SEND: Immediately queue transcribed text to be sent
+                            st.success(f"✅ Transcribed: \"{transcribed_text[:100]}...\"")
+                            st.session_state.voice_message_to_send = transcribed_text
+                            # Clean up voice recorder state
+                            st.session_state.show_voice_recorder = False
+                            if 'last_transcribed_audio' in st.session_state:
+                                del st.session_state.last_transcribed_audio
                             st.rerun()
 
                     except Exception as e:
@@ -470,42 +530,17 @@ def render_chat(session):
                         import traceback
                         st.code(traceback.format_exc())
 
-            # Show transcribed text if available
-            if 'transcribed_text' in st.session_state:
-                transcribed_text = st.text_area(
-                    "Transcribed text (you can edit before sending):",
-                    value=st.session_state.transcribed_text,
-                    height=100,
-                    key="transcribed_text_area"
-                )
-
-                col_send, col_cancel = st.columns(2)
-                with col_send:
-                    if st.button("📤 Send", key="send_voice", use_container_width=True, type="primary"):
-                        st.session_state.voice_message_to_send = transcribed_text
-                        # Clean up
-                        del st.session_state.transcribed_text
-                        del st.session_state.last_transcribed_audio
-                        st.session_state.show_voice_recorder = False
-                        st.rerun()
-
-                with col_cancel:
-                    if st.button("❌ Cancel", key="cancel_voice", use_container_width=True):
-                        # Clean up
-                        if 'transcribed_text' in st.session_state:
-                            del st.session_state.transcribed_text
-                        if 'last_transcribed_audio' in st.session_state:
-                            del st.session_state.last_transcribed_audio
-                        st.session_state.show_voice_recorder = False
-                        st.rerun()
-
-    # Check if we have a voice message to send
+    # Check if we have a voice message to send (auto-sent after transcription)
     user_input = None
     if 'voice_message_to_send' in st.session_state:
         user_input = st.session_state.voice_message_to_send
         del st.session_state.voice_message_to_send
+        # Mark that this was a voice message so we can enable TTS response
+        st.session_state.last_message_was_voice = True
     else:
         user_input = st.chat_input("Type your message here...", key="chat_input")
+        # Regular text input, disable TTS
+        st.session_state.last_message_was_voice = False
 
     if user_input:
         # Prevent accidental empty submits

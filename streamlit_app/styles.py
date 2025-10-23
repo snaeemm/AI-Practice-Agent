@@ -172,6 +172,47 @@ h4, .stMarkdown h4 {
     color: #aaaaaa !important;
 }
 
+.main .stCaption, .main [data-testid="stCaption"] {
+    color: #cccccc !important;
+}
+
+/* Ensure all text in main is light colored */
+.main p, .main span, .main div {
+    color: #ffffff !important;
+}
+
+.main .element-container p,
+.main .element-container span,
+.main .element-container div {
+    color: #ffffff !important;
+}
+
+/* Override any black text in main content */
+.main * {
+    color: inherit !important;
+}
+
+/* But ensure root elements are white */
+.main > * {
+    color: #ffffff !important;
+}
+
+.main .block-container * {
+    color: #ffffff !important;
+}
+
+/* Except for input fields which need dark text */
+.main input[type="text"],
+.main textarea,
+.main [data-baseweb="input"] input,
+.main [data-baseweb="select"] div[data-baseweb="input"] input,
+.main [data-baseweb="select"] div[data-baseweb="input"] div,
+.main [role="option"],
+.main [data-baseweb="tag"],
+.main [data-baseweb="tag"] span {
+    color: #1a1a1a !important;
+}
+
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #0d243d 0%, #132f4d 60%, #153b5b 100%) !important;
     color: #ffffff !important;
@@ -287,6 +328,258 @@ section[data-testid="stSidebar"] [data-baseweb="select"] div[data-baseweb="input
 
 section[data-testid="stSidebar"] [data-baseweb="select"] div[data-baseweb="input"] input {
     color: #ffffff !important;
+}
+
+/* ==================== MAIN CONTENT FORM ELEMENTS ==================== */
+
+/* Main content selectboxes and dropdowns */
+.main [data-baseweb="select"] {
+    background-color: transparent !important;
+}
+
+.main [data-baseweb="select"] > div:first-child {
+    background-color: transparent !important;
+    border: none !important;
+}
+
+.main [data-baseweb="select"] div[data-baseweb="input"] {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(102, 179, 255, 0.3) !important;
+    border-radius: 8px !important;
+    color: #1a1a1a !important;
+    min-height: 2.8rem !important;
+    padding: 0.5rem 0.75rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.main [data-baseweb="select"] div[data-baseweb="input"]:hover {
+    background-color: rgba(255, 255, 255, 1) !important;
+    border-color: rgba(102, 179, 255, 0.5) !important;
+    box-shadow: 0 0 10px rgba(102, 179, 255, 0.15) !important;
+}
+
+.main [data-baseweb="select"] div[data-baseweb="input"]:focus-within {
+    background-color: rgba(255, 255, 255, 1) !important;
+    border-color: rgba(102, 179, 255, 0.6) !important;
+    box-shadow: 0 0 15px rgba(102, 179, 255, 0.25) !important;
+    outline: none !important;
+}
+
+.main [data-baseweb="select"] div[data-baseweb="input"] input,
+.main [data-baseweb="select"] div[data-baseweb="input"] div {
+    color: #1a1a1a !important;
+}
+
+/* Dropdown menu styling */
+.main [data-baseweb="popover"] {
+    background-color: rgba(255, 255, 255, 0.98) !important;
+    border: 1px solid rgba(102, 179, 255, 0.3) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+.main [data-baseweb="menu"] {
+    background-color: rgba(255, 255, 255, 0.98) !important;
+}
+
+.main [role="option"] {
+    color: #1a1a1a !important;
+    background-color: transparent !important;
+    padding: 0.6rem 1rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.main [role="option"]:hover {
+    background-color: rgba(102, 179, 255, 0.15) !important;
+    color: #000000 !important;
+}
+
+.main [role="option"][aria-selected="true"] {
+    background-color: rgba(102, 179, 255, 0.25) !important;
+    color: #000000 !important;
+    font-weight: 600 !important;
+}
+
+/* Main content text inputs */
+.main input[type="text"]:not([data-testid="stChatInput"] input),
+.main [data-baseweb="input"] input {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(102, 179, 255, 0.3) !important;
+    border-radius: 8px !important;
+    color: #1a1a1a !important;
+    padding: 0.6rem 0.75rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.main input[type="text"]:hover:not([data-testid="stChatInput"] input) {
+    background-color: rgba(255, 255, 255, 1) !important;
+    border-color: rgba(102, 179, 255, 0.5) !important;
+}
+
+.main input[type="text"]:focus:not([data-testid="stChatInput"] input) {
+    background-color: rgba(255, 255, 255, 1) !important;
+    border-color: rgba(102, 179, 255, 0.6) !important;
+    box-shadow: 0 0 15px rgba(102, 179, 255, 0.25) !important;
+}
+
+.main input[type="text"]::placeholder {
+    color: rgba(26, 26, 26, 0.5) !important;
+}
+
+/* Main content multiselect */
+.main [data-baseweb="tag"] {
+    background-color: rgba(102, 179, 255, 0.2) !important;
+    border: 1px solid rgba(102, 179, 255, 0.4) !important;
+    color: #1a1a1a !important;
+    border-radius: 6px !important;
+    padding: 0.25rem 0.5rem !important;
+    margin: 0.25rem !important;
+}
+
+.main [data-baseweb="tag"] span {
+    color: #1a1a1a !important;
+}
+
+/* Multiselect container - auto expand */
+.main div[data-baseweb="select"] > div {
+    min-height: 2.8rem !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* Multiselect input container with tags */
+.main div[data-baseweb="select"] div[data-baseweb="input"] {
+    min-height: 2.8rem !important;
+    height: auto !important;
+    max-height: none !important;
+    flex-wrap: wrap !important;
+    padding: 0.4rem !important;
+}
+
+/* Hide selected items from dropdown list */
+.main [role="listbox"] [role="option"][aria-selected="true"] {
+    display: none !important;
+}
+
+/* Better visibility for multiselect options */
+.main [role="listbox"] [role="option"] {
+    padding: 0.7rem 1rem !important;
+    color: #1a1a1a !important;
+    font-weight: 500 !important;
+}
+
+.main [role="listbox"] [role="option"]:hover {
+    background-color: rgba(102, 179, 255, 0.2) !important;
+    color: #000000 !important;
+}
+
+/* Main content radio buttons - enhanced visibility */
+.main [role="radiogroup"] {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border-radius: 8px !important;
+    padding: 0.5rem !important;
+}
+
+.main [role="radiogroup"] label {
+    color: #ffffff !important;
+}
+
+.main [role="radiogroup"] label span {
+    color: #ffffff !important;
+}
+
+.main [role="radiogroup"] label div {
+    color: #ffffff !important;
+}
+
+.main [role="radiogroup"] p {
+    color: #ffffff !important;
+}
+
+/* Radio button options text */
+.main [role="radiogroup"] label[data-baseweb="radio"] {
+    color: #ffffff !important;
+}
+
+.main [role="radiogroup"] label[data-baseweb="radio"] > div {
+    color: #ffffff !important;
+}
+
+.main [role="radiogroup"] [class*="st"] {
+    color: #ffffff !important;
+}
+
+.main [data-testid="stRadio"] label {
+    color: #ffffff !important;
+}
+
+.main [data-testid="stRadio"] label > div {
+    color: #ffffff !important;
+}
+
+.main [data-testid="stRadio"] label > div > div {
+    color: #ffffff !important;
+}
+
+.main [data-testid="stRadio"] [role="radiogroup"] label {
+    color: #ffffff !important;
+}
+
+/* Force all descendants of radio to be white */
+.main [data-testid="stRadio"] * {
+    color: #ffffff !important;
+}
+
+.main [role="radio"] {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border: 2px solid rgba(102, 179, 255, 0.3) !important;
+    width: 20px !important;
+    height: 20px !important;
+    transition: all 0.2s ease !important;
+}
+
+.main [role="radio"]:hover {
+    border-color: rgba(102, 179, 255, 0.6) !important;
+    box-shadow: 0 0 8px rgba(102, 179, 255, 0.3) !important;
+}
+
+.main [role="radio"][aria-checked="true"] {
+    background-color: #3498db !important;
+    border-color: #2980b9 !important;
+    box-shadow: 0 0 12px rgba(52, 152, 219, 0.5) !important;
+}
+
+.main [role="radio"] + div {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+}
+
+.main [role="radio"] ~ div {
+    color: #ffffff !important;
+}
+
+/* Main content labels */
+.main label {
+    color: #e8f1ff !important;
+    font-weight: 500 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* Main content color pickers */
+.main input[type="color"] {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border: 2px solid rgba(102, 179, 255, 0.3) !important;
+    border-radius: 8px !important;
+    width: 80px !important;
+    height: 45px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+}
+
+.main input[type="color"]:hover {
+    border-color: rgba(102, 179, 255, 0.6) !important;
+    box-shadow: 0 0 15px rgba(102, 179, 255, 0.3) !important;
+    transform: scale(1.05) !important;
 }
 
 [data-testid="stStatusContainer"] {
@@ -585,17 +878,21 @@ button[data-testid*="download"]:hover {
 
 /* Text areas */
 textarea {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(102, 179, 255, 0.2) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(102, 179, 255, 0.3) !important;
     border-radius: 8px !important;
-    color: #ffffff !important;
+    color: #1a1a1a !important;
     padding: 0.75rem !important;
     transition: all 0.3s ease !important;
     font-family: 'Montserrat', sans-serif !important;
 }
 
+textarea::placeholder {
+    color: rgba(26, 26, 26, 0.5) !important;
+}
+
 textarea:focus {
-    background: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 1) !important;
     border-color: rgba(102, 179, 255, 0.6) !important;
     box-shadow: 0 0 20px rgba(102, 179, 255, 0.3) !important;
 }
@@ -991,6 +1288,7 @@ section[data-testid="stSidebar"] {
 }
 
 /* Slide Viewer Styling with Enhanced Transitions */
+/* IMPORTANT: Slide styles should NOT apply to LinkedIn preview */
 
 /* Slide transition animations */
 @keyframes slideInFromRight {
@@ -1037,7 +1335,8 @@ section[data-testid="stSidebar"] {
     }
 }
 
-.slide-container {
+/* Scoped to NOT affect linkedin-preview-wrapper */
+.slide-container:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) {
     background: linear-gradient(135deg, #1a3a52 0%, #1a4d6d 100%) !important;
     border-radius: 16px !important;
     padding: 30px !important;
@@ -1052,11 +1351,12 @@ section[data-testid="stSidebar"] {
 }
 
 /* Smooth transition on slide changes */
-.slide-container, .slide-inner {
+.slide-container:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *),
+.slide-inner:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-.slide-watermark {
+.slide-watermark:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) {
     position: absolute !important;
     top: 50% !important;
     right: 10px !important;
@@ -1066,14 +1366,14 @@ section[data-testid="stSidebar"] {
     height: auto !important;
 }
 
-.slide-watermark img {
+.slide-watermark:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) img {
     width: 100% !important;
     height: auto !important;
     display: block !important;
     filter: brightness(0) invert(1) opacity(1) !important;
 }
 
-.slide-inner {
+.slide-inner:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) {
     width: 100% !important;
     background: linear-gradient(135deg, #0a1828 0%, #0f2a3f 100%) !important;
     border-radius: 12px !important;
@@ -1082,7 +1382,7 @@ section[data-testid="stSidebar"] {
     border: 1px solid rgba(41, 128, 185, 0.3) !important;
 }
 
-.slide-title-slide {
+.slide-title-slide:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) {
     text-align: center !important;
     padding: 80px 50px !important;
     background: linear-gradient(135deg, #2980b9 0%, #3498db 100%) !important;
@@ -1090,7 +1390,7 @@ section[data-testid="stSidebar"] {
     border-radius: 12px !important;
 }
 
-.slide-title-slide h1 {
+.slide-title-slide:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) h1 {
     font-size: 56px !important;
     font-weight: 700 !important;
     margin: 0 0 30px 0 !important;
@@ -1098,7 +1398,7 @@ section[data-testid="stSidebar"] {
     color: #ffffff !important;
 }
 
-.slide-title-slide h3 {
+.slide-title-slide:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) h3 {
     font-size: 28px !important;
     font-weight: 300 !important;
     margin: 30px 0 !important;
@@ -1106,7 +1406,7 @@ section[data-testid="stSidebar"] {
     color: #ffffff !important;
 }
 
-.slide-title-slide .brand {
+.slide-title-slide:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) .brand {
     font-size: 16px !important;
     margin-top: 60px !important;
     letter-spacing: 3px !important;
@@ -1114,7 +1414,7 @@ section[data-testid="stSidebar"] {
     color: #ffffff !important;
 }
 
-.slide-content-slide h2 {
+.slide-content-slide:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) h2 {
     font-size: 48px !important;
     color: #66b3ff !important;
     margin: 0 0 20px 0 !important;
@@ -1122,7 +1422,7 @@ section[data-testid="stSidebar"] {
     border-bottom: 4px solid #3498db !important;
 }
 
-.slide-content-slide .bullet {
+.slide-content-slide:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) .bullet {
     font-size: 20px !important;
     color: #e8f1ff !important;
     margin: 20px 0 !important;
@@ -1131,7 +1431,7 @@ section[data-testid="stSidebar"] {
     line-height: 1.6 !important;
 }
 
-.slide-content-slide .bullet:before {
+.slide-content-slide:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) .bullet:before {
     content: "▸" !important;
     position: absolute !important;
     left: 0 !important;
@@ -1141,7 +1441,7 @@ section[data-testid="stSidebar"] {
 }
 
 /* Nested Bullet Styling */
-.slide-content-slide .bullet-nested {
+.slide-content-slide:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) .bullet-nested {
     font-size: 17px !important;
     color: #b3d9ff !important;
     margin: 12px 0 !important;
@@ -1150,7 +1450,7 @@ section[data-testid="stSidebar"] {
     line-height: 1.5 !important;
 }
 
-.slide-content-slide .bullet-nested:before {
+.slide-content-slide:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) .bullet-nested:before {
     content: "◦" !important;
     position: absolute !important;
     left: 5px !important;

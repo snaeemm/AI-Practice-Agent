@@ -33,3 +33,4 @@ Pillow>=10.0.0
 
 # Voice/Audio Processing
 vosk>=0.3.45  # Lightweight, free, offline speech recognition
+pyttsx3>=2.90  # Text-to-speech for agent voice responses
