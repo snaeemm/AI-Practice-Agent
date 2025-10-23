@@ -156,26 +156,23 @@ def send_message(session, user_input: str, display_message: str = None):
         # Generate TTS if last message was voice
         if st.session_state.get('last_message_was_voice', False) and response_text:
             try:
-                import pyttsx3
+                from gtts import gTTS
                 import tempfile
 
-                # Generate speech audio
+                # Generate speech audio using Google TTS
+                tts = gTTS(text=response_text, lang='en', slow=False)
+
+                # Save to temporary file
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_audio:
-                    engine = pyttsx3.init()
-
-                    # Configure voice (optional - adjust speed/volume)
-                    engine.setProperty('rate', 150)  # Speed (words per minute)
-                    engine.setProperty('volume', 0.9)  # Volume (0.0 to 1.0)
-
-                    # Save to file
-                    engine.save_to_file(response_text, tmp_audio.name)
-                    engine.runAndWait()
-
+                    tts.save(tmp_audio.name)
                     # Store audio path in session state for playback
                     st.session_state.tts_audio_path = tmp_audio.name
+                    print(f"✅ TTS audio generated: {tmp_audio.name}")
 
             except Exception as tts_error:
                 print(f"⚠️ TTS Error: {tts_error}")
+                import traceback
+                traceback.print_exc()
                 # Don't fail the whole response if TTS fails
 
     except Exception as e:
@@ -203,18 +200,26 @@ def render_chat(session):
 
     # Auto-play TTS if available
     if 'tts_audio_path' in st.session_state:
+        print(f"🔊 Playing TTS audio from: {st.session_state.tts_audio_path}")
         try:
             with open(st.session_state.tts_audio_path, 'rb') as audio_file:
                 audio_bytes = audio_file.read()
+                print(f"🔊 Audio file size: {len(audio_bytes)} bytes")
+
+                # Display audio player with autoplay
                 st.audio(audio_bytes, format='audio/mp3', autoplay=True)
+                st.caption("🔊 Agent is speaking...")
 
             # Clean up
             import os as os_module
             os_module.unlink(st.session_state.tts_audio_path)
             del st.session_state.tts_audio_path
+            print("✅ TTS audio played and cleaned up")
 
         except Exception as e:
             print(f"⚠️ Error playing TTS audio: {e}")
+            import traceback
+            traceback.print_exc()
             if 'tts_audio_path' in st.session_state:
                 del st.session_state.tts_audio_path
 
@@ -516,7 +521,7 @@ def render_chat(session):
                             st.session_state.last_transcribed_audio = audio_file
                         else:
                             # AUTO-SEND: Immediately queue transcribed text to be sent
-                            st.success(f"✅ Transcribed: \"{transcribed_text[:100]}...\"")
+                            st.success("✅ Transcribed successfully - sending to agent...")
                             st.session_state.voice_message_to_send = transcribed_text
                             # Clean up voice recorder state
                             st.session_state.show_voice_recorder = False
