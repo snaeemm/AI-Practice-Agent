@@ -34,6 +34,3 @@ Pillow>=10.0.0
 # Voice/Audio Processing
 vosk>=0.3.45  # Lightweight, free, offline speech recognition
 gTTS>=2.5.0  # Google Text-to-speech for agent voice responses
-streamlit-audiorecorder>=0.0.5  # One-click audio recording component
-pydub>=0.25.1  # Audio processing library (required by streamlit-audiorecorder)
-audioop-lts>=0.2.2  # Required for pydub on Python 3.13+ (audioop removed from stdlib)

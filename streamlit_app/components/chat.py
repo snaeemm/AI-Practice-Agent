@@ -445,148 +445,103 @@ def render_chat(session):
 
     current_show_uploader = st.session_state.get('show_uploader', False)
 
-    # Voice input button and chat input in columns
-    col1, col2 = st.columns([5, 1])
+    # Upload document button
+    if st.button("📎 Upload Document", help="Upload RFP or documents", key="upload_btn", use_container_width=True):
+        st.session_state.show_uploader = not current_show_uploader
+        st.rerun()
 
-    with col1:
-        if st.button("📎 Upload Document", help="Upload RFP or documents", key="upload_btn", use_container_width=True):
-            st.session_state.show_uploader = not current_show_uploader
-            st.rerun()
+    # Voice recorder - always visible, no toggle needed
+    st.markdown("### 🎤 Voice Message")
+    st.caption("Click the microphone to record your message")
+    audio_file = st.audio_input("Record audio", key="audio_input")
 
-    with col2:
-        if st.button("🎤", help="Record voice message", key="voice_btn", use_container_width=True):
-            st.session_state.show_voice_recorder = True
-            st.rerun()
+    if audio_file and 'last_transcribed_audio' not in st.session_state:
+        with st.spinner("🎯 Transcribing audio..."):
+            try:
+                from vosk import Model, KaldiRecognizer
+                import wave
+                import json
+                import tempfile
+                import os as os_module
+                import urllib.request
+                import zipfile
 
-    # Show voice recorder if toggled
-    if st.session_state.get('show_voice_recorder', False):
-        # Add CSS for voice recorder to ensure white text
-        st.markdown("""
-        <style>
-        div[data-testid="stAudioInput"] label {
-            color: #ffffff !important;
-        }
-        div[data-testid="stAudioInput"] * {
-            color: #ffffff !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
+                # Download and cache Vosk model
+                @st.cache_resource
+                def load_vosk_model():
+                    model_path = "/tmp/vosk-model-small-en-us-0.15"
 
-        with st.container():
-            col_title, col_close = st.columns([5, 1])
-            with col_title:
-                st.markdown("### 🎤 Voice Message")
-            with col_close:
-                if st.button("✖", key="close_voice", help="Close voice recorder"):
-                    st.session_state.show_voice_recorder = False
-                    if 'last_transcribed_audio' in st.session_state:
-                        del st.session_state.last_transcribed_audio
+                    # Download model if not exists
+                    if not os.path.exists(model_path):
+                        model_url = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
+                        zip_path = "/tmp/vosk-model.zip"
+
+                        st.info("📥 Downloading speech recognition model (one-time, ~40MB)...")
+                        urllib.request.urlretrieve(model_url, zip_path)
+
+                        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                            zip_ref.extractall("/tmp/")
+
+                        os_module.unlink(zip_path)
+
+                    return Model(model_path)
+
+                model = load_vosk_model()
+
+                # Save audio to temporary file
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
+                    tmp_file.write(audio_file.getbuffer())
+                    tmp_audio_path = tmp_file.name
+
+                # Open WAV file and transcribe
+                wf = wave.open(tmp_audio_path, "rb")
+
+                # Check audio format
+                if wf.getnchannels() != 1 or wf.getsampwidth() != 2:
+                    st.warning("⚠️ Audio format should be mono, 16-bit. Attempting transcription anyway...")
+
+                recognizer = KaldiRecognizer(model, wf.getframerate())
+                recognizer.SetWords(True)
+
+                # Transcribe
+                full_text = []
+                while True:
+                    data = wf.readframes(4000)
+                    if len(data) == 0:
+                        break
+                    if recognizer.AcceptWaveform(data):
+                        result = json.loads(recognizer.Result())
+                        if 'text' in result and result['text']:
+                            full_text.append(result['text'])
+
+                # Get final result
+                final_result = json.loads(recognizer.FinalResult())
+                if 'text' in final_result and final_result['text']:
+                    full_text.append(final_result['text'])
+
+                transcribed_text = " ".join(full_text).strip()
+
+                # Clean up
+                wf.close()
+                os_module.unlink(tmp_audio_path)
+
+                if not transcribed_text:
+                    st.warning("⚠️ No speech detected. Please try speaking more clearly.")
+                    # Mark this audio as processed to prevent re-processing
+                    st.session_state.last_transcribed_audio = audio_file
+                else:
+                    # AUTO-SEND: Immediately queue transcribed text to be sent
+                    st.success("✅ Transcribed successfully - sending to agent...")
+                    st.session_state.voice_message_to_send = transcribed_text
+                    # Mark as processed
+                    st.session_state.last_transcribed_audio = audio_file
                     st.rerun()
 
-            from audiorecorder import audiorecorder
-
-            st.caption("👇 Click once to start recording, click again to stop")
-            audio_data = audiorecorder(
-                start_prompt="🎤 Start Recording",
-                stop_prompt="⏹️ Stop Recording",
-                pause_prompt="",
-                key="audio_recorder"
-            )
-
-            if len(audio_data) > 0 and 'last_transcribed_audio' not in st.session_state:
-                with st.spinner("🎯 Transcribing audio..."):
-                    try:
-                        from vosk import Model, KaldiRecognizer
-                        import wave
-                        import json
-                        import tempfile
-                        import os as os_module
-                        import urllib.request
-                        import zipfile
-
-                        # Download and cache Vosk model
-                        @st.cache_resource
-                        def load_vosk_model():
-                            model_path = "/tmp/vosk-model-small-en-us-0.15"
-
-                            # Download model if not exists
-                            if not os.path.exists(model_path):
-                                model_url = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
-                                zip_path = "/tmp/vosk-model.zip"
-
-                                st.info("📥 Downloading speech recognition model (one-time, ~40MB)...")
-                                urllib.request.urlretrieve(model_url, zip_path)
-
-                                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                                    zip_ref.extractall("/tmp/")
-
-                                os_module.unlink(zip_path)
-
-                            return Model(model_path)
-
-                        model = load_vosk_model()
-
-                        # Convert AudioSegment to WAV file for Vosk
-                        # audio_data is a pydub AudioSegment object
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
-                            tmp_audio_path = tmp_file.name
-
-                        # Export AudioSegment to WAV file (mono, 16kHz for Vosk)
-                        audio_mono = audio_data.set_channels(1)
-                        audio_16k = audio_mono.set_frame_rate(16000)
-                        audio_16k.export(tmp_audio_path, format="wav")
-
-                        # Open WAV file and transcribe
-                        wf = wave.open(tmp_audio_path, "rb")
-
-                        # Check audio format
-                        if wf.getnchannels() != 1 or wf.getsampwidth() != 2:
-                            st.warning("⚠️ Audio format should be mono, 16-bit. Attempting transcription anyway...")
-
-                        recognizer = KaldiRecognizer(model, wf.getframerate())
-                        recognizer.SetWords(True)
-
-                        # Transcribe
-                        full_text = []
-                        while True:
-                            data = wf.readframes(4000)
-                            if len(data) == 0:
-                                break
-                            if recognizer.AcceptWaveform(data):
-                                result = json.loads(recognizer.Result())
-                                if 'text' in result and result['text']:
-                                    full_text.append(result['text'])
-
-                        # Get final result
-                        final_result = json.loads(recognizer.FinalResult())
-                        if 'text' in final_result and final_result['text']:
-                            full_text.append(final_result['text'])
-
-                        transcribed_text = " ".join(full_text).strip()
-
-                        # Clean up
-                        wf.close()
-                        os_module.unlink(tmp_audio_path)
-
-                        if not transcribed_text:
-                            st.warning("⚠️ No speech detected. Please try speaking more clearly.")
-                            # Mark this audio as processed to prevent re-processing
-                            st.session_state.last_transcribed_audio = True
-                        else:
-                            # AUTO-SEND: Immediately queue transcribed text to be sent
-                            st.success("✅ Transcribed successfully - sending to agent...")
-                            st.session_state.voice_message_to_send = transcribed_text
-                            # Clean up voice recorder state
-                            st.session_state.show_voice_recorder = False
-                            if 'last_transcribed_audio' in st.session_state:
-                                del st.session_state.last_transcribed_audio
-                            st.rerun()
-
-                    except Exception as e:
-                        st.error(f"❌ Transcription failed: {str(e)}")
-                        st.info("💡 Make sure `vosk` is installed: `pip install vosk`")
-                        import traceback
-                        st.code(traceback.format_exc())
+            except Exception as e:
+                st.error(f"❌ Transcription failed: {str(e)}")
+                st.info("💡 Make sure `vosk` is installed: `pip install vosk`")
+                import traceback
+                st.code(traceback.format_exc())
 
     # Check if we have a voice message to send (auto-sent after transcription)
     user_input = None
