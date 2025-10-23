@@ -158,9 +158,41 @@ def send_message(session, user_input: str, display_message: str = None):
             try:
                 from gtts import gTTS
                 import tempfile
+                import re
+
+                # Clean markdown formatting from text for TTS
+                clean_text = response_text
+
+                # Remove markdown bold/italic (** or __)
+                clean_text = re.sub(r'\*\*(.+?)\*\*', r'\1', clean_text)
+                clean_text = re.sub(r'__(.+?)__', r'\1', clean_text)
+                clean_text = re.sub(r'\*(.+?)\*', r'\1', clean_text)
+                clean_text = re.sub(r'_(.+?)_', r'\1', clean_text)
+
+                # Remove markdown links [text](url)
+                clean_text = re.sub(r'\[(.+?)\]\(.+?\)', r'\1', clean_text)
+
+                # Remove code blocks and inline code
+                clean_text = re.sub(r'```.*?```', '', clean_text, flags=re.DOTALL)
+                clean_text = re.sub(r'`(.+?)`', r'\1', clean_text)
+
+                # Remove markdown headers (#)
+                clean_text = re.sub(r'^#+\s+', '', clean_text, flags=re.MULTILINE)
+
+                # Replace markdown lists (-, *, +) with nothing
+                clean_text = re.sub(r'^\s*[-*+]\s+', '', clean_text, flags=re.MULTILINE)
+
+                # Remove horizontal rules (---, ___)
+                clean_text = re.sub(r'^[-_*]{3,}$', '', clean_text, flags=re.MULTILINE)
+
+                # Clean up extra whitespace
+                clean_text = re.sub(r'\n{3,}', '\n\n', clean_text)
+                clean_text = clean_text.strip()
+
+                print(f"🎤 TTS Clean Text: {clean_text[:100]}...")
 
                 # Generate speech audio using Google TTS
-                tts = gTTS(text=response_text, lang='en', slow=False)
+                tts = gTTS(text=clean_text, lang='en', slow=False)
 
                 # Save to temporary file
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_audio:
@@ -423,7 +455,7 @@ def render_chat(session):
 
     with col2:
         if st.button("🎤", help="Record voice message", key="voice_btn", use_container_width=True):
-            st.session_state.show_voice_recorder = not st.session_state.get('show_voice_recorder', False)
+            st.session_state.show_voice_recorder = True
             st.rerun()
 
     # Show voice recorder if toggled
@@ -441,9 +473,18 @@ def render_chat(session):
         """, unsafe_allow_html=True)
 
         with st.container():
-            st.markdown("### 🎤 Voice Message")
-            st.caption("Record your message - it will be sent automatically after transcription")
-            audio_file = st.audio_input("Press to record", key="audio_input")
+            col_title, col_close = st.columns([5, 1])
+            with col_title:
+                st.markdown("### 🎤 Voice Message")
+            with col_close:
+                if st.button("✖", key="close_voice", help="Close voice recorder"):
+                    st.session_state.show_voice_recorder = False
+                    if 'last_transcribed_audio' in st.session_state:
+                        del st.session_state.last_transcribed_audio
+                    st.rerun()
+
+            st.caption("👇 Click the microphone below to start recording")
+            audio_file = st.audio_input("Click to start recording", key="audio_input")
 
             if audio_file and 'last_transcribed_audio' not in st.session_state:
                 with st.spinner("🎯 Transcribing audio..."):
