@@ -483,10 +483,17 @@ def render_chat(session):
                         del st.session_state.last_transcribed_audio
                     st.rerun()
 
-            st.caption("👇 Click the microphone below to start recording")
-            audio_file = st.audio_input("Click to start recording", key="audio_input")
+            from audiorecorder import audiorecorder
 
-            if audio_file and 'last_transcribed_audio' not in st.session_state:
+            st.caption("👇 Click once to start recording, click again to stop")
+            audio_data = audiorecorder(
+                start_prompt="🎤 Start Recording",
+                stop_prompt="⏹️ Stop Recording",
+                pause_prompt="",
+                key="audio_recorder"
+            )
+
+            if len(audio_data) > 0 and 'last_transcribed_audio' not in st.session_state:
                 with st.spinner("🎯 Transcribing audio..."):
                     try:
                         from vosk import Model, KaldiRecognizer
@@ -519,10 +526,15 @@ def render_chat(session):
 
                         model = load_vosk_model()
 
-                        # Save audio to temporary file
+                        # Convert AudioSegment to WAV file for Vosk
+                        # audio_data is a pydub AudioSegment object
                         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
-                            tmp_file.write(audio_file.getbuffer())
                             tmp_audio_path = tmp_file.name
+
+                        # Export AudioSegment to WAV file (mono, 16kHz for Vosk)
+                        audio_mono = audio_data.set_channels(1)
+                        audio_16k = audio_mono.set_frame_rate(16000)
+                        audio_16k.export(tmp_audio_path, format="wav")
 
                         # Open WAV file and transcribe
                         wf = wave.open(tmp_audio_path, "rb")
@@ -558,8 +570,8 @@ def render_chat(session):
 
                         if not transcribed_text:
                             st.warning("⚠️ No speech detected. Please try speaking more clearly.")
-                            # Clear the audio so user can record again
-                            st.session_state.last_transcribed_audio = audio_file
+                            # Mark this audio as processed to prevent re-processing
+                            st.session_state.last_transcribed_audio = True
                         else:
                             # AUTO-SEND: Immediately queue transcribed text to be sent
                             st.success("✅ Transcribed successfully - sending to agent...")
