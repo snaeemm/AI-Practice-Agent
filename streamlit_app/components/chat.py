@@ -287,173 +287,148 @@ def render_chat(session):
             with st.expander(f"🔧 {msg.get('tool_name', 'Tool Call')}"):
                 st.json(msg.get('tool_result', {}))
 
-    if st.session_state.get('show_uploader', False):
-        with st.expander("📤 Upload Document", expanded=True):
+    # File uploader - always visible
+    uploader_key = st.session_state.get('uploader_key', 0)
 
-            # Inject CSS to make uploader label white
-            st.markdown(
-                """
-                <style>
-                    /* Make file uploader label white */
-                    div[data-testid="stFileUploader"] label {
-                        color: white !important;
-                    }
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
+    uploaded_file = st.file_uploader(
+        "📎 Upload Document (PDF, DOCX, XLSX, etc.)",
+        type=['pdf', 'docx', 'xlsx', 'txt', 'pptx'],
+        key=f"file_uploader_{uploader_key}"
+    )
 
-            uploader_key = st.session_state.get('uploader_key', 0)
+    if uploaded_file:
+        st.session_state.pending_file = uploaded_file
+        st.session_state.uploading_in_progress = True  # NEW: Gate chat during processing
 
-            uploaded_file = st.file_uploader(
-                "Choose a file (PDF, DOCX, XLSX, etc.)",
-                type=['pdf', 'docx', 'xlsx', 'txt', 'pptx'],
-                key=f"file_uploader_{uploader_key}"
-            )
+        max_retries = 3
+        extraction_result = None
+        for attempt in range(max_retries):
+            with st.spinner(f"📄 Processing {uploaded_file.name}... (Attempt {attempt + 1}/{max_retries})"):
+                file_path = os.path.join("/tmp", uploaded_file.name)
+                with open(file_path, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
 
-
-            if uploaded_file:
-                st.session_state.pending_file = uploaded_file
-                st.session_state.uploading_in_progress = True  # NEW: Gate chat during processing
-
-                max_retries = 3
-                extraction_result = None
-                for attempt in range(max_retries):
-                    with st.spinner(f"📄 Processing {uploaded_file.name}... (Attempt {attempt + 1}/{max_retries})"):
-                        file_path = os.path.join("/tmp", uploaded_file.name)
-                        with open(file_path, "wb") as f:
-                            f.write(uploaded_file.getbuffer())
-
-                        extraction_result = extract_document_text(file_path)
-                        if extraction_result['status'] == 'success':
-                            break
-                        else:
-                            if attempt < max_retries - 1:
-                                import time
-                                time.sleep(2)  # Brief pause before retry
-                            else:
-                                # All retries failed
-                                pass
-
-                # Clear selection after process (success or error) by incrementing key
-                st.session_state.uploader_key = uploader_key + 1
-                st.session_state.uploading_in_progress = False  # NEW: Unlock chat
-
-                if extraction_result and extraction_result['status'] == 'success':
-                    # Detect document type and extract metadata
-                    with st.spinner("🔍 Analyzing document..."):
-                        db = DatabaseManager()
-
-                        # Get document type (from PDF extraction or detect from text)
-                        document_type = extraction_result.get('document_type')
-                        if not document_type:
-                            document_type = detect_document_type(extraction_result['text'])
-
-                        # Optimized: No longer fetch all records for duplicate detection
-                        # The new database methods handle this directly
-                        # Extract metadata with duplicate checking
-                        metadata = extract_document_metadata(
-                            extraction_result['text'],
-                            document_type,
-                            db=db  # Pass db instance for optimized lookups
-                        )
-
-                        title = metadata['title']
-                        matching_id = metadata['matching_id']
-                        entity_type = metadata['entity_type']
-                        has_qualification = metadata['has_qualification']
-                        has_bid_plan = metadata['has_bid_plan']
-
-                        print(f"🔍 Document type: {document_type}")
-                        print(f"🔍 Extracted title: {title}")
-                        print(f"🔄 Matching {entity_type} ID: {matching_id}")
-
-                        # Get status using the matched ID or by title
-                        status = {
-                            'exists': False,
-                            'matching_id': None,
-                            'entity_type': entity_type,
-                            'title': None,
-                            'has_qualification': False,
-                            'has_bid_plan': False
-                        }
-
-                        if matching_id and document_type == "RFP":
-                            # Optimized: Single query with LEFT JOINs instead of 3 separate queries
-                            rfp_data = db.get_rfp_upload_status(matching_id)
-
-                            status = {
-                                'exists': True,
-                                'matching_id': matching_id,
-                                'entity_type': 'rfp',
-                                'title': rfp_data.get('project_title') if rfp_data else title,
-                                'client_name': rfp_data.get('client_name') if rfp_data else None,
-                                'has_qualification': rfp_data.get('has_qualification', False) if rfp_data else False,
-                                'has_bid_plan': rfp_data.get('has_bid_plan', False) if rfp_data else False
-                            }
-                        elif matching_id and document_type == "Meeting Notes":
-                            brief_doc = db.get_client_brief(matching_id)
-                            status = {
-                                'exists': True,
-                                'matching_id': matching_id,
-                                'entity_type': 'brief',
-                                'title': brief_doc.get('client_name') if brief_doc else title,
-                                'has_qualification': False,
-                                'has_bid_plan': False
-                            }
-
-                        print(f"📊 Database status: {status}")
-
-                    st.session_state.pending_extraction = {
-                        'filename': extraction_result['filename'],
-                        'text': extraction_result['text'],
-                        'file_uri': extraction_result.get('file_uri'),
-                        'document_type': document_type,
-                        'title': title,
-                        'matching_id': status.get('matching_id'),
-                        'entity_type': entity_type,
-                        'has_qualification': status.get('has_qualification', False),
-                        'has_bid_plan': status.get('has_bid_plan', False)
-                    }
-
-                    print(f"💾 Pending extraction data: doc_type={document_type}, title={title}, matching_id={status.get('matching_id')}, entity_type={entity_type}")
-
-                    st.success(f"✅ Document processed: {extraction_result['filename']}")
-
-                    # Show status based on document type
-                    if status.get('exists'):
-                        if entity_type == 'rfp':
-                            st.warning(f"⚠️ This RFP already exists: **{title}**")
-                            status_parts = []
-                            if status.get('has_qualification'):
-                                status_parts.append("✓ Qualification")
-                            if status.get('has_bid_plan'):
-                                status_parts.append("✓ Bid Plan")
-                            if status_parts:
-                                st.info(f"Status: {', '.join(status_parts)}")
-                        elif entity_type == 'brief':
-                            st.warning(f"⚠️ Client brief already exists for: **{title}**")
-
-                    st.info(f"📋 Document type: {document_type} | 💬 Add your instructions below and send")
+                extraction_result = extract_document_text(file_path)
+                if extraction_result['status'] == 'success':
+                    break
                 else:
-                    error_msg = extraction_result.get('error', 'Unknown error') if extraction_result else 'Unknown error'
-                    st.error(f"⚠️ Extraction failed after {max_retries} attempts: {error_msg}")
-                    if 'pending_file' in st.session_state:
-                        del st.session_state.pending_file
+                    if attempt < max_retries - 1:
+                        import time
+                        time.sleep(2)  # Brief pause before retry
+                    else:
+                        # All retries failed
+                        pass
+
+        # Clear selection after process (success or error) by incrementing key
+        st.session_state.uploader_key = uploader_key + 1
+        st.session_state.uploading_in_progress = False  # NEW: Unlock chat
+
+        if extraction_result and extraction_result['status'] == 'success':
+            # Detect document type and extract metadata
+            with st.spinner("🔍 Analyzing document..."):
+                db = DatabaseManager()
+
+                # Get document type (from PDF extraction or detect from text)
+                document_type = extraction_result.get('document_type')
+                if not document_type:
+                    document_type = detect_document_type(extraction_result['text'])
+
+                # Optimized: No longer fetch all records for duplicate detection
+                # The new database methods handle this directly
+                # Extract metadata with duplicate checking
+                metadata = extract_document_metadata(
+                    extraction_result['text'],
+                    document_type,
+                    db=db  # Pass db instance for optimized lookups
+                )
+
+                title = metadata['title']
+                matching_id = metadata['matching_id']
+                entity_type = metadata['entity_type']
+                has_qualification = metadata['has_qualification']
+                has_bid_plan = metadata['has_bid_plan']
+
+                print(f"🔍 Document type: {document_type}")
+                print(f"🔍 Extracted title: {title}")
+                print(f"🔄 Matching {entity_type} ID: {matching_id}")
+
+                # Get status using the matched ID or by title
+                status = {
+                    'exists': False,
+                    'matching_id': None,
+                    'entity_type': entity_type,
+                    'title': None,
+                    'has_qualification': False,
+                    'has_bid_plan': False
+                }
+
+                if matching_id and document_type == "RFP":
+                    # Optimized: Single query with LEFT JOINs instead of 3 separate queries
+                    rfp_data = db.get_rfp_upload_status(matching_id)
+
+                    status = {
+                        'exists': True,
+                        'matching_id': matching_id,
+                        'entity_type': 'rfp',
+                        'title': rfp_data.get('project_title') if rfp_data else title,
+                        'client_name': rfp_data.get('client_name') if rfp_data else None,
+                        'has_qualification': rfp_data.get('has_qualification', False) if rfp_data else False,
+                        'has_bid_plan': rfp_data.get('has_bid_plan', False) if rfp_data else False
+                    }
+                elif matching_id and document_type == "Meeting Notes":
+                    brief_doc = db.get_client_brief(matching_id)
+                    status = {
+                        'exists': True,
+                        'matching_id': matching_id,
+                        'entity_type': 'brief',
+                        'title': brief_doc.get('client_name') if brief_doc else title,
+                        'has_qualification': False,
+                        'has_bid_plan': False
+                    }
+
+                print(f"📊 Database status: {status}")
+
+            st.session_state.pending_extraction = {
+                'filename': extraction_result['filename'],
+                'text': extraction_result['text'],
+                'file_uri': extraction_result.get('file_uri'),
+                'document_type': document_type,
+                'title': title,
+                'matching_id': status.get('matching_id'),
+                'entity_type': entity_type,
+                'has_qualification': status.get('has_qualification', False),
+                'has_bid_plan': status.get('has_bid_plan', False)
+            }
+
+            print(f"💾 Pending extraction data: doc_type={document_type}, title={title}, matching_id={status.get('matching_id')}, entity_type={entity_type}")
+
+            st.success(f"✅ Document processed: {extraction_result['filename']}")
+
+            # Show status based on document type
+            if status.get('exists'):
+                if entity_type == 'rfp':
+                    st.warning(f"⚠️ This RFP already exists: **{title}**")
+                    status_parts = []
+                    if status.get('has_qualification'):
+                        status_parts.append("✓ Qualification")
+                    if status.get('has_bid_plan'):
+                        status_parts.append("✓ Bid Plan")
+                    if status_parts:
+                        st.info(f"Status: {', '.join(status_parts)}")
+                elif entity_type == 'brief':
+                    st.warning(f"⚠️ Client brief already exists for: **{title}**")
+
+            st.info(f"📋 Document type: {document_type} | 💬 Add your instructions below and send")
+        else:
+            error_msg = extraction_result.get('error', 'Unknown error') if extraction_result else 'Unknown error'
+            st.error(f"⚠️ Extraction failed after {max_retries} attempts: {error_msg}")
+            if 'pending_file' in st.session_state:
+                del st.session_state.pending_file
                         
     st.markdown("---")
 
-    current_show_uploader = st.session_state.get('show_uploader', False)
-
-    # Upload document button
-    if st.button("📎 Upload Document", help="Upload RFP or documents", key="upload_btn", use_container_width=True):
-        st.session_state.show_uploader = not current_show_uploader
-        st.rerun()
-
-    # Voice recorder - always visible, no toggle needed
-    st.markdown("### 🎤 Voice Message")
-    st.caption("Click the microphone to record your message")
-    audio_file = st.audio_input("Record audio", key="audio_input")
+    # Voice recorder - always visible, side by side with upload
+    audio_file = st.audio_input("", key="audio_input", label_visibility="collapsed")
 
     if audio_file and 'last_transcribed_audio' not in st.session_state:
         with st.spinner("🎯 Transcribing audio..."):
