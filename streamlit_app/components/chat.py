@@ -93,17 +93,56 @@ def get_mime_type(file_path: str) -> str:
 
 def ensure_adk_session_sync(user_id: str, session_id: str):
     """
-    Ensure ADK session exists.
+    Ensure ADK session exists in the ADK database.
 
-    NOTE: This is handled by Google's ADK DatabaseSessionService automatically.
-    We just track in local cache to avoid redundant checks.
+    CRITICAL: ADK Runner requires session to exist in its own tables.
+    This explicitly creates the session if it doesn't exist.
     """
-    if session_id in _synced_sessions:
-        return True
+    # ALWAYS check the ADK database, don't trust the in-memory cache
+    # The _synced_sessions set can be stale after Streamlit restarts
+    try:
+        import asyncio
 
-    # Mark as synced - ADK's DatabaseSessionService handles the actual DB sync
-    _synced_sessions.add(session_id)
-    return True
+        # Check if session exists in ADK database
+        print(f"🔍 Checking ADK session: user={user_id}, session={session_id}", flush=True)
+
+        # Run async function synchronously
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        existing_session = loop.run_until_complete(
+            session_service.get_session(
+                app_name=APP_NAME,
+                user_id=user_id,
+                session_id=session_id
+            )
+        )
+
+        if existing_session is None:
+            # Session not found - create it
+            print(f"🆕 Creating ADK session for user={user_id}, session={session_id}", flush=True)
+            loop.run_until_complete(
+                session_service.create_session(
+                    app_name=APP_NAME,
+                    user_id=user_id,
+                    session_id=session_id
+                )
+            )
+            print(f"✅ ADK session created successfully", flush=True)
+        else:
+            print(f"✅ ADK session already exists", flush=True)
+
+        _synced_sessions.add(session_id)
+        return True
+    except Exception as e:
+        print(f"❌ CRITICAL ERROR syncing ADK session: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        # Don't add to _synced_sessions if failed - will retry next time
+        return False
 
 
 def send_message(session, user_input: str, display_message: str = None):
@@ -114,7 +153,17 @@ def send_message(session, user_input: str, display_message: str = None):
 
     try:
         user_id = str(session.session['user_id'])
-        ensure_adk_session_sync(user_id, session.session_id)
+        print(f"\n{'='*80}")
+        print(f"📨 SENDING MESSAGE")
+        print(f"User ID: {user_id}")
+        print(f"Session ID: {session.session_id}")
+        print(f"Message: {user_input[:100]}...")
+        print(f"{'='*80}\n")
+
+        # CRITICAL: Ensure ADK session exists before sending message
+        adk_sync_success = ensure_adk_session_sync(user_id, session.session_id)
+        if not adk_sync_success:
+            raise Exception("Failed to sync ADK session - cannot send message")
 
         content = types.Content(
             role="user",
@@ -123,28 +172,40 @@ def send_message(session, user_input: str, display_message: str = None):
 
         all_parts = []
         response_text = ""
+        event_count = 0
 
+        print(f"🔄 Starting runner.run() event loop...")
         for event in runner.run(
             user_id=user_id,
             session_id=session.session_id,
             new_message=content
         ):
+            event_count += 1
+            print(f"📍 Event #{event_count}: is_final={event.is_final_response()}, type={type(event).__name__}")
+
             if event.is_final_response():
+                print(f"✅ FINAL RESPONSE RECEIVED")
                 if event.content and hasattr(event.content, 'parts') and event.content.parts:
                     for part in event.content.parts:
                         if hasattr(part, 'text') and part.text:
                             response_text = part.text
+                            print(f"📝 Response text: {response_text[:100]}...")
                             break
                 break
 
             if event.content and hasattr(event.content, 'parts') and event.content.parts:
                 for part in event.content.parts:
                     if hasattr(part, 'text') and part.text:
+                        print(f"💭 Thinking: {part.text[:50]}...")
                         all_parts.append({"type": "thinking", "content": part.text.strip()})
 
                     if hasattr(part, 'function_call') and part.function_call:
                         func_name = part.function_call.name if hasattr(part.function_call, 'name') else 'function'
+                        print(f"🔧 Tool call: {func_name}")
                         all_parts.append({"type": "tool_call", "content": func_name})
+
+        print(f"🏁 Event loop finished. Total events: {event_count}")
+        print(f"Response text length: {len(response_text)}")
 
         if all_parts:
             all_parts.append({"type": "response", "content": response_text})
@@ -335,7 +396,7 @@ def render_chat(session):
     with col_upload:
         uploader_key = st.session_state.get('uploader_key', 0)
         uploaded_file = st.file_uploader(
-            "",
+            "Upload Document",
             type=['pdf', 'docx', 'xlsx', 'txt', 'pptx'],
             key=f"file_uploader_{uploader_key}",
             label_visibility="collapsed"
@@ -343,7 +404,7 @@ def render_chat(session):
 
     with col_voice:
         audio_key = st.session_state.get('audio_key', 0)
-        audio_file = st.audio_input("", key=f"audio_input_{audio_key}", label_visibility="collapsed")
+        audio_file = st.audio_input("Record Audio", key=f"audio_input_{audio_key}", label_visibility="collapsed")
 
     if uploaded_file:
         st.session_state.pending_file = uploaded_file

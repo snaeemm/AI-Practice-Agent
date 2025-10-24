@@ -70,7 +70,17 @@ def render_new_session_form(username):
                     session = create_session(username, new_session_name)
                     st.session_state.session_id = session.session_id
                     st.session_state.session_object = session
-                    st.success(f"✅ Created: {new_session_name}")
+
+                    # CRITICAL: Force ADK session sync for new session
+                    # This ensures the session exists in ADK database before first message
+                    from components.chat import ensure_adk_session_sync
+                    user_id = str(session.session['user_id'])
+
+                    sync_success = ensure_adk_session_sync(user_id, session.session_id)
+                    if not sync_success:
+                        st.error("⚠️ Failed to initialize ADK session. Please try again.")
+                    else:
+                        st.success(f"✅ Created: {new_session_name}")
                     st.rerun()
                 else:
                     st.error("⚠️ Please enter a session name")
@@ -330,11 +340,10 @@ def render_sidebar(page_context="default"):
                 return session
             else:
                 try:
-                    if 'session_object' not in st.session_state:
-                        session = load_session(st.session_state.session_id)
-                        st.session_state.session_object = session
-                    else:
-                        session = st.session_state.session_object
+                    # ALWAYS reload session from database to ensure fresh cache/db connections
+                    # Don't trust st.session_state.session_object as it may have stale references
+                    session = load_session(st.session_state.session_id)
+                    st.session_state.session_object = session
 
                     st.divider()
 

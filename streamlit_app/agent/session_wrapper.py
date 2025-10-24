@@ -58,11 +58,18 @@ class SessionContext:
         if not self.session:
             raise ValueError(f"Session not found: {session_id}")
 
-        # Ensure cache is initialized for this session (prevents first-load issues)
-        if self._cache is not None and self._cache.get_messages(session_id) is None:
-            # Load existing messages from DB into cache
-            existing_messages = session_manager.get_session_messages(session_id)
-            self._cache.set_messages(session_id, existing_messages)
+        # CRITICAL: Always ensure cache is initialized for this session
+        # This prevents race conditions and cache misses on first message
+        if self._cache is not None:
+            cached_messages = self._cache.get_messages(session_id)
+            if cached_messages is None:
+                # Cache miss - load from DB and initialize cache
+                print(f"🔄 Cache miss for session {session_id} - loading from DB")
+                existing_messages = session_manager.get_session_messages(session_id)
+                self._cache.set_messages(session_id, existing_messages)
+                print(f"✅ Cache initialized with {len(existing_messages)} messages")
+            else:
+                print(f"✅ Cache hit for session {session_id} - {len(cached_messages)} messages")
 
     @classmethod
     def create(cls, username: str = "default_user", session_name: Optional[str] = None):
