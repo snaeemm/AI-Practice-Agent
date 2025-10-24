@@ -475,7 +475,11 @@ def render_chat(session):
                         
 
     # Audio transcription (audio_file is from the column above)
-    if audio_file and 'last_transcribed_audio' not in st.session_state:
+    # Check if this is a NEW audio file (different from last processed)
+    is_new_audio = (audio_file is not None and
+                    st.session_state.get('last_transcribed_audio') != audio_file)
+
+    if is_new_audio:
         with st.spinner("🎯 Transcribing audio..."):
             try:
                 from vosk import Model, KaldiRecognizer
@@ -570,9 +574,7 @@ def render_chat(session):
         del st.session_state.voice_message_to_send
         # Mark that this was a voice message so we can enable TTS response
         st.session_state.last_message_was_voice = True
-        # Clear the audio recording reference so it can be removed
-        if 'last_transcribed_audio' in st.session_state:
-            del st.session_state.last_transcribed_audio
+        # Note: We keep last_transcribed_audio so we don't re-process the same audio
     else:
         user_input = st.chat_input("Type your message here...", key="chat_input")
         # Regular text input, disable TTS
