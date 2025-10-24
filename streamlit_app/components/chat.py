@@ -399,6 +399,12 @@ def render_chat(session):
         audio_key = st.session_state.get('audio_key', 0)
         audio_file = st.audio_input("Record Audio", key=f"audio_input_{audio_key}", label_visibility="collapsed")
 
+    # NEW: If audio input is active, stop TTS playback
+    if audio_file is not None and 'tts_audio_path' in st.session_state:
+        print("🎤 Audio input detected, stopping TTS playback.", flush=True)
+        del st.session_state.tts_audio_path
+        st.rerun() # Rerun to immediately stop audio playback
+
     if uploaded_file:
         st.session_state.pending_file = uploaded_file
         st.session_state.uploading_in_progress = True  # NEW: Gate chat during processing
