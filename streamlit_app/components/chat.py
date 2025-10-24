@@ -287,8 +287,50 @@ def render_chat(session):
             with st.expander(f"🔧 {msg.get('tool_name', 'Tool Call')}"):
                 st.json(msg.get('tool_result', {}))
 
+    # CSS to make upload/voice more compact and equal height
+    st.markdown("""
+    <style>
+    /* Make file uploader compact and same height as audio */
+    [data-testid="stFileUploader"] {
+        padding: 0 !important;
+        margin-bottom: 5px !important;
+    }
+    [data-testid="stFileUploader"] > div {
+        padding: 0 !important;
+    }
+    [data-testid="stFileUploader"] section {
+        padding: 8px !important;
+        min-height: 45px !important;
+        max-height: 45px !important;
+    }
+    /* Hide all text in uploader */
+    [data-testid="stFileUploader"] small,
+    [data-testid="stFileUploader"] button,
+    [data-testid="stFileUploader"] span {
+        display: none !important;
+    }
+    /* Replace with simple text */
+    [data-testid="stFileUploader"] section::before {
+        content: "📎 Upload" !important;
+        font-size: 14px !important;
+        display: block !important;
+        text-align: center !important;
+        color: #000000 !important;
+    }
+    /* Make audio input compact */
+    [data-testid="stAudioInput"] {
+        padding: 0 !important;
+        margin-bottom: 5px !important;
+    }
+    [data-testid="stAudioInput"] > div {
+        min-height: 45px !important;
+        max-height: 45px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # Upload and Voice side by side
-    col_upload, col_voice = st.columns([3, 1])
+    col_upload, col_voice = st.columns(2)
 
     with col_upload:
         uploader_key = st.session_state.get('uploader_key', 0)
@@ -431,7 +473,6 @@ def render_chat(session):
             if 'pending_file' in st.session_state:
                 del st.session_state.pending_file
                         
-    st.markdown("---")
 
     # Audio transcription (audio_file is from the column above)
     if audio_file and 'last_transcribed_audio' not in st.session_state:
