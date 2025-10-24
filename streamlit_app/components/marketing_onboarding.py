@@ -71,13 +71,17 @@ def render_onboarding_wizard(
 def _render_step_profile_type():
     """Step 1: Choose profile type and basic info"""
     st.markdown("### Step 1: Profile Type")
-    st.markdown("Are you creating content as an individual or for a company?")
+    st.markdown("What type of marketing profile are you creating?")
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         if st.button("👤 Personal Brand", use_container_width=True, type="primary" if st.session_state.onboarding_data.get('profile_type') == 'personal' else "secondary"):
             st.session_state.onboarding_data['profile_type'] = 'personal'
+            st.session_state.onboarding_data['relationship_type'] = 'standalone_individual'
+            # Clear company-related data
+            st.session_state.onboarding_data.pop('company_id', None)
+            st.session_state.onboarding_data.pop('employee_role', None)
             st.rerun()
 
         st.caption("For: Consultants, founders, thought leaders, professionals building personal brand")
@@ -85,12 +89,80 @@ def _render_step_profile_type():
     with col2:
         if st.button("🏢 Company Account", use_container_width=True, type="primary" if st.session_state.onboarding_data.get('profile_type') == 'company' else "secondary"):
             st.session_state.onboarding_data['profile_type'] = 'company'
+            st.session_state.onboarding_data['relationship_type'] = 'standalone_company'
+            # Clear employee-related data
+            st.session_state.onboarding_data.pop('company_id', None)
+            st.session_state.onboarding_data.pop('employee_role', None)
             st.rerun()
 
         st.caption("For: Corporate accounts, startups, agencies posting on behalf of company")
 
+    with col3:
+        if st.button("👔 Company Employee", use_container_width=True, type="primary" if st.session_state.onboarding_data.get('profile_type') == 'employee' else "secondary"):
+            st.session_state.onboarding_data['profile_type'] = 'employee'
+            st.session_state.onboarding_data['relationship_type'] = 'company_employee'
+            st.rerun()
+
+        st.caption("For: CEOs, CMOs, team members posting under their company's umbrella")
+
     if st.session_state.onboarding_data.get('profile_type'):
         st.success(f"✓ Selected: {st.session_state.onboarding_data['profile_type'].title()}")
+
+        # If employee profile, show company selector
+        if st.session_state.onboarding_data.get('profile_type') == 'employee':
+            st.markdown("---")
+            st.markdown("#### Link to Company")
+            st.caption("Select which company this employee profile belongs to")
+
+            # Get user's company profiles
+            from agent.database.marketing_profile_manager import MarketingProfileManager
+            from agent.database.db_manager import DatabaseManager
+
+            db = DatabaseManager()
+            marketing_mgr = MarketingProfileManager(db)
+
+            # Get session user_id (need to pass from parent)
+            user_id = st.session_state.user.get('user_id') if st.session_state.user else None
+
+            if user_id:
+                company_profiles = [p for p in marketing_mgr.get_user_profiles(user_id)
+                                   if p.get('profile_type') == 'company']
+
+                if company_profiles:
+                    company_options = {f"🏢 {p['profile_name']}": p['profile_id'] for p in company_profiles}
+
+                    selected_company = st.selectbox(
+                        "Select Company",
+                        options=list(company_options.keys()),
+                        help="Choose which company this employee profile belongs to"
+                    )
+
+                    if selected_company:
+                        st.session_state.onboarding_data['company_id'] = company_options[selected_company]
+
+                    # Employee role
+                    employee_role = st.text_input(
+                        "Employee Role/Title",
+                        value=st.session_state.onboarding_data.get('employee_role', ''),
+                        placeholder="e.g., CEO, CMO, Marketing Director, VP Sales",
+                        help="Your role at the company"
+                    )
+
+                    if employee_role:
+                        st.session_state.onboarding_data['employee_role'] = employee_role
+
+                else:
+                    st.warning("⚠️ No company profiles found. You need to create a company profile first.")
+
+                    if st.button("Create Company Profile First", type="primary"):
+                        st.session_state.onboarding_data['profile_type'] = 'company'
+                        st.session_state.onboarding_data['relationship_type'] = 'standalone_company'
+                        st.rerun()
+
+                    st.stop()
+            else:
+                st.error("User ID not found. Please log in again.")
+                st.stop()
 
         st.markdown("---")
 
@@ -212,7 +284,14 @@ def _render_step_profile_type():
                 st.rerun()
 
         with col_next:
-            if st.button("Next →", use_container_width=True, type="primary", disabled=not profile_name):
+            # Check if we can proceed
+            can_proceed = bool(profile_name)
+
+            # For employee profiles, also need company_id and employee_role
+            if st.session_state.onboarding_data.get('profile_type') == 'employee':
+                can_proceed = can_proceed and st.session_state.onboarding_data.get('company_id') and st.session_state.onboarding_data.get('employee_role')
+
+            if st.button("Next →", use_container_width=True, type="primary", disabled=not can_proceed):
                 st.session_state.onboarding_step = 2
                 st.rerun()
 
@@ -223,7 +302,7 @@ def _render_step_brand_identity():
 
     st.markdown("### Step 2: Brand Identity")
 
-    if profile_type == 'personal':
+    if profile_type == 'personal' or profile_type == 'employee':
         st.markdown("Tell us about your personal brand")
 
         # Role/Title
@@ -356,6 +435,7 @@ def _render_step_brand_identity():
     with col_next:
         can_proceed = (
             (profile_type == 'personal' and st.session_state.onboarding_data.get('role_title')) or
+            (profile_type == 'employee' and st.session_state.onboarding_data.get('role_title')) or
             (profile_type == 'company' and st.session_state.onboarding_data.get('company_size'))
         )
         if st.button("Next →", use_container_width=True, type="primary", disabled=not can_proceed):
@@ -640,9 +720,14 @@ def _render_step_review_save(marketing_mgr: MarketingProfileManager, user_id: st
                 # Debug logging
                 print(f"🔍 Creating profile with user_id: {user_id}")
 
+                # Determine actual profile type for database (employee profiles use 'personal' type)
+                profile_type = data.get('profile_type', 'personal')
+                if profile_type == 'employee':
+                    profile_type = 'personal'  # Employees are personal profiles linked to companies
+
                 profile_id = marketing_mgr.create_profile(
                     user_id=user_id,
-                    profile_type=data.get('profile_type', 'personal'),
+                    profile_type=profile_type,
                     profile_name=data.get('profile_name', 'My Profile'),
                     brand_voice=data.get('brand_voice'),
                     industry=data.get('industry'),
@@ -659,7 +744,11 @@ def _render_step_review_save(marketing_mgr: MarketingProfileManager, user_id: st
                     personal_bio=data.get('personal_bio'),
                     typical_post_style=data.get('typical_post_style'),
                     example_posts=example_posts if example_posts else None,
-                    avoid_topics=data.get('avoid_topics')
+                    avoid_topics=data.get('avoid_topics'),
+                    # Profile hierarchy fields
+                    relationship_type=data.get('relationship_type', 'standalone_individual'),
+                    company_id=data.get('company_id'),
+                    employee_role=data.get('employee_role')
                 )
 
                 st.success("🎉 Profile created successfully!")

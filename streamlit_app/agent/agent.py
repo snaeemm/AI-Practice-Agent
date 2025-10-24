@@ -12,6 +12,7 @@ from agent.tools import (
 from agent.prompts import SYSTEM_PROMPT
 from agent.database.database_agent import database_agent
 from agent.ppt_agent.ppt_agent import ppt_agent
+from agent.marketing_agent.marketing_agent import marketing_agent
 
 # def list_available_rfps() -> dict:
 #     """
@@ -69,6 +70,7 @@ root_agent = LlmAgent(
     ],
     sub_agents=[
         database_agent,
-        ppt_agent
+        ppt_agent,
+        marketing_agent
     ]
 )

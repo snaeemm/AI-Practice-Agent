@@ -71,7 +71,7 @@ class MarketingProfileManager:
                 optional_fields = [
                     'brand_colors', 'company_size', 'logo_url', 'typical_post_style',
                     'example_posts', 'role_title', 'expertise_areas', 'personal_bio',
-                    'avoid_topics', 'profile_metadata'
+                    'avoid_topics', 'profile_metadata', 'relationship_type', 'company_id', 'employee_role'
                 ]
 
                 for field in optional_fields:

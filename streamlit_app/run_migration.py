@@ -1,5 +1,6 @@
 """Run database migrations"""
 import os
+from pathlib import Path
 from agent.database.db_singleton import get_db
 
 def run_migration():
@@ -38,6 +39,12 @@ def run_migration():
     CREATE INDEX IF NOT EXISTS idx_generated_files_created ON generated_files(created_at DESC);
     """
 
+    # Migration 3: Read and execute marketing strategy tables migration
+    migration_3_file = Path(__file__).parent / "agent" / "database" / "migrations" / "add_marketing_strategy_tables.sql"
+
+    with open(migration_3_file, 'r', encoding='utf-8') as f:
+        migration_3 = f.read()
+
     with db._get_connection() as conn:
         with conn.cursor() as cursor:
             print("Running migration 1: raw_document_text column...")
@@ -45,6 +52,9 @@ def run_migration():
 
             print("Running migration 2: generated_files table...")
             cursor.execute(migration_2)
+
+            print("Running migration 3: marketing strategy tables...")
+            cursor.execute(migration_3)
 
             conn.commit()
 

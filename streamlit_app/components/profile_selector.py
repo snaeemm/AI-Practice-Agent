@@ -38,9 +38,35 @@ def render_profile_selector(
     # Profile selector
     profile_options = {}
     for profile in profiles:
-        icon = "👤" if profile['profile_type'] == 'personal' else "🏢"
+        # Determine icon and label based on relationship type
+        relationship_type = profile.get('relationship_type', 'standalone_individual')
+
+        if relationship_type == 'standalone_company':
+            icon = "🏢"
+            label_base = profile['profile_name']
+        elif relationship_type == 'company_employee':
+            icon = "👔"
+            # Get company name if linked
+            company_id = profile.get('company_id')
+            company_name = None
+            if company_id:
+                # Find company profile
+                for comp in profiles:
+                    if comp['profile_id'] == company_id:
+                        company_name = comp['profile_name']
+                        break
+
+            employee_role = profile.get('employee_role', 'Employee')
+            if company_name:
+                label_base = f"{profile['profile_name']} ({employee_role} @ {company_name})"
+            else:
+                label_base = f"{profile['profile_name']} ({employee_role})"
+        else:  # standalone_individual
+            icon = "👤"
+            label_base = profile['profile_name']
+
         default_marker = " ⭐" if profile.get('is_default') else ""
-        label = f"{icon} {profile['profile_name']}{default_marker}"
+        label = f"{icon} {label_base}{default_marker}"
         profile_options[label] = profile['profile_id']
 
     # Determine current selection
@@ -212,6 +238,59 @@ def render_profile_editor(
             help="The default profile will be automatically selected"
         )
 
+        # Profile relationship management (for employee profiles)
+        st.markdown("---")
+        st.markdown("**Profile Relationship**")
+
+        relationship_type = profile.get('relationship_type', 'standalone_individual')
+        company_id = profile.get('company_id')
+        employee_role = profile.get('employee_role')
+
+        if relationship_type == 'company_employee' and company_id:
+            st.info(f"👔 This is an employee profile linked to a company")
+
+            # Get all company profiles for this user
+            user_profiles = marketing_mgr.get_user_profiles(profile['user_id'])
+            company_profiles = [p for p in user_profiles if p.get('profile_type') == 'company']
+
+            if company_profiles:
+                company_options = {f"🏢 {p['profile_name']}": p['profile_id'] for p in company_profiles}
+
+                # Find current company index
+                current_company_name = None
+                for p in company_profiles:
+                    if p['profile_id'] == company_id:
+                        current_company_name = f"🏢 {p['profile_name']}"
+                        break
+
+                if current_company_name and current_company_name in company_options:
+                    company_index = list(company_options.keys()).index(current_company_name)
+                else:
+                    company_index = 0
+
+                selected_company = st.selectbox(
+                    "Linked Company",
+                    options=list(company_options.keys()),
+                    index=company_index,
+                    help="Change which company this profile is linked to"
+                )
+
+                new_company_id = company_options[selected_company]
+
+                new_employee_role = st.text_input(
+                    "Employee Role",
+                    value=employee_role or '',
+                    placeholder="e.g., CEO, CMO, Marketing Director"
+                )
+            else:
+                st.warning("No company profiles available to link to")
+                new_company_id = company_id
+                new_employee_role = employee_role
+        else:
+            st.caption("This is a standalone profile (not linked to a company)")
+            new_company_id = None
+            new_employee_role = None
+
         # Submit
         col1, col2 = st.columns([1, 1])
 
@@ -234,6 +313,13 @@ def render_profile_editor(
                 'default_tone': default_tone,
                 'image_style_preference': image_style_preference
             }
+
+            # Add relationship fields if this is an employee profile
+            if relationship_type == 'company_employee':
+                if new_company_id:
+                    updates['company_id'] = new_company_id
+                if new_employee_role:
+                    updates['employee_role'] = new_employee_role
 
             success = marketing_mgr.update_profile(profile_id, **updates)
 

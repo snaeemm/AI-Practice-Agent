@@ -315,7 +315,7 @@ def render_chat(session):
         font-size: 14px !important;
         display: block !important;
         text-align: center !important;
-        color: #000000 !important;
+        color: #1f77b4 !important;
     }
     /* Make audio input compact */
     [data-testid="stAudioInput"] {
@@ -570,6 +570,9 @@ def render_chat(session):
         del st.session_state.voice_message_to_send
         # Mark that this was a voice message so we can enable TTS response
         st.session_state.last_message_was_voice = True
+        # Clear the audio recording reference so it can be removed
+        if 'last_transcribed_audio' in st.session_state:
+            del st.session_state.last_transcribed_audio
     else:
         user_input = st.chat_input("Type your message here...", key="chat_input")
         # Regular text input, disable TTS
