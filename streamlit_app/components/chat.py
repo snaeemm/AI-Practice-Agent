@@ -287,14 +287,20 @@ def render_chat(session):
             with st.expander(f"🔧 {msg.get('tool_name', 'Tool Call')}"):
                 st.json(msg.get('tool_result', {}))
 
-    # File uploader - always visible
-    uploader_key = st.session_state.get('uploader_key', 0)
+    # Upload and Voice side by side
+    col_upload, col_voice = st.columns([3, 1])
 
-    uploaded_file = st.file_uploader(
-        "📎 Upload Document (PDF, DOCX, XLSX, etc.)",
-        type=['pdf', 'docx', 'xlsx', 'txt', 'pptx'],
-        key=f"file_uploader_{uploader_key}"
-    )
+    with col_upload:
+        uploader_key = st.session_state.get('uploader_key', 0)
+        uploaded_file = st.file_uploader(
+            "",
+            type=['pdf', 'docx', 'xlsx', 'txt', 'pptx'],
+            key=f"file_uploader_{uploader_key}",
+            label_visibility="collapsed"
+        )
+
+    with col_voice:
+        audio_file = st.audio_input("", key="audio_input", label_visibility="collapsed")
 
     if uploaded_file:
         st.session_state.pending_file = uploaded_file
@@ -427,9 +433,7 @@ def render_chat(session):
                         
     st.markdown("---")
 
-    # Voice recorder - always visible, side by side with upload
-    audio_file = st.audio_input("", key="audio_input", label_visibility="collapsed")
-
+    # Audio transcription (audio_file is from the column above)
     if audio_file and 'last_transcribed_audio' not in st.session_state:
         with st.spinner("🎯 Transcribing audio..."):
             try:
