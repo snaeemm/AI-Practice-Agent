@@ -342,7 +342,8 @@ def render_chat(session):
         )
 
     with col_voice:
-        audio_file = st.audio_input("", key="audio_input", label_visibility="collapsed")
+        audio_key = st.session_state.get('audio_key', 0)
+        audio_file = st.audio_input("", key=f"audio_input_{audio_key}", label_visibility="collapsed")
 
     if uploaded_file:
         st.session_state.pending_file = uploaded_file
@@ -584,7 +585,15 @@ def render_chat(session):
         # Prevent accidental empty submits
         if not user_input.strip():
             st.rerun()  # Just rerun without processing
-        
+
+        # Clear audio widget if this was a voice message
+        if st.session_state.get('last_message_was_voice', False):
+            audio_key = st.session_state.get('audio_key', 0)
+            st.session_state.audio_key = audio_key + 1
+            # Clear the transcribed audio reference so new recordings can be processed
+            if 'last_transcribed_audio' in st.session_state:
+                del st.session_state.last_transcribed_audio
+
         with st.spinner("🤔 Agent is thinking..."):
             if st.session_state.get('pending_extraction'):
                 extraction = st.session_state.pending_extraction
