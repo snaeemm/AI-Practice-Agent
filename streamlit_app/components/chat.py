@@ -102,38 +102,31 @@ def ensure_adk_session_sync(user_id: str, session_id: str):
     # The _synced_sessions set can be stale after Streamlit restarts
     try:
         import asyncio
+        import nest_asyncio
+        nest_asyncio.apply()
 
-        # Check if session exists in ADK database
-        print(f"🔍 Checking ADK session: user={user_id}, session={session_id}", flush=True)
-
-        # Run async function synchronously
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-        existing_session = loop.run_until_complete(
-            session_service.get_session(
+        async def get_or_create_session():
+            # Check if session exists in ADK database
+            print(f"🔍 Checking ADK session: user={user_id}, session={session_id}", flush=True)
+            existing_session = await session_service.get_session(
                 app_name=APP_NAME,
                 user_id=user_id,
                 session_id=session_id
             )
-        )
 
-        if existing_session is None:
-            # Session not found - create it
-            print(f"🆕 Creating ADK session for user={user_id}, session={session_id}", flush=True)
-            loop.run_until_complete(
-                session_service.create_session(
+            if existing_session is None:
+                # Session not found - create it
+                print(f"🆕 Creating ADK session for user={user_id}, session={session_id}", flush=True)
+                await session_service.create_session(
                     app_name=APP_NAME,
                     user_id=user_id,
                     session_id=session_id
                 )
-            )
-            print(f"✅ ADK session created successfully", flush=True)
-        else:
-            print(f"✅ ADK session already exists", flush=True)
+                print(f"✅ ADK session created successfully", flush=True)
+            else:
+                print(f"✅ ADK session already exists", flush=True)
+
+        asyncio.run(get_or_create_session())
 
         _synced_sessions.add(session_id)
         return True
