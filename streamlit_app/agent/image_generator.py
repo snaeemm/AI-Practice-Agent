@@ -27,7 +27,7 @@ def generate_image_from_prompt(
 
     Args:
         prompt: Text description of the image to generate
-        aspect_ratio: Image aspect ratio (currently supports 1:1 best)
+        aspect_ratio: Image aspect ratio (supports: "1:1", "16:9", "9:16", "4:5")
         number_of_images: Number of images to generate (note: may generate multiple in one call)
         reference_images: List of PIL Image objects to use as visual reference (optional)
         negative_prompt: What NOT to include in the image (optional)

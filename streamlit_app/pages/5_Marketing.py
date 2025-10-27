@@ -4,25 +4,28 @@ from styles import apply_custom_styles
 from components.sidebar import render_sidebar
 from components.branding import render_page_header_logo
 from components.marketing_onboarding import render_onboarding_wizard
-from components.profile_selector import render_profile_selector, render_profile_summary_card, render_profile_editor, render_profile_stats
-from components.linkedin_preview import render_linkedin_preview, render_compact_post_card
+from components.profile_selector import render_profile_selector, render_profile_editor, render_profile_stats
+from components.social_previews import render_social_preview
+from components.calendar_manager import render_calendar_week_view, render_calendar_summary, render_calendar_legend
+from components.calendar_entry_editor import render_calendar_entry_editor
+from components.post_preview_card import render_post_grid, render_post_filters, filter_and_sort_posts
 from PIL import Image
 import io
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import zipfile
 
 # Database imports
 from agent.database.db_manager import DatabaseManager
 from agent.database.marketing_profile_manager import MarketingProfileManager
-from agent.linkedin_post_generator import LinkedInPostGenerator
+from agent.social_media_post_generator import SocialMediaPostGenerator
 from agent.config.settings import settings
 
 st.set_page_config(page_title="Marketing - Granite", page_icon="📱", layout="wide")
 
 apply_custom_styles()
 
-# Additional CSS override for this page to fix text visibility and LinkedIn preview
+# Additional CSS override for this page to fix text visibility
 st.markdown("""
 <style>
 /* Force all radio button text to be white */
@@ -116,56 +119,6 @@ div[data-testid="stNumberInput"] label {
 [data-testid="stExpander"] summary {
     color: #ffffff !important;
 }
-
-/* CRITICAL: Fix LinkedIn preview - prevent slide styles */
-div.linkedin-preview-wrapper {
-    background: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    min-height: auto !important;
-    height: auto !important;
-    display: block !important;
-    position: relative !important;
-    animation: none !important;
-    border: none !important;
-    box-shadow: none !important;
-}
-
-div.linkedin-preview-wrapper div.linkedin-post {
-    background: linear-gradient(135deg, #1a3a52 0%, #1a4d6d 100%) !important;
-    animation: none !important;
-    min-height: auto !important;
-    height: auto !important;
-}
-
-div.linkedin-preview-wrapper div.linkedin-post * {
-    background: transparent !important;
-    animation: none !important;
-}
-
-div.linkedin-preview-wrapper div.linkedin-post div.linkedin-avatar {
-    background: linear-gradient(135deg, #1A3A52 0%, #2E5266 100%) !important;
-}
-
-/* Ensure no slide classes leak into LinkedIn preview */
-div.linkedin-preview-wrapper .slide-container,
-div.linkedin-preview-wrapper .slide-inner,
-div.linkedin-preview-wrapper .slide-watermark {
-    display: none !important;
-}
-
-/* Ensure no white backgrounds in marketing page */
-.main [data-testid="column"]:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) {
-    background: transparent !important;
-}
-
-.main [data-testid="stVerticalBlock"]:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) {
-    background: transparent !important;
-}
-
-.main [class*="element-container"]:not(.linkedin-preview-wrapper):not(.linkedin-preview-wrapper *) {
-    background: transparent !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -192,13 +145,13 @@ render_sidebar("marketing")
 def get_db_manager():
     return DatabaseManager()
 
-@st.cache_resource
-def get_marketing_manager():
-    db = get_db_manager()
-    return MarketingProfileManager(db)
+@st.cache_resource(ttl=None, show_spinner=False)
+def get_marketing_manager(_db_manager):
+    """Create marketing manager - underscore prefix prevents hashing"""
+    return MarketingProfileManager(_db_manager)
 
 db_manager = get_db_manager()
-marketing_mgr = get_marketing_manager()
+marketing_mgr = get_marketing_manager(db_manager)
 
 # Initialize session state
 if 'show_onboarding' not in st.session_state:
@@ -208,7 +161,6 @@ if 'show_profile_editor' not in st.session_state:
     st.session_state.show_profile_editor = False
 
 if 'current_profile_id' not in st.session_state:
-    # Try to load default profile
     default_profile = marketing_mgr.get_default_profile(user_id)
     if default_profile:
         st.session_state.current_profile_id = default_profile['profile_id']
@@ -218,8 +170,23 @@ if 'current_profile_id' not in st.session_state:
 if 'generated_post' not in st.session_state:
     st.session_state.generated_post = None
 
-if 'post_history' not in st.session_state:
-    st.session_state.post_history = []
+if 'selected_platform' not in st.session_state:
+    st.session_state.selected_platform = 'linkedin'
+
+if 'prefilled_topic' not in st.session_state:
+    st.session_state.prefilled_topic = ''
+
+if 'calendar_week_offset' not in st.session_state:
+    st.session_state.calendar_week_offset = 0
+
+if 'show_calendar_editor' not in st.session_state:
+    st.session_state.show_calendar_editor = False
+
+if 'editing_calendar_entry' not in st.session_state:
+    st.session_state.editing_calendar_entry = None
+
+if 'calendar_default_date' not in st.session_state:
+    st.session_state.calendar_default_date = None
 
 # ==================== MAIN APP LOGIC ====================
 
@@ -233,7 +200,7 @@ if st.session_state.show_onboarding or (len(profiles) == 0 and not st.session_st
     if new_profile_id:
         st.session_state.current_profile_id = new_profile_id
         st.session_state.show_onboarding = False
-        st.success("🎉 Profile created! You can now generate LinkedIn posts.")
+        st.success("🎉 Profile created! You can now generate social media posts.")
         time.sleep(2)
         st.rerun()
 
@@ -253,8 +220,8 @@ if st.session_state.show_profile_editor and st.session_state.get('editing_profil
 
 # ==================== HEADER ====================
 
-st.markdown("# 📱 LinkedIn Post Generator")
-st.markdown("### AI-Powered Content Creation with Context")
+st.markdown("# 📱 Social Media Post Generator")
+st.markdown("### AI-Powered Content for LinkedIn & Instagram")
 
 st.divider()
 
@@ -273,284 +240,222 @@ if selected_profile_id:
 
     st.divider()
 
-    # ==================== MAIN LAYOUT ====================
+    # ==================== STRATEGY BANNER (Optional) ====================
+
+    # Show content themes if available
+    if current_profile.get('content_themes'):
+        themes_text = ', '.join(current_profile['content_themes'][:3])
+        st.info(f"📊 **Content Themes:** {themes_text}")
+
+    # ==================== MAIN 2-COLUMN LAYOUT ====================
 
     col_left, col_right = st.columns([3, 2])
 
     with col_left:
-        st.markdown("### 🎯 Create LinkedIn Post")
+        st.markdown("### 🎯 Create Post")
 
-        # Tab selection for mode
-        mode_tab = st.radio(
-            "Choose Mode",
-            options=["Guided Workflow", "Advanced (Manual)"],
-            horizontal=True,
+        # Platform Selector
+        st.markdown("#### Choose Platform")
+
+        platform_col1, platform_col2 = st.columns(2)
+
+        with platform_col1:
+            linkedin_type = "primary" if st.session_state.selected_platform == 'linkedin' else "secondary"
+            if st.button("💼 LinkedIn\n\nProfessional networking", key="btn_linkedin", use_container_width=True, type=linkedin_type):
+                st.session_state.selected_platform = 'linkedin'
+                st.rerun()
+
+        with platform_col2:
+            instagram_type = "primary" if st.session_state.selected_platform == 'instagram' else "secondary"
+            if st.button("📸 Instagram\n\nVisual storytelling", key="btn_instagram", use_container_width=True, type=instagram_type):
+                st.session_state.selected_platform = 'instagram'
+                st.rerun()
+
+        selected_platform = st.session_state.selected_platform
+        platform_emoji = "💼" if selected_platform == "linkedin" else "📸"
+        platform_name = selected_platform.title()
+
+        st.markdown("---")
+
+        # Topic Input with Smart Suggestions
+        st.markdown("#### What do you want to post about?")
+
+        # Show theme-based suggestions
+        if current_profile.get('content_themes'):
+            with st.expander("💡 Suggested Topics (click to use)"):
+                for theme in current_profile['content_themes'][:3]:
+                    if st.button(f"📌 {theme}", key=f"suggest_{theme}", use_container_width=True):
+                        st.session_state.prefilled_topic = f"Share insights about {theme}"
+                        st.rerun()
+
+        topic = st.text_area(
+            "Describe your topic or goal",
+            value=st.session_state.prefilled_topic,
+            placeholder=f"Example: Announce our AI product launch, share insights on remote work trends, celebrate a team milestone",
+            height=120,
+            help="Be specific! The more context you provide, the better the post will be.",
+            key="topic_input"
+        )
+
+        # Clear prefill after use
+        if st.session_state.prefilled_topic and topic:
+            st.session_state.prefilled_topic = ''
+
+        # Platform-specific tips
+        platform_tips = {
+            'linkedin': "💡 **LinkedIn tip:** Professional tone, data-driven insights, engagement questions work best",
+            'instagram': "💡 **Instagram tip:** Visual storytelling, authentic voice, emojis, action CTAs"
+        }
+        st.caption(platform_tips[selected_platform])
+
+        st.markdown("---")
+
+        # Post Type Selection
+        st.markdown("#### Post Type (Optional)")
+
+        post_types = {
+            "Let AI Decide": None,
+            "📢 Announcement": "announcement",
+            "💡 Thought Leadership": "thought_leadership",
+            "✅ Tips & Advice": "tips",
+            "🏢 Company Culture": "company_culture",
+            "📖 Personal Story": "personal_story"
+        }
+
+        selected_post_type = st.radio(
+            "Post type",
+            options=list(post_types.keys()),
+            horizontal=False,
             label_visibility="collapsed"
         )
 
-        if mode_tab == "Guided Workflow":
-            # ========== GUIDED WORKFLOW ==========
+        post_type = post_types[selected_post_type]
 
-            # Step 1: Topic
-            st.markdown("#### Step 1: What do you want to post about?")
+        st.markdown("---")
 
-            topic = st.text_area(
-                "Describe your topic or goal",
-                placeholder="Example: Announce our new AI product launch, share insights on remote work trends, celebrate a team milestone",
-                height=100,
-                help="Be specific! The more context you provide, the better the post will be.",
-                key="topic_input"
+        # Reference Images Upload
+        st.markdown("#### Reference Images (Optional)")
+        st.caption("Upload images to guide the AI's image generation style")
+
+        uploaded_files = st.file_uploader(
+            "Choose reference images",
+            type=['png', 'jpg', 'jpeg', 'webp'],
+            accept_multiple_files=True,
+            help="Upload 1-5 reference images to guide style",
+            label_visibility="collapsed",
+            key="ref_images"
+        )
+
+        if uploaded_files:
+            st.markdown(f"**{len(uploaded_files)} image(s) uploaded**")
+            cols = st.columns(min(len(uploaded_files), 5))
+            for idx, uploaded_file in enumerate(uploaded_files[:5]):
+                with cols[idx % 5]:
+                    img = Image.open(uploaded_file)
+                    st.image(img, use_container_width=True)
+
+        st.markdown("---")
+
+        # Generate Button
+        col_gen1, col_gen2 = st.columns([2, 1])
+
+        with col_gen1:
+            generate_btn = st.button(
+                f"🎨 Generate {platform_name} Post",
+                use_container_width=True,
+                type="primary"
             )
 
-            st.caption("💡 Examples: Product launches, hiring announcements, industry insights, thought leadership, tips & advice")
+        with col_gen2:
+            include_image = st.checkbox("Include Image", value=True)
 
-            st.markdown("---")
+        if generate_btn:
+            if not topic or len(topic.strip()) < 10:
+                st.error("⚠️ Please provide more detail about your topic (at least 10 characters)")
+            else:
+                start_time = time.time()
 
-            # Step 2: Post Type
-            st.markdown("#### Step 2: Choose Post Type (Optional)")
-
-            post_types = {
-                "Let AI Decide": None,
-                "📢 Announcement": "announcement",
-                "💡 Thought Leadership": "thought_leadership",
-                "✅ Tips & Advice": "tips",
-                "🏢 Company Culture": "company_culture",
-                "📖 Personal Story": "personal_story"
-            }
-
-            selected_post_type = st.radio(
-                "Post type",
-                options=list(post_types.keys()),
-                horizontal=False,
-                label_visibility="collapsed"
-            )
-
-            post_type = post_types[selected_post_type]
-
-            st.markdown("---")
-
-            # Step 2.5: Optional Reference Images
-            st.markdown("#### Optional: Upload Reference Images")
-            st.caption("Upload images to guide the AI's image generation style (optional)")
-
-            uploaded_files = st.file_uploader(
-                "Choose reference images",
-                type=['png', 'jpg', 'jpeg', 'webp'],
-                accept_multiple_files=True,
-                help="Upload 1-5 reference images to guide the style",
-                label_visibility="collapsed",
-                key="guided_mode_uploader"
-            )
-
-            if uploaded_files:
-                st.markdown(f"**Uploaded: {len(uploaded_files)} image(s)**")
-                cols = st.columns(min(len(uploaded_files), 5))
-                for idx, uploaded_file in enumerate(uploaded_files[:5]):
-                    with cols[idx % 5]:
+                # Process reference images
+                reference_images = []
+                if uploaded_files and include_image:
+                    for uploaded_file in uploaded_files[:5]:
                         img = Image.open(uploaded_file)
-                        st.image(img, use_container_width=True)
+                        reference_images.append(img)
 
-            st.markdown("---")
+                with st.spinner(f"🎯 Generating your {platform_name} post... This may take 20-30 seconds..."):
+                    try:
+                        generator = SocialMediaPostGenerator()
 
-            # Step 3: Generate
-            st.markdown("#### Step 3: Generate Your Post")
-
-            col_gen1, col_gen2 = st.columns([2, 1])
-
-            with col_gen1:
-                generate_btn = st.button(
-                    "🎨 Generate LinkedIn Post",
-                    use_container_width=True,
-                    type="primary"
-                )
-
-            with col_gen2:
-                include_image = st.checkbox("Include Image", value=True)
-
-            if generate_btn:
-                if not topic or len(topic.strip()) < 10:
-                    st.error("⚠️ Please provide more detail about your topic (at least 10 characters)")
-                else:
-                    start_time = time.time()
-
-                    # Process reference images if uploaded
-                    reference_images = []
-                    if uploaded_files and include_image:
-                        for uploaded_file in uploaded_files[:5]:
-                            img = Image.open(uploaded_file)
-                            reference_images.append(img)
-
-                    with st.spinner(f"🎯 Analyzing your profile and generating post... This may take 20-30 seconds..."):
-                        try:
-                            generator = LinkedInPostGenerator()
-
-                            result = generator.generate_complete_post(
-                                topic=topic.strip(),
-                                post_type=post_type,
-                                profile=current_profile,
-                                generate_image=include_image,
-                                reference_images=reference_images if reference_images else None
-                            )
-
-                            elapsed_time = time.time() - start_time
-
-                            if result['success']:
-                                st.success(f"✅ Post generated in {elapsed_time:.1f} seconds!")
-
-                                # Store in session state
-                                st.session_state.generated_post = result
-
-                                # Save to database
-                                try:
-                                    post_id = marketing_mgr.save_generated_post(
-                                        user_id=user_id,
-                                        profile_id=selected_profile_id,
-                                        post_topic=topic,
-                                        generated_text=result['post_text'],
-                                        image_bytes=result.get('image_bytes'),
-                                        image_prompt=result.get('image_prompt'),
-                                        hashtags=result.get('hashtags'),
-                                        post_type=result.get('post_type_detected'),
-                                        tone_used=current_profile.get('default_tone'),
-                                        image_style_used=current_profile.get('image_style_preference'),
-                                        gemini_reasoning=result.get('reasoning')
-                                    )
-
-                                    st.session_state.generated_post['post_id'] = post_id
-
-                                except Exception as e:
-                                    st.warning(f"Post generated but failed to save to database: {e}")
-
-                                st.rerun()
-                            else:
-                                st.error(f"❌ Failed to generate post")
-                                st.error(f"**Error:** {result.get('error', 'Unknown error')}")
-
-                                # Show helpful error info
-                                error_msg = result.get('error', '').lower()
-                                if "quota" in error_msg:
-                                    st.info("💡 **Solution:** Free tier limit reached. Try again later or upgrade to paid tier.")
-                                elif "api key" in error_msg:
-                                    st.info("💡 **Solution:** Check your GOOGLE_API_KEY in the .env file.")
-
-                        except Exception as e:
-                            st.error(f"❌ Unexpected error: {e}")
-                            import traceback
-                            st.code(traceback.format_exc())
-
-        else:
-            # ========== ADVANCED MODE (Original functionality) ==========
-
-            st.markdown("#### Advanced Image Generation")
-            st.caption("Direct control over image generation parameters")
-
-            # Import old image generator
-            from agent.image_generator import generate_image_from_prompt
-
-            prompt = st.text_area(
-                "📝 Image Description",
-                placeholder="Example: A futuristic Dubai skyline at golden hour with modern glass buildings, photorealistic, high quality, professional photography",
-                height=120,
-                help="Describe what you want to see in the image. Be specific about style, mood, colors, and composition.",
-                key="advanced_prompt"
-            )
-
-            # Reference images upload
-            st.markdown("#### 📎 Reference Images (Optional)")
-            uploaded_files = st.file_uploader(
-                "Choose reference images",
-                type=['png', 'jpg', 'jpeg', 'webp'],
-                accept_multiple_files=True,
-                help="Upload 1-5 reference images",
-                label_visibility="collapsed"
-            )
-
-            if uploaded_files:
-                st.markdown(f"**Uploaded: {len(uploaded_files)} image(s)**")
-                cols = st.columns(min(len(uploaded_files), 5))
-                for idx, uploaded_file in enumerate(uploaded_files[:5]):
-                    with cols[idx % 5]:
-                        img = Image.open(uploaded_file)
-                        st.image(img, use_container_width=True)
-
-            st.markdown("---")
-
-            col_settings1, col_settings2 = st.columns(2)
-
-            with col_settings1:
-                aspect_ratio = st.selectbox(
-                    "📐 Aspect Ratio",
-                    options=["1:1 (Square)", "16:9 (Landscape)", "9:16 (Portrait)"],
-                    index=0
-                )
-                aspect_ratio = aspect_ratio.split(" ")[0]
-
-            with col_settings2:
-                num_variations = st.selectbox("🎲 Variations", options=[1, 2, 3, 4], index=0)
-
-            with st.expander("⚙️ Advanced Options"):
-                negative_prompt = st.text_input(
-                    "🚫 Negative Prompt",
-                    placeholder="Example: blurry, low quality, distorted",
-                    help="What to avoid in the image"
-                )
-
-            st.markdown("---")
-
-            generate_advanced_btn = st.button("🎨 Generate Image", use_container_width=True, type="primary")
-
-            if generate_advanced_btn:
-                if not prompt or len(prompt.strip()) < 5:
-                    st.error("⚠️ Please enter a description (at least 5 characters)")
-                else:
-                    start_time = time.time()
-
-                    reference_images = []
-                    if uploaded_files:
-                        for uploaded_file in uploaded_files[:5]:
-                            img = Image.open(uploaded_file)
-                            reference_images.append(img)
-
-                    with st.spinner(f"🎨 Generating image... This may take 10-20 seconds..."):
-                        result = generate_image_from_prompt(
-                            prompt=prompt.strip(),
-                            aspect_ratio=aspect_ratio,
-                            number_of_images=num_variations,
-                            reference_images=reference_images if reference_images else None,
-                            negative_prompt=negative_prompt if negative_prompt else None
+                        result = generator.generate_complete_post(
+                            topic=topic.strip(),
+                            platform=selected_platform,
+                            post_type=post_type,
+                            profile=current_profile,
+                            generate_image=include_image,
+                            reference_images=reference_images if reference_images else None
                         )
 
-                    elapsed_time = time.time() - start_time
+                        elapsed_time = time.time() - start_time
 
-                    if result['success']:
-                        st.success(f"✅ Image generated in {elapsed_time:.1f} seconds!")
+                        if result['success']:
+                            st.success(f"✅ Post generated in {elapsed_time:.1f} seconds!")
 
-                        # Store as simple generated post
-                        st.session_state.generated_post = {
-                            'success': True,
-                            'post_text': '',
-                            'image_bytes': result['image_bytes'],
-                            'image_prompt': prompt,
-                            'hashtags': [],
-                            'reasoning': 'Generated via advanced mode'
-                        }
+                            # Store in session state
+                            st.session_state.generated_post = result
 
-                        st.rerun()
-                    else:
-                        st.error(f"❌ Failed to generate image: {result['error']}")
+                            # Save to database
+                            try:
+                                post_id = marketing_mgr.save_generated_post(
+                                    user_id=user_id,
+                                    profile_id=selected_profile_id,
+                                    post_topic=topic,
+                                    generated_text=result['post_text'],
+                                    image_bytes=result.get('image_bytes'),
+                                    image_prompt=result.get('image_prompt'),
+                                    hashtags=result.get('hashtags'),
+                                    post_type=result.get('post_type_detected'),
+                                    tone_used=current_profile.get('default_tone'),
+                                    image_style_used=current_profile.get('image_style_preference'),
+                                    gemini_reasoning=result.get('reasoning'),
+                                    platform=selected_platform
+                                )
 
-    # ==================== RIGHT COLUMN: PREVIEW ====================
+                                st.session_state.generated_post['post_id'] = post_id
+
+                            except Exception as e:
+                                st.warning(f"Post generated but failed to save to database: {e}")
+
+                            st.rerun()
+                        else:
+                            st.error(f"❌ Failed to generate post")
+                            st.error(f"**Error:** {result.get('error', 'Unknown error')}")
+
+                            # Show helpful error info
+                            error_msg = result.get('error', '').lower()
+                            if "quota" in error_msg:
+                                st.info("💡 **Solution:** Free tier limit reached. Try again later or upgrade to paid tier.")
+                            elif "api key" in error_msg:
+                                st.info("💡 **Solution:** Check your GOOGLE_API_KEY in the .env file.")
+
+                    except Exception as e:
+                        st.error(f"❌ Unexpected error: {e}")
+                        import traceback
+                        st.code(traceback.format_exc())
+
+    # ==================== RIGHT COLUMN: PREVIEW + ACTIONS ====================
 
     with col_right:
         st.markdown("### 📸 Preview")
 
         if st.session_state.generated_post:
             post_data = st.session_state.generated_post
+            post_platform = post_data.get('platform', 'linkedin')
 
-            # LinkedIn Preview
+            # Platform-specific preview
             user_role = current_profile.get('role_title') or current_profile.get('industry')
 
-            render_linkedin_preview(
+            render_social_preview(
+                platform=post_platform,
                 post_text=post_data.get('post_text', ''),
                 user_name=user_name,
                 user_role=user_role,
@@ -590,7 +495,6 @@ if selected_profile_id:
 
             # Download image
             if post_data.get('image_bytes'):
-                # Convert memoryview to bytes if needed
                 image_data = post_data['image_bytes']
                 if isinstance(image_data, memoryview):
                     image_data = bytes(image_data)
@@ -598,7 +502,7 @@ if selected_profile_id:
                 st.download_button(
                     label="📥 Download Image",
                     data=image_data,
-                    file_name=f"linkedin_post_{int(time.time())}.png",
+                    file_name=f"{post_platform}_post_{int(time.time())}.png",
                     mime="image/png",
                     use_container_width=True
                 )
@@ -612,30 +516,24 @@ if selected_profile_id:
                 st.download_button(
                     label="📄 Download Text",
                     data=post_text_with_hashtags,
-                    file_name=f"linkedin_post_{int(time.time())}.txt",
+                    file_name=f"{post_platform}_post_{int(time.time())}.txt",
                     mime="text/plain",
                     use_container_width=True
                 )
 
             # Download complete package as ZIP
             if post_data.get('image_bytes') and post_data.get('post_text'):
-                # Create ZIP in memory
                 zip_buffer = io.BytesIO()
 
-                # Convert memoryview to bytes if needed
                 image_data = post_data['image_bytes']
                 if isinstance(image_data, memoryview):
                     image_data = bytes(image_data)
 
                 with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-                    # Add image
-                    zip_file.writestr(f"linkedin_post_image.png", image_data)
+                    zip_file.writestr(f"{post_platform}_post_image.png", image_data)
+                    zip_file.writestr(f"{post_platform}_post_text.txt", post_text_with_hashtags)
 
-                    # Add text
-                    zip_file.writestr(f"linkedin_post_text.txt", post_text_with_hashtags)
-
-                    # Add markdown with both
-                    markdown_content = f"""# LinkedIn Post
+                    markdown_content = f"""# {post_platform.title()} Post
 
 {post_text_with_hashtags}
 
@@ -643,10 +541,11 @@ if selected_profile_id:
 
 **Generated by Granite Marketing AI**
 - Profile: {current_profile['profile_name']}
-- Topic: {post_data.get('post_topic', 'N/A')}
+- Platform: {post_platform.title()}
+- Topic: {topic}
 - Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
-Image: See linkedin_post_image.png
+Image: See {post_platform}_post_image.png
 """
                     zip_file.writestr(f"README.md", markdown_content)
 
@@ -655,13 +554,137 @@ Image: See linkedin_post_image.png
                 st.download_button(
                     label="📦 Download Package (ZIP)",
                     data=zip_buffer.getvalue(),
-                    file_name=f"linkedin_post_package_{int(time.time())}.zip",
+                    file_name=f"{post_platform}_post_package_{int(time.time())}.zip",
                     mime="application/zip",
                     use_container_width=True
                 )
 
         else:
             st.info("👈 Generate a post to see the preview here")
+
+    # ==================== WEEKLY CONTENT CALENDAR ====================
+
+    st.divider()
+
+    st.markdown("### 📅 Content Calendar")
+
+    # Show calendar editor modal if active
+    if st.session_state.show_calendar_editor:
+        with st.container():
+            st.markdown("---")
+            render_calendar_entry_editor(
+                marketing_mgr=marketing_mgr,
+                user_id=user_id,
+                profile_id=selected_profile_id,
+                entry=st.session_state.editing_calendar_entry,
+                default_date=st.session_state.calendar_default_date
+            )
+            st.markdown("---")
+
+            if st.button("✖️ Close Editor"):
+                st.session_state.show_calendar_editor = False
+                st.session_state.editing_calendar_entry = None
+                st.session_state.calendar_default_date = None
+                st.rerun()
+    else:
+        # Get calendar data
+        week_offset = st.session_state.get('calendar_week_offset', 0)
+
+        # Calculate date range for current week view
+        today = datetime.now()
+        start_of_week = today - timedelta(days=today.weekday())  # Monday
+        start_of_week = start_of_week + timedelta(weeks=week_offset)
+        end_of_week = start_of_week + timedelta(days=6)  # Sunday
+
+        # Fetch calendar entries from database
+        calendar_entries = marketing_mgr.get_profile_calendar(
+            profile_id=selected_profile_id,
+            start_date=start_of_week,
+            end_date=end_of_week
+        )
+
+        # Callbacks for calendar interactions
+        def handle_add_entry(date: datetime):
+            st.session_state.show_calendar_editor = True
+            st.session_state.editing_calendar_entry = None
+            st.session_state.calendar_default_date = date
+            st.rerun()
+
+        def handle_edit_entry(entry: dict):
+            st.session_state.show_calendar_editor = True
+            st.session_state.editing_calendar_entry = entry
+            st.session_state.calendar_default_date = None
+            st.rerun()
+
+        # Render calendar legend
+        render_calendar_legend()
+
+        # Render calendar
+        render_calendar_week_view(
+            calendar_entries=calendar_entries,
+            profile_id=selected_profile_id,
+            user_id=user_id,
+            on_add_entry=handle_add_entry,
+            on_edit_entry=handle_edit_entry,
+            week_offset=week_offset
+        )
+
+        # Calendar summary stats
+        if calendar_entries:
+            st.markdown("---")
+            render_calendar_summary(calendar_entries)
+
+    # ==================== AI CALENDAR PLANNER ====================
+
+    st.divider()
+
+    with st.expander("🤖 AI Calendar Planner", expanded=False):
+        st.markdown("""
+        Let the marketing agent help you plan your content calendar based on your strategy,
+        recent post performance, and content themes.
+        """)
+
+        col1, col2 = st.columns([2, 1])
+
+        with col1:
+            plan_duration = st.selectbox(
+                "Planning horizon",
+                options=["Next week (7 days)", "Next 2 weeks (14 days)", "Next month (30 days)"],
+                index=0
+            )
+
+        with col2:
+            posts_per_week = st.number_input(
+                "Posts per week",
+                min_value=1,
+                max_value=7,
+                value=3,
+                help="Target number of posts per week"
+            )
+
+        if st.button("🎯 Generate Calendar Plan", use_container_width=True, type="primary"):
+            st.info("""
+            💡 **To use AI Calendar Planning:**
+
+            The marketing agent can create a full content calendar for you! To use this feature:
+
+            1. Go to the main chat interface (Home page)
+            2. Ask the agent: *"Plan a content calendar for my [profile name] for the next [duration]"*
+            3. The agent will analyze your strategy, recent performance, and create a calendar plan
+            4. Once created, the calendar will appear here automatically!
+
+            **Example prompts:**
+            - "Plan a 2-week content calendar for my profile with 3 posts per week"
+            - "Suggest topics for next week's LinkedIn posts"
+            - "Create a content calendar focused on AI Innovation theme"
+            """)
+
+            st.markdown("""
+            <div style="background: rgba(102, 179, 255, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #66b3ff; margin-top: 16px;">
+                <strong>🚀 Coming Soon:</strong> Direct AI calendar planning from this page!<br>
+                For now, use the conversational interface on the Home page to access the marketing agent's calendar planning capabilities.
+            </div>
+            """, unsafe_allow_html=True)
 
     # ==================== POST HISTORY ====================
 
@@ -670,52 +693,56 @@ Image: See linkedin_post_image.png
     st.markdown("### 🕒 Recent Posts")
 
     # Load recent posts
-    recent_posts = marketing_mgr.get_user_posts(user_id, profile_id=selected_profile_id, limit=20)
+    recent_posts = marketing_mgr.get_user_posts(user_id, profile_id=selected_profile_id, limit=50)
 
     if recent_posts:
-        # Filter and display options
-        col_filter1, col_filter2, col_filter3 = st.columns([2, 1, 1])
+        st.markdown(f"**{len(recent_posts)} post(s) generated**")
 
-        with col_filter1:
-            st.markdown(f"**{len(recent_posts)} post(s) generated with this profile**")
+        # Render filters
+        filters = render_post_filters(
+            platforms=['linkedin', 'instagram'],
+            post_types=list(set([p.get('post_type') for p in recent_posts if p.get('post_type')]))
+        )
 
-        with col_filter2:
-            show_posted_only = st.checkbox("Posted only", value=False)
+        # Apply filters
+        filtered_posts = filter_and_sort_posts(recent_posts, filters)
 
-        with col_filter3:
-            if st.button("🗑️ Clear All", use_container_width=True):
-                st.warning("Clear all feature not implemented (database preservation)")
+        if filtered_posts:
+            st.markdown(f"*Showing {len(filtered_posts)} of {len(recent_posts)} posts*")
 
-        # Filter
-        if show_posted_only:
-            recent_posts = [p for p in recent_posts if p.get('was_posted')]
+            # Callbacks for post actions
+            def handle_view_post(post: dict):
+                st.session_state.generated_post = post
+                st.session_state.selected_platform = post.get('platform', 'linkedin')
+                st.rerun()
 
-        # Display in grid
-        cols_per_row = 3
-        for i in range(0, len(recent_posts), cols_per_row):
-            cols = st.columns(cols_per_row)
+            def handle_repost(post: dict):
+                # Pre-fill the topic input for regeneration
+                st.session_state.prefilled_topic = post.get('post_topic', '')
+                st.session_state.selected_platform = post.get('platform', 'linkedin')
+                st.success("💡 Topic loaded! Scroll up to the post generator to create a new version.")
+                # Scroll to top would require JS, so we just show a message
 
-            for j in range(cols_per_row):
-                idx = i + j
-                if idx < len(recent_posts):
-                    post = recent_posts[idx]
+            def handle_add_to_calendar(post: dict):
+                # Open calendar editor with this post's topic pre-filled
+                st.session_state.show_calendar_editor = True
+                st.session_state.calendar_default_date = datetime.now() + timedelta(days=1)
+                st.session_state.editing_calendar_entry = None
+                # Store post info for pre-filling
+                st.session_state.calendar_prefill_topic = post.get('post_topic', '')
+                st.session_state.calendar_prefill_post_id = post.get('post_id')
+                st.rerun()
 
-                    with cols[j]:
-                        # Compact card
-                        if post.get('image_bytes'):
-                            try:
-                                img = Image.open(io.BytesIO(post['image_bytes']))
-                                st.image(img, use_container_width=True)
-                            except:
-                                pass
-
-                        st.caption(f"**{post.get('post_topic', 'Untitled')[:40]}...**")
-                        st.caption(f"{post.get('created_at', 'Unknown time')}")
-
-                        if st.button("👁️ View", key=f"view_post_{post['post_id']}", use_container_width=True):
-                            # Load this post as current
-                            st.session_state.generated_post = post
-                            st.rerun()
+            # Render posts in 3-column grid
+            render_post_grid(
+                posts=filtered_posts,
+                columns=3,
+                on_view=handle_view_post,
+                on_repost=handle_repost,
+                on_add_to_calendar=handle_add_to_calendar
+            )
+        else:
+            st.info("No posts match the current filters")
     else:
         st.info("No posts generated yet with this profile")
 
@@ -733,37 +760,32 @@ else:
 
 st.divider()
 
-with st.expander("💡 Tips for Better LinkedIn Posts"):
+with st.expander("💡 Tips for Better Social Media Posts"):
     st.markdown("""
-    ### How to Create Engaging LinkedIn Content
+    ### Platform-Specific Best Practices
 
-    **1. Be Specific with Your Topic**
-    - ✅ Good: "Share our company's journey to achieving carbon neutrality and lessons learned"
-    - ❌ Vague: "Post about environment stuff"
+    #### LinkedIn 💼
+    - **Hook**: First line grabs attention (visible in feed)
+    - **Value**: Data-driven insights, industry expertise
+    - **Length**: 150-300 words optimal
+    - **CTA**: End with engagement question
+    - **Hashtags**: 3-5 professional industry tags
+    - **Tone**: Professional, thought-provoking, authoritative
 
-    **2. Trust Your Profile Context**
-    - Your profile already contains your brand voice, audience, and themes
-    - The AI will use this context automatically
-    - Just focus on what you want to say today
+    #### Instagram 📸
+    - **Visual First**: Image is the star, text complements
+    - **Authentic Voice**: Conversational, relatable storytelling
+    - **Length**: 125-150 words, short paragraphs
+    - **CTA**: Action-driven (DM, link in bio, save this)
+    - **Hashtags**: 8-12 mix of trending + niche tags
+    - **Tone**: Authentic, engaging, strategic emojis
 
-    **3. LinkedIn Best Practices**
-    - **Hook**: First line grabs attention (people see it in feed)
-    - **Value**: Provide insights, lessons, or actionable advice
-    - **CTA**: End with a question or call-to-action to drive engagement
-    - **Length**: 150-300 words is optimal for engagement
+    ### General Tips
 
-    **4. Post Types That Work**
-    - **Announcements**: Product launches, hiring, company milestones
-    - **Thought Leadership**: Industry insights backed by data or experience
-    - **Tips & Advice**: Actionable how-to content
-    - **Stories**: Personal experiences with lessons learned
-    - **Culture**: Behind-the-scenes, team highlights
-
-    **5. Optimize Your Images**
-    - Square (1:1) works best for LinkedIn feed visibility
-    - Keep text minimal (LinkedIn adds the post text)
-    - Use brand colors for consistency
-    - Professional but eye-catching
+    1. **Be Specific**: "Share our carbon neutrality journey" > "Post about environment"
+    2. **Trust Your Profile**: Your brand voice and audience are already configured
+    3. **Reference Images**: Upload style examples for consistent visuals
+    4. **Optimize Images**: AI generates platform-specific visual prompts automatically
 
     ### Profile Tips
 
@@ -774,10 +796,10 @@ with st.expander("💡 Tips for Better LinkedIn Posts"):
 
     ### Troubleshooting
 
-    - **Generic output?** → Add more context to your topic description
-    - **Wrong tone?** → Check your profile's default tone setting
-    - **Image doesn't match?** → Be more specific about image needs in your topic
-    - **API errors?** → Check your GOOGLE_API_KEY and quota limits
+    - **Generic output?** → Add more context to your topic
+    - **Wrong tone?** → Check profile's default tone setting
+    - **Image doesn't match?** → Upload reference images for style guidance
+    - **API errors?** → Check GOOGLE_API_KEY and quota limits
     """)
 
 # Footer
@@ -789,5 +811,5 @@ with col_footer1:
     st.markdown("**Current Profile:** " + current_profile.get('profile_name', 'None') if selected_profile_id else "**No profile selected**")
 
 with col_footer2:
-    st.markdown("**Free Tier:** Limited usage per day")
+    st.markdown("**Platforms:** LinkedIn, Instagram")
     st.markdown(f"**Profiles:** {len(profiles)}")

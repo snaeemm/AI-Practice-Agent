@@ -259,10 +259,14 @@ class MarketingProfileManager:
         post_type: Optional[str] = None,
         tone_used: Optional[str] = None,
         image_style_used: Optional[str] = None,
-        gemini_reasoning: Optional[str] = None
+        gemini_reasoning: Optional[str] = None,
+        platform: str = 'linkedin'
     ) -> str:
         """
-        Save a generated LinkedIn post to the database
+        Save a generated social media post to the database
+
+        Args:
+            platform: Platform for the post ('linkedin' or 'instagram'), defaults to 'linkedin'
 
         Returns:
             post_id (str): UUID of created post
@@ -273,20 +277,20 @@ class MarketingProfileManager:
                     INSERT INTO generated_linkedin_posts (
                         user_id, profile_id, session_id, post_topic, generated_text,
                         image_bytes, image_prompt, hashtags, post_type,
-                        tone_used, image_style_used, gemini_reasoning
+                        tone_used, image_style_used, gemini_reasoning, platform
                     )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING post_id
                 """, (
                     user_id, profile_id, session_id, post_topic, generated_text,
                     image_bytes, image_prompt, hashtags, post_type,
-                    tone_used, image_style_used, gemini_reasoning
+                    tone_used, image_style_used, gemini_reasoning, platform
                 ))
 
                 post_id = cursor.fetchone()[0]
                 conn.commit()
 
-                print(f"✅ Saved generated post: {post_id}")
+                print(f"✅ Saved generated {platform} post: {post_id}")
                 return str(post_id)
 
     def get_post(self, post_id: str) -> Optional[Dict[str, Any]]:
@@ -435,4 +439,281 @@ class MarketingProfileManager:
                     'total_posts': row[0] or 0,
                     'posted_count': row[1] or 0,
                     'avg_rating': float(row[2]) if row[2] else None
+                }
+
+    # ==================== Content Calendar ====================
+
+    def get_profile_calendar(
+        self,
+        profile_id: str,
+        start_date: datetime,
+        end_date: datetime,
+        status_filter: Optional[List[str]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get calendar entries for a profile within a date range
+
+        Args:
+            profile_id: UUID of the profile
+            start_date: Start of date range
+            end_date: End of date range
+            status_filter: Optional list of statuses to filter by
+
+        Returns:
+            List of calendar entry dictionaries
+        """
+        with self.db._get_connection() as conn:
+            with conn.cursor() as cursor:
+                if status_filter:
+                    placeholders = ','.join(['%s'] * len(status_filter))
+                    sql = f"""
+                        SELECT
+                            calendar_id, scheduled_date, scheduled_time, content_type,
+                            topic, theme, status, draft_text, final_post_id,
+                            performance_notes, created_at
+                        FROM content_calendar
+                        WHERE profile_id = %s
+                          AND scheduled_date >= %s
+                          AND scheduled_date <= %s
+                          AND status IN ({placeholders})
+                        ORDER BY scheduled_date ASC, scheduled_time ASC
+                    """
+                    cursor.execute(sql, (profile_id, start_date.date(), end_date.date(), *status_filter))
+                else:
+                    sql = """
+                        SELECT
+                            calendar_id, scheduled_date, scheduled_time, content_type,
+                            topic, theme, status, draft_text, final_post_id,
+                            performance_notes, created_at
+                        FROM content_calendar
+                        WHERE profile_id = %s
+                          AND scheduled_date >= %s
+                          AND scheduled_date <= %s
+                        ORDER BY scheduled_date ASC, scheduled_time ASC
+                    """
+                    cursor.execute(sql, (profile_id, start_date.date(), end_date.date()))
+
+                rows = cursor.fetchall()
+                entries = []
+                for row in rows:
+                    entries.append({
+                        'calendar_id': str(row[0]),
+                        'scheduled_date': row[1],
+                        'scheduled_time': row[2],
+                        'content_type': row[3],
+                        'topic': row[4],
+                        'theme': row[5],
+                        'status': row[6],
+                        'draft_text': row[7],
+                        'final_post_id': str(row[8]) if row[8] else None,
+                        'performance_notes': row[9],
+                        'created_at': row[10]
+                    })
+
+                return entries
+
+    def create_calendar_entry(
+        self,
+        user_id: str,
+        profile_id: str,
+        scheduled_date: datetime,
+        topic: str,
+        content_type: str = 'linkedin_post',
+        theme: Optional[str] = None,
+        status: str = 'planned',
+        draft_text: Optional[str] = None,
+        scheduled_time: Optional[datetime] = None
+    ) -> str:
+        """
+        Create a new calendar entry from the UI
+
+        Args:
+            user_id: UUID of the user
+            profile_id: UUID of the profile
+            scheduled_date: Date to schedule post
+            topic: Topic/title of the post
+            content_type: Type of content
+            theme: Optional theme from strategy
+            status: Entry status (default: 'planned')
+            draft_text: Optional draft content
+            scheduled_time: Optional specific time
+
+        Returns:
+            calendar_id (str): UUID of created entry
+        """
+        with self.db._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO content_calendar (
+                        user_id, profile_id, scheduled_date, scheduled_time,
+                        topic, content_type, theme, status, draft_text
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING calendar_id
+                """, (
+                    user_id, profile_id, scheduled_date.date(),
+                    scheduled_time.time() if scheduled_time else None,
+                    topic, content_type, theme, status, draft_text
+                ))
+
+                calendar_id = cursor.fetchone()[0]
+                conn.commit()
+
+                print(f"✅ Created calendar entry: {topic} on {scheduled_date.date()} ({calendar_id})")
+                return str(calendar_id)
+
+    def update_calendar_entry(
+        self,
+        calendar_id: str,
+        **kwargs
+    ) -> bool:
+        """
+        Update a calendar entry
+
+        Args:
+            calendar_id: UUID of the calendar entry
+            **kwargs: Fields to update
+
+        Returns:
+            bool: True if updated successfully
+        """
+        if not kwargs:
+            return False
+
+        with self.db._get_connection() as conn:
+            with conn.cursor() as cursor:
+                # Build SET clause dynamically
+                set_clauses = []
+                values = []
+
+                allowed_fields = [
+                    'scheduled_date', 'scheduled_time', 'topic', 'content_type',
+                    'theme', 'status', 'draft_text', 'final_post_id', 'performance_notes'
+                ]
+
+                for field, value in kwargs.items():
+                    if field in allowed_fields:
+                        set_clauses.append(f"{field} = %s")
+                        # Convert date/time objects
+                        if field == 'scheduled_date' and isinstance(value, datetime):
+                            values.append(value.date())
+                        elif field == 'scheduled_time' and isinstance(value, datetime):
+                            values.append(value.time())
+                        else:
+                            values.append(value)
+
+                if not set_clauses:
+                    return False
+
+                values.append(calendar_id)
+
+                sql = f"""
+                    UPDATE content_calendar
+                    SET {', '.join(set_clauses)}
+                    WHERE calendar_id = %s
+                """
+
+                cursor.execute(sql, values)
+                rows_affected = cursor.rowcount
+                conn.commit()
+
+                return rows_affected > 0
+
+    def delete_calendar_entry(
+        self,
+        calendar_id: str
+    ) -> bool:
+        """
+        Delete a calendar entry
+
+        Args:
+            calendar_id: UUID of the calendar entry
+
+        Returns:
+            bool: True if deleted successfully
+        """
+        with self.db._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    DELETE FROM content_calendar
+                    WHERE calendar_id = %s
+                """, (calendar_id,))
+
+                rows_affected = cursor.rowcount
+                conn.commit()
+
+                return rows_affected > 0
+
+    def link_post_to_calendar(
+        self,
+        post_id: str,
+        calendar_id: str
+    ) -> bool:
+        """
+        Link a generated post to a calendar entry
+
+        Args:
+            post_id: UUID of the generated post
+            calendar_id: UUID of the calendar entry
+
+        Returns:
+            bool: True if linked successfully
+        """
+        with self.db._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE content_calendar
+                    SET final_post_id = %s,
+                        status = 'drafted'
+                    WHERE calendar_id = %s
+                """, (post_id, calendar_id))
+
+                rows_affected = cursor.rowcount
+                conn.commit()
+
+                return rows_affected > 0
+
+    def get_calendar_entry(
+        self,
+        calendar_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get a single calendar entry by ID
+
+        Args:
+            calendar_id: UUID of the calendar entry
+
+        Returns:
+            Calendar entry dictionary or None
+        """
+        with self.db._get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT
+                        calendar_id, profile_id, user_id, scheduled_date, scheduled_time,
+                        content_type, topic, theme, status, draft_text, final_post_id,
+                        performance_notes, created_at, updated_at
+                    FROM content_calendar
+                    WHERE calendar_id = %s
+                """, (calendar_id,))
+
+                row = cursor.fetchone()
+                if not row:
+                    return None
+
+                return {
+                    'calendar_id': str(row[0]),
+                    'profile_id': str(row[1]),
+                    'user_id': str(row[2]),
+                    'scheduled_date': row[3],
+                    'scheduled_time': row[4],
+                    'content_type': row[5],
+                    'topic': row[6],
+                    'theme': row[7],
+                    'status': row[8],
+                    'draft_text': row[9],
+                    'final_post_id': str(row[10]) if row[10] else None,
+                    'performance_notes': row[11],
+                    'created_at': row[12],
+                    'updated_at': row[13]
                 }
