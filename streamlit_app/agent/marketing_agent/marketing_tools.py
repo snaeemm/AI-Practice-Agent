@@ -10,12 +10,121 @@ import json
 from agent.database.db_singleton import get_db
 from agent.database.marketing_db_tools import MarketingDatabaseTools
 from agent.database.marketing_profile_manager import MarketingProfileManager
+from agent.session_context import get_current_user_id
 
 
 # Initialize database connections
 db = get_db()
 marketing_db = MarketingDatabaseTools(db)
 profile_manager = MarketingProfileManager(db)
+
+
+# ==================== Profile Search Tools ====================
+
+def tool_search_profile_by_name(
+    profile_name: str,
+    user_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Search for a marketing profile by name for a specific user.
+
+    This tool helps find the profile_id when you only have the profile name.
+    Use this BEFORE calling other tools that require profile_id.
+
+    Args:
+        profile_name: Name of the profile to search for (case-insensitive partial match)
+        user_id: Optional UUID of the user (defaults to current session user)
+
+    Returns:
+        Dictionary with:
+        - success (bool): True if found
+        - profiles (list): List of matching profiles with id, name, type
+        - message (str): Status message
+
+    Example:
+        tool_search_profile_by_name(profile_name="Shahzeb")
+        Returns: {"success": True, "profiles": [{"profile_id": "...", "profile_name": "Shahzeb Naeem", ...}]}
+    """
+    try:
+        # Get user_id from session if not provided
+        if user_id is None:
+            print(f"🔍 [PROFILE SEARCH] user_id not provided, attempting to get from session...")
+            user_id = get_current_user_id()
+            if user_id is None:
+                print(f"❌ [PROFILE SEARCH] Failed to get user_id from session")
+                return {
+                    'success': False,
+                    'profiles': [],
+                    'error': 'No user_id provided and unable to get from session',
+                    'message': 'user_id is required. Please provide it or ensure you are in an active session.'
+                }
+            print(f"✅ [PROFILE SEARCH] Using user_id from session: {user_id}")
+        else:
+            print(f"✅ [PROFILE SEARCH] user_id provided as parameter: {user_id}")
+
+        # Get all profiles for user
+        profiles = profile_manager.get_user_profiles(user_id)
+        print(f"🔍 [PROFILE SEARCH] Found {len(profiles) if profiles else 0} total profiles for user {user_id}")
+
+        if profiles:
+            print(f"📋 [PROFILE SEARCH] Profile names: {[p.get('profile_name', 'UNNAMED') for p in profiles]}")
+
+        if not profiles:
+            return {
+                'success': False,
+                'profiles': [],
+                'message': f"No profiles found for user_id {user_id}. Please create a profile first."
+            }
+
+        # Search for matching profiles (case-insensitive)
+        search_term = profile_name.lower()
+        print(f"🔎 [PROFILE SEARCH] Searching for '{search_term}' (case-insensitive)")
+
+        matching_profiles = [
+            {
+                'profile_id': str(p['profile_id']),
+                'profile_name': p['profile_name'],
+                'profile_type': p['profile_type'],
+                'industry': p.get('industry'),
+                'is_default': p.get('is_default', False)
+            }
+            for p in profiles
+            if search_term in p['profile_name'].lower()
+        ]
+
+        print(f"✅ [PROFILE SEARCH] Found {len(matching_profiles)} matching profile(s)")
+
+        if matching_profiles:
+            return {
+                'success': True,
+                'profiles': matching_profiles,
+                'message': f"Found {len(matching_profiles)} matching profile(s). Use the profile_id for other operations.",
+                'total_user_profiles': len(profiles)
+            }
+        else:
+            # Return all profiles if no match
+            all_profiles = [
+                {
+                    'profile_id': str(p['profile_id']),
+                    'profile_name': p['profile_name'],
+                    'profile_type': p['profile_type'],
+                    'is_default': p.get('is_default', False)
+                }
+                for p in profiles
+            ]
+            return {
+                'success': False,
+                'profiles': all_profiles,
+                'message': f"No profiles matching '{profile_name}'. Here are all {len(profiles)} profiles for this user."
+            }
+
+    except Exception as e:
+        return {
+            'success': False,
+            'profiles': [],
+            'error': str(e),
+            'message': f"Error searching profiles: {str(e)}"
+        }
 
 
 # ==================== Strategy Management Tools ====================

@@ -13,6 +13,7 @@ from agent.prompts import SYSTEM_PROMPT
 from agent.database.database_agent import database_agent
 from agent.ppt_agent.ppt_agent import ppt_agent
 from agent.marketing_agent.marketing_agent import marketing_agent
+from agent.research_agent.research_agent import research_agent
 
 # def list_available_rfps() -> dict:
 #     """
@@ -67,10 +68,12 @@ root_agent = LlmAgent(
         tool_qualify_rfp,
         tool_plan_bid_sections,
         tool_generate_client_brief
+        # Note: tool_generate_image has been moved to marketing_agent for direct access
     ],
     sub_agents=[
         database_agent,
         ppt_agent,
-        marketing_agent
+        marketing_agent,
+        research_agent
     ]
 )

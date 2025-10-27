@@ -107,9 +107,51 @@ class SessionContext:
         """Save user message to database"""
         self.session_mgr.add_message(self.session_id, "user", content)
 
+    def save_user_message_with_image(self, content: str, image_data: dict):
+        """Save user message with image to database
+
+        Args:
+            content: Text message
+            image_data: Dict with 'bytes' (base64 encoded) and 'mime_type'
+        """
+        import base64
+        import json
+
+        # Store image as metadata in message
+        message_data = {
+            'content': content,
+            'image': {
+                'bytes': base64.b64encode(image_data['bytes']).decode('utf-8'),
+                'mime_type': image_data['mime_type']
+            }
+        }
+        self.session_mgr.add_message(self.session_id, "user", json.dumps(message_data))
+
     def save_assistant_message(self, content: str):
         """Save assistant message to database"""
         self.session_mgr.add_message(self.session_id, "assistant", content)
+
+    def save_generated_image(self, image_bytes: bytes, prompt: str, aspect_ratio: str = "1:1"):
+        """Save a generated image to chat history for display
+
+        Args:
+            image_bytes: PNG image bytes
+            prompt: The prompt used to generate the image
+            aspect_ratio: Image aspect ratio
+        """
+        import base64
+        import json
+
+        # Store image as a special assistant message with image data
+        message_data = {
+            'type': 'generated_image',
+            'image': {
+                'bytes': base64.b64encode(image_bytes).decode('utf-8'),
+                'prompt': prompt,
+                'aspect_ratio': aspect_ratio
+            }
+        }
+        self.session_mgr.add_message(self.session_id, "assistant", json.dumps(message_data))
 
     def save_tool_call(self, tool_name: str, tool_args: dict, tool_result: dict):
         """Save tool call to database"""

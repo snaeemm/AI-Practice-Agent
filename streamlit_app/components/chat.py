@@ -87,9 +87,19 @@ def get_mime_type(file_path: str) -> str:
         'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         'txt': 'text/plain',
         'csv': 'text/csv',
-        'json': 'application/json'
+        'json': 'application/json',
+        'png': 'image/png',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'gif': 'image/gif',
+        'webp': 'image/webp'
     }
     return mime_types.get(ext, 'application/octet-stream')
+
+def is_image_file(filename: str) -> bool:
+    """Check if file is an image based on extension"""
+    ext = filename.lower().split('.')[-1]
+    return ext in ['png', 'jpg', 'jpeg', 'gif', 'webp']
 
 def ensure_adk_session_sync(user_id: str, session_id: str):
     """
@@ -138,19 +148,38 @@ def ensure_adk_session_sync(user_id: str, session_id: str):
         return False
 
 
-def send_message(session, user_input: str, display_message: str = None):
-    """Process user message and get agent response"""
+def send_message(session, user_input: str, display_message: str = None, image_data: dict = None):
+    """Process user message and get agent response
+
+    Args:
+        session: Session object
+        user_input: Text message from user
+        display_message: Optional shortened message for display
+        image_data: Optional dict with 'bytes' and 'mime_type' for image
+    """
     # Save display version to history (shortened if provided)
     display_msg = display_message if display_message is not None else user_input
-    session.save_user_message(display_msg)
+
+    # If image is included, save it to session state for display
+    if image_data:
+        session.save_user_message_with_image(display_msg, image_data)
+    else:
+        session.save_user_message(display_msg)
 
     try:
         user_id = str(session.session['user_id'])
+
+        # Store user_id in session state for tools to access
+        from agent.session_context import set_current_user_id
+        set_current_user_id(user_id)
+
         print(f"\n{'='*80}")
         print(f"📨 SENDING MESSAGE")
         print(f"User ID: {user_id}")
         print(f"Session ID: {session.session_id}")
         print(f"Message: {user_input[:100]}...")
+        if image_data:
+            print(f"Image: {image_data['mime_type']}, {len(image_data['bytes'])} bytes")
         print(f"{'='*80}\n")
 
         # CRITICAL: Ensure ADK session exists before sending message
@@ -158,9 +187,21 @@ def send_message(session, user_input: str, display_message: str = None):
         if not adk_sync_success:
             raise Exception("Failed to sync ADK session - cannot send message")
 
+        # Build content parts
+        parts = [types.Part(text=user_input)]
+
+        # Add image if provided
+        if image_data:
+            parts.append(types.Part(
+                inline_data=types.Blob(
+                    mime_type=image_data['mime_type'],
+                    data=image_data['bytes']
+                )
+            ))
+
         content = types.Content(
             role="user",
-            parts=[types.Part(text=user_input)]
+            parts=parts
         )
 
         all_parts = []
@@ -206,6 +247,24 @@ def send_message(session, user_input: str, display_message: str = None):
             session.save_assistant_message(json.dumps(all_parts))
         else:
             session.save_assistant_message(response_text)
+
+        # Save any pending generated images to chat history
+        # Import the global pending images list from tools module
+        from agent import tools
+
+        with tools._pending_images_lock:
+            if tools._pending_images:
+                print(f"💾 Saving {len(tools._pending_images)} pending image(s) to chat history...")
+                for img_data in tools._pending_images:
+                    session.save_generated_image(
+                        image_bytes=img_data['image_bytes'],
+                        prompt=img_data['prompt'],
+                        aspect_ratio=img_data['aspect_ratio']
+                    )
+                    print(f"   ✅ Image saved: {img_data['prompt'][:50]}...")
+                # Clear the queue
+                tools._pending_images.clear()
+                print(f"✅ All pending images saved to chat history")
 
         # Generate TTS if last message was voice
         if st.session_state.get('last_message_was_voice', False) and response_text:
@@ -321,25 +380,71 @@ def render_chat(session):
 
         if role == 'user':
             with st.chat_message("user"):
-                st.markdown(content)
+                # Try to parse content as JSON (might contain image data)
+                try:
+                    import json
+                    import base64
+                    parsed_content = json.loads(content)
+                    if isinstance(parsed_content, dict) and 'image' in parsed_content:
+                        # Display image
+                        image_data = parsed_content['image']
+                        st.image(base64.b64decode(image_data['bytes']), caption="Uploaded image")
+                        # Display text content
+                        st.markdown(parsed_content.get('content', ''))
+                    else:
+                        # Not an image message
+                        st.markdown(content)
+                except (json.JSONDecodeError, TypeError, KeyError):
+                    # Regular text message
+                    st.markdown(content)
         elif role == 'assistant':
             with st.chat_message("assistant"):
                 try:
                     import json
-                    parts = json.loads(content)
+                    import base64
+                    parsed = json.loads(content)
 
-                    for part in parts:
-                        if part["type"] == "thinking":
-                            st.markdown(f"**💭 Thinking:** {part['content']}")
-                        elif part["type"] == "tool_call":
-                            st.markdown(f"⚡ {part['content']}")
-                        elif part["type"] == "response":
-                            st.markdown(part["content"])
-                except (json.JSONDecodeError, KeyError):
+                    # Check if this is a generated image message
+                    if isinstance(parsed, dict) and parsed.get('type') == 'generated_image':
+                        image_data = parsed['image']
+                        st.markdown(f"**✨ Image Generated Successfully**")
+                        image_bytes = base64.b64decode(image_data['bytes'])
+                        st.image(image_bytes, caption=f"Generated: {image_data['prompt'][:100]}...")
+                        st.caption(f"📐 Aspect ratio: {image_data['aspect_ratio']}")
+                    # Check if this is a structured message with parts
+                    elif isinstance(parsed, list):
+                        for part in parsed:
+                            if part["type"] == "thinking":
+                                st.markdown(f"**💭 Thinking:** {part['content']}")
+                            elif part["type"] == "tool_call":
+                                st.markdown(f"⚡ {part['content']}")
+                            elif part["type"] == "response":
+                                st.markdown(part["content"])
+                    else:
+                        # Unknown JSON structure, display as text
+                        st.markdown(content)
+                except (json.JSONDecodeError, KeyError, TypeError):
+                    # Regular text message
                     st.markdown(content)
         elif role == 'tool':
-            with st.expander(f"🔧 {msg.get('tool_name', 'Tool Call')}"):
-                st.json(msg.get('tool_result', {}))
+            tool_result = msg.get('tool_result', {})
+            tool_name = msg.get('tool_name', 'Tool Call')
+
+            # Check if this is an image generation result (legacy format with image_data)
+            if tool_name == 'tool_generate_image' and tool_result.get('success') and 'image_data' in tool_result:
+                # Display the generated image prominently (legacy)
+                with st.chat_message("assistant"):
+                    st.markdown(f"**✨ Image Generated Successfully**")
+                    st.image(tool_result['image_data'], caption=f"Generated: {tool_result.get('prompt_used', 'Custom image')[:100]}...")
+                    st.caption(f"📐 Aspect ratio: {tool_result.get('aspect_ratio', 'N/A')}")
+            else:
+                # Regular tool result - show in expander
+                with st.expander(f"🔧 {tool_name}"):
+                    # Don't show image_data bytes in JSON (too large)
+                    display_result = {k: v for k, v in tool_result.items() if k not in ['image_data', 'display_image_to_user']}
+                    if 'image_data' in tool_result:
+                        display_result['image_data'] = f"<{len(tool_result['image_data'])} bytes>"
+                    st.json(display_result)
 
     # CSS to make upload/voice more compact and equal height
     st.markdown("""
@@ -390,7 +495,7 @@ def render_chat(session):
         uploader_key = st.session_state.get('uploader_key', 0)
         uploaded_file = st.file_uploader(
             "Upload Document",
-            type=['pdf', 'docx', 'xlsx', 'txt', 'pptx'],
+            type=['pdf', 'docx', 'xlsx', 'txt', 'pptx', 'png', 'jpg', 'jpeg', 'gif', 'webp'],
             key=f"file_uploader_{uploader_key}",
             label_visibility="collapsed"
         )
@@ -409,130 +514,153 @@ def render_chat(session):
         st.session_state.pending_file = uploaded_file
         st.session_state.uploading_in_progress = True  # NEW: Gate chat during processing
 
-        max_retries = 3
-        extraction_result = None
-        for attempt in range(max_retries):
-            with st.spinner(f"📄 Processing {uploaded_file.name}... (Attempt {attempt + 1}/{max_retries})"):
-                file_path = os.path.join("/tmp", uploaded_file.name)
-                with open(file_path, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
+        # Check if file is an image
+        if is_image_file(uploaded_file.name):
+            # Handle image upload
+            with st.spinner(f"🖼️ Processing image {uploaded_file.name}..."):
+                file_bytes = uploaded_file.getbuffer().tobytes()
+                mime_type = get_mime_type(uploaded_file.name)
 
-                extraction_result = extract_document_text(file_path)
-                if extraction_result['status'] == 'success':
-                    break
-                else:
-                    if attempt < max_retries - 1:
-                        import time
-                        time.sleep(2)  # Brief pause before retry
-                    else:
-                        # All retries failed
-                        pass
-
-        # Clear selection after process (success or error) by incrementing key
-        st.session_state.uploader_key = uploader_key + 1
-        st.session_state.uploading_in_progress = False  # NEW: Unlock chat
-
-        if extraction_result and extraction_result['status'] == 'success':
-            # Detect document type and extract metadata
-            with st.spinner("🔍 Analyzing document..."):
-                db = DatabaseManager()
-
-                # Get document type (from PDF extraction or detect from text)
-                document_type = extraction_result.get('document_type')
-                if not document_type:
-                    document_type = detect_document_type(extraction_result['text'])
-
-                # Optimized: No longer fetch all records for duplicate detection
-                # The new database methods handle this directly
-                # Extract metadata with duplicate checking
-                metadata = extract_document_metadata(
-                    extraction_result['text'],
-                    document_type,
-                    db=db  # Pass db instance for optimized lookups
-                )
-
-                title = metadata['title']
-                matching_id = metadata['matching_id']
-                entity_type = metadata['entity_type']
-                has_qualification = metadata['has_qualification']
-                has_bid_plan = metadata['has_bid_plan']
-
-                print(f"🔍 Document type: {document_type}")
-                print(f"🔍 Extracted title: {title}")
-                print(f"🔄 Matching {entity_type} ID: {matching_id}")
-
-                # Get status using the matched ID or by title
-                status = {
-                    'exists': False,
-                    'matching_id': None,
-                    'entity_type': entity_type,
-                    'title': None,
-                    'has_qualification': False,
-                    'has_bid_plan': False
+                # Store image data for sending with next message
+                st.session_state.pending_image = {
+                    'bytes': file_bytes,
+                    'mime_type': mime_type,
+                    'filename': uploaded_file.name
                 }
 
-                if matching_id and document_type == "RFP":
-                    # Optimized: Single query with LEFT JOINs instead of 3 separate queries
-                    rfp_data = db.get_rfp_upload_status(matching_id)
+                st.success(f"✅ Image {uploaded_file.name} ready! Type your message or question about the image.")
 
+            # Clear selection
+            st.session_state.uploader_key = uploader_key + 1
+            st.session_state.uploading_in_progress = False
+            st.rerun()
+
+        else:
+            # Handle document upload (existing logic)
+            max_retries = 3
+            extraction_result = None
+            for attempt in range(max_retries):
+                with st.spinner(f"📄 Processing {uploaded_file.name}... (Attempt {attempt + 1}/{max_retries})"):
+                    file_path = os.path.join("/tmp", uploaded_file.name)
+                    with open(file_path, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+
+                    extraction_result = extract_document_text(file_path)
+                    if extraction_result['status'] == 'success':
+                        break
+                    else:
+                        if attempt < max_retries - 1:
+                            import time
+                            time.sleep(2)  # Brief pause before retry
+                        else:
+                            # All retries failed
+                            pass
+
+            # Clear selection after process (success or error) by incrementing key
+            st.session_state.uploader_key = uploader_key + 1
+            st.session_state.uploading_in_progress = False  # NEW: Unlock chat
+
+            if extraction_result and extraction_result['status'] == 'success':
+                # Detect document type and extract metadata
+                with st.spinner("🔍 Analyzing document..."):
+                    db = DatabaseManager()
+
+                    # Get document type (from PDF extraction or detect from text)
+                    document_type = extraction_result.get('document_type')
+                    if not document_type:
+                        document_type = detect_document_type(extraction_result['text'])
+
+                    # Optimized: No longer fetch all records for duplicate detection
+                    # The new database methods handle this directly
+                    # Extract metadata with duplicate checking
+                    metadata = extract_document_metadata(
+                        extraction_result['text'],
+                        document_type,
+                        db=db  # Pass db instance for optimized lookups
+                    )
+
+                    title = metadata['title']
+                    matching_id = metadata['matching_id']
+                    entity_type = metadata['entity_type']
+                    has_qualification = metadata['has_qualification']
+                    has_bid_plan = metadata['has_bid_plan']
+
+                    print(f"🔍 Document type: {document_type}")
+                    print(f"🔍 Extracted title: {title}")
+                    print(f"🔄 Matching {entity_type} ID: {matching_id}")
+
+                    # Get status using the matched ID or by title
                     status = {
-                        'exists': True,
-                        'matching_id': matching_id,
-                        'entity_type': 'rfp',
-                        'title': rfp_data.get('project_title') if rfp_data else title,
-                        'client_name': rfp_data.get('client_name') if rfp_data else None,
-                        'has_qualification': rfp_data.get('has_qualification', False) if rfp_data else False,
-                        'has_bid_plan': rfp_data.get('has_bid_plan', False) if rfp_data else False
-                    }
-                elif matching_id and document_type == "Meeting Notes":
-                    brief_doc = db.get_client_brief(matching_id)
-                    status = {
-                        'exists': True,
-                        'matching_id': matching_id,
-                        'entity_type': 'brief',
-                        'title': brief_doc.get('client_name') if brief_doc else title,
+                        'exists': False,
+                        'matching_id': None,
+                        'entity_type': entity_type,
+                        'title': None,
                         'has_qualification': False,
                         'has_bid_plan': False
                     }
 
-                print(f"📊 Database status: {status}")
+                    if matching_id and document_type == "RFP":
+                        # Optimized: Single query with LEFT JOINs instead of 3 separate queries
+                        rfp_data = db.get_rfp_upload_status(matching_id)
 
-            st.session_state.pending_extraction = {
-                'filename': extraction_result['filename'],
-                'text': extraction_result['text'],
-                'file_uri': extraction_result.get('file_uri'),
-                'document_type': document_type,
-                'title': title,
-                'matching_id': status.get('matching_id'),
-                'entity_type': entity_type,
-                'has_qualification': status.get('has_qualification', False),
-                'has_bid_plan': status.get('has_bid_plan', False)
-            }
+                        status = {
+                            'exists': True,
+                            'matching_id': matching_id,
+                            'entity_type': 'rfp',
+                            'title': rfp_data.get('project_title') if rfp_data else title,
+                            'client_name': rfp_data.get('client_name') if rfp_data else None,
+                            'has_qualification': rfp_data.get('has_qualification', False) if rfp_data else False,
+                            'has_bid_plan': rfp_data.get('has_bid_plan', False) if rfp_data else False
+                        }
+                    elif matching_id and document_type == "Meeting Notes":
+                        brief_doc = db.get_client_brief(matching_id)
+                        status = {
+                            'exists': True,
+                            'matching_id': matching_id,
+                            'entity_type': 'brief',
+                            'title': brief_doc.get('client_name') if brief_doc else title,
+                            'has_qualification': False,
+                            'has_bid_plan': False
+                        }
 
-            print(f"💾 Pending extraction data: doc_type={document_type}, title={title}, matching_id={status.get('matching_id')}, entity_type={entity_type}")
+                    print(f"📊 Database status: {status}")
 
-            st.success(f"✅ Document processed: {extraction_result['filename']}")
+                st.session_state.pending_extraction = {
+                    'filename': extraction_result['filename'],
+                    'text': extraction_result['text'],
+                    'file_uri': extraction_result.get('file_uri'),
+                    'document_type': document_type,
+                    'title': title,
+                    'matching_id': status.get('matching_id'),
+                    'entity_type': entity_type,
+                    'has_qualification': status.get('has_qualification', False),
+                    'has_bid_plan': status.get('has_bid_plan', False)
+                }
 
-            # Show status based on document type
-            if status.get('exists'):
-                if entity_type == 'rfp':
-                    st.warning(f"⚠️ This RFP already exists: **{title}**")
-                    status_parts = []
-                    if status.get('has_qualification'):
-                        status_parts.append("✓ Qualification")
-                    if status.get('has_bid_plan'):
-                        status_parts.append("✓ Bid Plan")
-                    if status_parts:
-                        st.info(f"Status: {', '.join(status_parts)}")
-                elif entity_type == 'brief':
-                    st.warning(f"⚠️ Client brief already exists for: **{title}**")
+                print(f"💾 Pending extraction data: doc_type={document_type}, title={title}, matching_id={status.get('matching_id')}, entity_type={entity_type}")
 
-            st.info(f"📋 Document type: {document_type} | 💬 Add your instructions below and send")
-        else:
-            error_msg = extraction_result.get('error', 'Unknown error') if extraction_result else 'Unknown error'
-            st.error(f"⚠️ Extraction failed after {max_retries} attempts: {error_msg}")
-            if 'pending_file' in st.session_state:
-                del st.session_state.pending_file
+                st.success(f"✅ Document processed: {extraction_result['filename']}")
+
+                # Show status based on document type
+                if status.get('exists'):
+                    if entity_type == 'rfp':
+                        st.warning(f"⚠️ This RFP already exists: **{title}**")
+                        status_parts = []
+                        if status.get('has_qualification'):
+                            status_parts.append("✓ Qualification")
+                        if status.get('has_bid_plan'):
+                            status_parts.append("✓ Bid Plan")
+                        if status_parts:
+                            st.info(f"Status: {', '.join(status_parts)}")
+                    elif entity_type == 'brief':
+                        st.warning(f"⚠️ Client brief already exists for: **{title}**")
+
+                st.info(f"📋 Document type: {document_type} | 💬 Add your instructions below and send")
+            else:
+                error_msg = extraction_result.get('error', 'Unknown error') if extraction_result else 'Unknown error'
+                st.error(f"⚠️ Extraction failed after {max_retries} attempts: {error_msg}")
+                if 'pending_file' in st.session_state:
+                    del st.session_state.pending_file
                         
 
     # Audio transcription (audio_file is from the column above)
@@ -721,5 +849,14 @@ USER REQUEST:
                 if 'pending_file' in st.session_state:
                     del st.session_state.pending_file
             else:
-                send_message(session, user_input)
+                # Check if there's a pending image to send
+                pending_image = st.session_state.get('pending_image')
+                if pending_image:
+                    # Send message with image
+                    send_message(session, user_input, image_data=pending_image)
+                    # Clear pending image
+                    del st.session_state.pending_image
+                else:
+                    # Regular text message
+                    send_message(session, user_input)
         st.rerun()

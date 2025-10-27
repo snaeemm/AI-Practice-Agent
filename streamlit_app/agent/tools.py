@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 from dotenv import load_dotenv
+import threading
 
 load_dotenv()
 
@@ -12,8 +13,13 @@ from agent.database.db_singleton import get_db
 from agent.database.db_manager import DatabaseManager # Added for fetching data
 import io # Added for byte stream handling
 from agent.config.settings import settings # Import settings
+from agent.image_generator import generate_image_from_prompt # Image generation
 
 db = get_db()
+
+# Thread-safe storage for pending images (since tools run in agent threads)
+_pending_images_lock = threading.Lock()
+_pending_images = []
 
 
 def tool_qualify_rfp(context: Optional[str] = None, pdf_path: Optional[str] = None) -> Dict[str, Any]:
@@ -1449,5 +1455,109 @@ def tool_generate_client_brief(context: Optional[str] = None, file_path: Optiona
             'success': False,
             'error': str(e),
             'message': f'Failed to generate client brief: {str(e)}'
+        }
+
+
+# ==================== Image Generation Tools ====================
+
+def tool_generate_image(
+    prompt: str,
+    aspect_ratio: str = "1:1",
+    negative_prompt: Optional[str] = None,
+    reference_image_url: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Generate an image using Gemini 2.5 Flash Image (conversational image generation).
+
+    Use this tool when any agent needs to create images for:
+    - Social media posts (LinkedIn, Instagram, etc.)
+    - Marketing materials
+    - Visual content for presentations
+    - Illustrations for blog posts or articles
+    - Any visual content creation need
+
+    IMPORTANT: This tool displays the image directly to the user via session state.
+    The agent receives only a success message, not the image bytes (to avoid token overflow).
+
+    Args:
+        prompt: Detailed description of the image to generate
+            Example: "Modern office with AI technology, professional, clean aesthetic"
+        aspect_ratio: Image dimensions
+            Options: "1:1" (square, LinkedIn), "16:9" (landscape), "9:16" (portrait), "4:5" (Instagram)
+            Default: "1:1"
+        negative_prompt: Optional - Things to avoid in the image
+            Example: "blurry, low quality, distorted faces"
+        reference_image_url: Optional - URL of reference image for style inspiration
+
+    Returns:
+        Dictionary with:
+        - success (bool): True if generation succeeded
+        - display_image_to_user (bool): Flag indicating image should be shown to user
+        - message (str): Status message
+        - error (str): Error message (if failed)
+
+    Examples:
+        # LinkedIn post image
+        tool_generate_image(
+            prompt="Professional office scene with AI technology, modern, clean aesthetic",
+            aspect_ratio="1:1"
+        )
+
+        # Instagram post with specific style
+        tool_generate_image(
+            prompt="Vibrant sunset over city skyline, lifestyle photography",
+            aspect_ratio="4:5",
+            negative_prompt="dark, gloomy, rainy"
+        )
+    """
+    try:
+        print(f"🎨 Generating image with prompt: {prompt[:80]}...")
+        print(f"   Aspect ratio: {aspect_ratio}")
+
+        # Call the image generator
+        result = generate_image_from_prompt(
+            prompt=prompt,
+            aspect_ratio=aspect_ratio,
+            negative_prompt=negative_prompt,
+            reference_images=None  # Can be extended later
+        )
+
+        if result.get('success'):
+            # Store image in thread-safe global storage (not session_state, since tools run in threads)
+            # This avoids passing large bytes back to the agent (which causes token overflow)
+            global _pending_images, _pending_images_lock
+
+            # Queue the image for saving to chat history
+            with _pending_images_lock:
+                _pending_images.append({
+                    'image_bytes': result['image_bytes'],
+                    'prompt': prompt,
+                    'aspect_ratio': aspect_ratio
+                })
+                print(f"✅ Image queued for saving to chat history (queue size: {len(_pending_images)})")
+
+            # Return success to agent WITHOUT the image bytes
+            return {
+                'success': True,
+                'display_image_to_user': True,  # Flag for chat.py to save and display image
+                'message': f"✅ Image generated successfully! The image has been displayed to the user.",
+                'aspect_ratio': aspect_ratio,
+                'prompt_used': prompt
+            }
+        else:
+            return {
+                'success': False,
+                'error': result.get('error', 'Unknown error'),
+                'message': f"❌ Image generation failed: {result.get('error', 'Unknown error')}"
+            }
+
+    except Exception as e:
+        import traceback
+        print(f"❌ Error in tool_generate_image: {e}")
+        traceback.print_exc()
+        return {
+            'success': False,
+            'error': str(e),
+            'message': f'Failed to generate image: {str(e)}'
         }
 
