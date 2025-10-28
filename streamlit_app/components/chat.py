@@ -187,8 +187,9 @@ def send_message(session, user_input: str, display_message: str = None, image_da
         if not adk_sync_success:
             raise Exception("Failed to sync ADK session - cannot send message")
 
-        # Build content parts
-        parts = [types.Part(text=user_input)]
+        # Build content parts with session context
+        message_with_context = f"[SESSION_CONTEXT: user_id={user_id}, session_id={session.session_id}]\n\n{user_input}"
+        parts = [types.Part(text=message_with_context)]
 
         # Add image if provided
         if image_data:
@@ -533,7 +534,6 @@ def render_chat(session):
             # Clear selection
             st.session_state.uploader_key = uploader_key + 1
             st.session_state.uploading_in_progress = False
-            st.rerun()
 
         else:
             # Handle document upload (existing logic)

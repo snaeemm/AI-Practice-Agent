@@ -10,7 +10,7 @@ import json
 from agent.database.db_singleton import get_db
 from agent.database.marketing_db_tools import MarketingDatabaseTools
 from agent.database.marketing_profile_manager import MarketingProfileManager
-from agent.session_context import get_current_user_id
+from agent.session_context import get_current_user_id, get_user_id_from_session_id
 
 
 # Initialize database connections
@@ -19,11 +19,143 @@ marketing_db = MarketingDatabaseTools(db)
 profile_manager = MarketingProfileManager(db)
 
 
+# ==================== Helper Function ====================
+
+def _get_user_id(user_id: Optional[str] = None, session_id: Optional[str] = None) -> Optional[str]:
+    """
+    Helper to get user_id from multiple sources in priority order.
+
+    Priority:
+    1. Explicit user_id parameter
+    2. session_id lookup (most reliable for sub-agents)
+    3. Context variable fallback
+
+    Args:
+        user_id: Explicitly provided user_id
+        session_id: Session ID to look up user_id from
+
+    Returns:
+        user_id or None
+    """
+    # 1. Use explicit user_id if provided
+    if user_id:
+        return user_id
+
+    # 2. Try session_id lookup (most reliable)
+    if session_id:
+        looked_up_user_id = get_user_id_from_session_id(session_id)
+        if looked_up_user_id:
+            return looked_up_user_id
+
+    # 3. Fallback to context variable
+    return get_current_user_id()
+
+
 # ==================== Profile Search Tools ====================
+
+def tool_list_all_profiles(
+    user_id: Optional[str] = None,
+    session_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    List all marketing profiles for the current user.
+
+    This tool retrieves all profiles (personal, company, and employee) that belong to the user.
+    Use this to show an overview of all available profiles.
+
+    Args:
+        user_id: Optional UUID of the user (auto-detected if not provided)
+        session_id: Optional session ID to look up user_id (auto-detected if not provided)
+
+    Returns:
+        Dictionary with:
+        - success (bool): True if successful
+        - profiles (list): List of all profiles with details
+        - count (int): Number of profiles found
+        - message (str): Status message
+
+    Example:
+        tool_list_all_profiles()
+        Returns: {"success": True, "profiles": [...], "count": 3, "message": "Found 3 profiles"}
+    """
+    try:
+        # Get user_id using helper
+        user_id = _get_user_id(user_id, session_id)
+
+        if user_id is None:
+            print(f"❌ [LIST PROFILES] Failed to get user_id from any source")
+            return {
+                'success': False,
+                'profiles': [],
+                'count': 0,
+                'error': 'No user_id provided and unable to get from session',
+                'message': 'user_id is required. Please provide it or ensure you are in an active session.'
+            }
+
+        print(f"✅ [LIST PROFILES] Using user_id: {user_id}")
+
+        # Get all profiles for user
+        profiles = profile_manager.get_user_profiles(user_id)
+        print(f"🔍 [LIST PROFILES] Found {len(profiles) if profiles else 0} total profiles for user {user_id}")
+
+        if not profiles:
+            return {
+                'success': True,
+                'profiles': [],
+                'count': 0,
+                'message': 'No marketing profiles found. You can create one using tool_create_marketing_profile.'
+            }
+
+        # Format profiles for display
+        formatted_profiles = []
+        for p in profiles:
+            profile_info = {
+                'profile_id': str(p['profile_id']),
+                'profile_name': p['profile_name'],
+                'profile_type': p['profile_type'],
+                'industry': p.get('industry'),
+                'target_audience': p.get('target_audience'),
+                'default_platforms': p.get('default_platforms'),
+                'is_default': p.get('is_default', False),
+                'created_at': p.get('created_at').isoformat() if p.get('created_at') else None
+            }
+
+            # Add type-specific fields
+            if p['profile_type'] == 'personal':
+                profile_info['role_title'] = p.get('role_title')
+                profile_info['expertise_areas'] = p.get('expertise_areas')
+            elif p['profile_type'] == 'company':
+                profile_info['company_size'] = p.get('company_size')
+                profile_info['company_location'] = p.get('company_location')
+
+            formatted_profiles.append(profile_info)
+
+        print(f"✅ [LIST PROFILES] Returning {len(formatted_profiles)} profile(s)")
+
+        return {
+            'success': True,
+            'profiles': formatted_profiles,
+            'count': len(formatted_profiles),
+            'message': f"Found {len(formatted_profiles)} marketing profile(s)"
+        }
+
+    except Exception as e:
+        print(f"❌ [LIST PROFILES] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'success': False,
+            'profiles': [],
+            'count': 0,
+            'error': str(e),
+            'message': f'Failed to list profiles: {str(e)}'
+        }
+
 
 def tool_search_profile_by_name(
     profile_name: str,
-    user_id: Optional[str] = None
+    user_id: Optional[str] = None,
+    session_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Search for a marketing profile by name for a specific user.
@@ -33,7 +165,8 @@ def tool_search_profile_by_name(
 
     Args:
         profile_name: Name of the profile to search for (case-insensitive partial match)
-        user_id: Optional UUID of the user (defaults to current session user)
+        user_id: Optional UUID of the user (auto-detected if not provided)
+        session_id: Optional session ID to look up user_id (auto-detected if not provided)
 
     Returns:
         Dictionary with:
@@ -46,21 +179,19 @@ def tool_search_profile_by_name(
         Returns: {"success": True, "profiles": [{"profile_id": "...", "profile_name": "Shahzeb Naeem", ...}]}
     """
     try:
-        # Get user_id from session if not provided
+        # Get user_id using helper
+        user_id = _get_user_id(user_id, session_id)
+
         if user_id is None:
-            print(f"🔍 [PROFILE SEARCH] user_id not provided, attempting to get from session...")
-            user_id = get_current_user_id()
-            if user_id is None:
-                print(f"❌ [PROFILE SEARCH] Failed to get user_id from session")
-                return {
-                    'success': False,
-                    'profiles': [],
-                    'error': 'No user_id provided and unable to get from session',
-                    'message': 'user_id is required. Please provide it or ensure you are in an active session.'
-                }
-            print(f"✅ [PROFILE SEARCH] Using user_id from session: {user_id}")
-        else:
-            print(f"✅ [PROFILE SEARCH] user_id provided as parameter: {user_id}")
+            print(f"❌ [PROFILE SEARCH] Failed to get user_id from any source")
+            return {
+                'success': False,
+                'profiles': [],
+                'error': 'No user_id provided and unable to get from session',
+                'message': 'user_id is required. Please provide it or ensure you are in an active session.'
+            }
+
+        print(f"✅ [PROFILE SEARCH] Using user_id: {user_id}")
 
         # Get all profiles for user
         profiles = profile_manager.get_user_profiles(user_id)
