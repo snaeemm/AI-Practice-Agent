@@ -1,0 +1,82 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment files (secrets should be in HF Space settings)
+.env
+.env.local
+.env.production
+.streamlit/secrets.toml
+
+# Output/Results directories
+output/
+results/
+tmp/
+*.tmp
+
+# Database files (we use remote PostgreSQL)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Documentation (not needed in container)
+*.md
+!README.md
+
+# Large media files (unless needed)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pptx
+*.xlsx
+!company_logo_*.png
+
+# Test files
+test_*.py
+*_test.py
+
+# Migration scripts (run separately, not in container)
+*_migration.py
+setup_*.py
+run_migration.py
+add_*.py
+clear_*.py
+verify_deployment.py
+
+# Cache directories
+.search_cache/
+.pytest_cache/
