@@ -17,12 +17,12 @@ USERS = [
     {"username": "lionel.laulhe", "password": "lionel-laulhe-123!", "full_name": "Lionel Laulhe"},
     {"username": "bethany.bromfield", "password": "bethany-bromfield-123!", "full_name": "Bethany Bromfield"},
     {"username": "sowjanya.gummella", "password": "sowjanya-gummella-123!", "full_name": "Sowjanya Gummella"},
-    {"username": "sharif.kamyab", "password": "sharif-kamyab-123!", "full_name": "Sharif Kamyab"},
     {"username": "anna.fakir", "password": "anna-fakir-123!", "full_name": "Anna Fakir"},
     {"username": "rana.alnajjar", "password": "rana-alnajjar-123!", "full_name": "Rana Al Najjar"},
     {"username": "ghalya.shamo", "password": "ghalya-shamo-123!", "full_name": "Ghalya Shamo"},
     {"username": "nadine.khair", "password": "nadine-khair-123!", "full_name": "Nadine Khair"},
     {"username": "julien.recan", "password": "julien-recan-123!", "full_name": "Julien Recan"},
+    {"username": "sharif", "password": "Password123", "full_name": "Sharif Kamyab"},
 ]
 
 def initialize_users():
