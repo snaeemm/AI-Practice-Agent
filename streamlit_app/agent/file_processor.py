@@ -4,6 +4,7 @@ from typing import Dict, Any
 from google import genai
 from dotenv import load_dotenv
 from docx import Document
+from pptx import Presentation
 
 load_dotenv()
 
@@ -99,9 +100,101 @@ def extract_text_from_docx(file_path: str) -> str:
         raise Exception(f"Failed to extract DOCX: {str(e)}")
 
 
+def extract_text_from_pptx(file_path: str) -> str:
+    """
+    Extract text from a PPTX file using python-pptx library.
+
+    Args:
+        file_path: Path to the PPTX file
+
+    Returns:
+        Extracted text content
+    """
+    try:
+        prs = Presentation(file_path)
+        text_parts = []
+
+        for slide_num, slide in enumerate(prs.slides, 1):
+            slide_text = []
+
+            # Extract text from all shapes in the slide
+            for shape in slide.shapes:
+                if hasattr(shape, "text") and shape.text.strip():
+                    slide_text.append(shape.text)
+
+                # Also check for tables in the slide
+                if shape.has_table:
+                    table = shape.table
+                    for row in table.rows:
+                        row_text = []
+                        for cell in row.cells:
+                            if cell.text.strip():
+                                row_text.append(cell.text)
+                        if row_text:
+                            slide_text.append(" | ".join(row_text))
+
+            # Add slide content with a separator
+            if slide_text:
+                text_parts.append(f"--- Slide {slide_num} ---")
+                text_parts.extend(slide_text)
+                text_parts.append("")  # Empty line between slides
+
+        return "\n".join(text_parts)
+    except Exception as e:
+        raise Exception(f"Failed to extract PPTX: {str(e)}")
+
+
+def extract_text_from_pdf(file_path: str) -> str:
+    """
+    Extract text from a PDF file using pdfplumber library.
+    Handles tables and preserves document structure.
+
+    Args:
+        file_path: Path to the PDF file
+
+    Returns:
+        Extracted text content with tables formatted as pipe-separated text
+    """
+    try:
+        import pdfplumber
+
+        text_parts = []
+
+        with pdfplumber.open(file_path) as pdf:
+            for page in pdf.pages:
+                # Extract regular text from page
+                page_text = page.extract_text()
+                if page_text and page_text.strip():
+                    text_parts.append(page_text)
+
+                # Extract tables and format as text
+                tables = page.extract_tables()
+                if tables:
+                    for table in tables:
+                        if table:
+                            # Format each row with pipe separators
+                            for row in table:
+                                if row:
+                                    # Convert None to empty string and join
+                                    row_text = " | ".join(str(cell) if cell is not None else "" for cell in row)
+                                    if row_text.strip():
+                                        text_parts.append(row_text)
+
+        return "\n".join(text_parts)
+    except Exception as e:
+        raise Exception(f"Failed to extract PDF: {str(e)}")
+
+
 def extract_document_text(file_path: str) -> Dict[str, Any]:
     """
-    Extract text from PDF, DOCX, XLSX, PPTX, or TXT files using Gemini File API.
+    Extract text from PDF, DOCX, XLSX, PPTX, or TXT files.
+
+    Extraction methods:
+    - PDF: Uses pdfplumber (local, fast, supports tables)
+    - DOCX: Uses python-docx (local, fast, supports tables)
+    - PPTX: Uses python-pptx (local, fast)
+    - TXT: Direct file read (local, instant)
+    - XLSX: Uses Gemini File API (slower, but necessary for complex formats)
 
     Args:
         file_path: Path to the document file
@@ -110,9 +203,10 @@ def extract_document_text(file_path: str) -> Dict[str, Any]:
         Dictionary with:
         - status: 'success' or 'failed'
         - text: Extracted text content (if success)
-        - file_uri: Gemini File API URI (if success)
+        - file_uri: Gemini File API URI (if XLSX) or None (for local extraction)
         - error: Error message (if failed)
         - filename: Original filename
+        - document_type: "RFP", "Meeting Notes", or "Other" (if detected)
     """
     try:
         path = Path(file_path)
@@ -177,6 +271,69 @@ def extract_document_text(file_path: str) -> Dict[str, Any]:
                     'filename': path.name
                 }
 
+        # Handle PPTX files directly using python-pptx
+        if file_ext == '.pptx' or file_ext == '.ppt':
+            print(f"📊 Extracting text from {path.name} using python-pptx...")
+            try:
+                text_content = extract_text_from_pptx(file_path)
+                if not text_content.strip():
+                    return {
+                        'status': 'failed',
+                        'error': 'No text could be extracted from the presentation',
+                        'filename': path.name
+                    }
+
+                print(f"✅ Extracted {len(text_content)} characters from {path.name}")
+
+                # Detect document type from extracted text
+                document_type = detect_document_type(text_content)
+
+                return {
+                    'status': 'success',
+                    'text': text_content,
+                    'file_uri': None,
+                    'filename': path.name,
+                    'document_type': document_type
+                }
+            except Exception as e:
+                return {
+                    'status': 'failed',
+                    'error': f'PPTX extraction error: {str(e)}',
+                    'filename': path.name
+                }
+
+        # Handle PDF files directly using pdfplumber
+        if file_ext == '.pdf':
+            print(f"📄 Extracting text from {path.name} using pdfplumber...")
+            try:
+                text_content = extract_text_from_pdf(file_path)
+                if not text_content.strip():
+                    return {
+                        'status': 'failed',
+                        'error': 'No text could be extracted from the PDF',
+                        'filename': path.name
+                    }
+
+                print(f"✅ Extracted {len(text_content)} characters from {path.name}")
+
+                # Detect document type from extracted text
+                document_type = detect_document_type(text_content)
+
+                return {
+                    'status': 'success',
+                    'text': text_content,
+                    'file_uri': None,  # No Gemini upload needed
+                    'filename': path.name,
+                    'document_type': document_type
+                }
+            except Exception as e:
+                return {
+                    'status': 'failed',
+                    'error': f'PDF extraction error: {str(e)}',
+                    'filename': path.name
+                }
+
+        # For XLSX and other formats, use Gemini File API
         print(f"📤 Uploading {path.name} to Gemini File API...")
         uploaded_file = client.files.upload(file=str(path))
 
