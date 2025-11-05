@@ -11,7 +11,7 @@ load_dotenv()
 client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 SUPPORTED_EXTENSIONS = ['.pdf', '.docx', '.xlsx', '.pptx', '.txt', '.doc', '.xls', '.ppt']
-MAX_FILE_SIZE_MB = 15
+MAX_FILE_SIZE_MB = 500
 
 def detect_document_type(text: str) -> str:
     """
