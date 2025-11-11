@@ -118,21 +118,6 @@ def render_slide_viewer(slides: List[Dict[str, Any]]) -> None:
     # Render the slide
     st.markdown(slide_html, unsafe_allow_html=True)
 
-    # Add keyboard navigation support
-    keyboard_script = f"""
-    <script>
-    document.addEventListener('keydown', function(e) {{
-        if (e.key === 'ArrowLeft') {{
-            document.querySelector('[data-testid="baseButton-secondary"][key="prev_slide"]')?.click();
-        }} else if (e.key === 'ArrowRight' || e.key === ' ') {{
-            e.preventDefault();
-            document.querySelector('[data-testid="baseButton-secondary"][key="next_slide"]')?.click();
-        }}
-    }});
-    </script>
-    """
-    st.markdown(keyboard_script, unsafe_allow_html=True)
-
     # Navigation controls
     st.markdown("---")
 

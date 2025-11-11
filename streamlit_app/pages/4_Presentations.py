@@ -29,13 +29,15 @@ def get_cached_presentation(presentation_id: int):
     db = DatabaseManager()
     return db.get_presentation_by_id(presentation_id)
 
-db = DatabaseManager()
-
 # Initialize session state for presentation selection
 if 'selected_presentation_id' not in st.session_state:
     st.session_state.selected_presentation_id = None
 if 'edit_mode_presentation' not in st.session_state:
     st.session_state.edit_mode_presentation = False
+if 'confirm_delete_id' not in st.session_state:
+    st.session_state.confirm_delete_id = None
+if 'generate_ppt_id' not in st.session_state:
+    st.session_state.generate_ppt_id = None
 
 # Back button at top (always visible)
 if st.session_state.selected_presentation_id:
@@ -47,8 +49,16 @@ if st.session_state.selected_presentation_id:
             st.rerun()
     st.markdown("---")
 
-# Get all presentations
-presentations = db.list_presentations(limit=50)
+# Get all presentations with error handling
+presentations = []
+try:
+    with st.spinner("Loading presentations..."):
+        db = DatabaseManager()
+        presentations = db.list_presentations(limit=50)
+except Exception as e:
+    st.error(f"⚠️ Error loading presentations: {str(e)}")
+    st.error("Please check your database connection and try refreshing the page.")
+    st.stop()
 
 # View selected presentation or dashboard
 if not st.session_state.selected_presentation_id:
@@ -166,33 +176,60 @@ else:
         col_download, col_delete = st.columns(2)
 
         with col_download:
-            if st.button("⬇️ Download .pptx", key=f"download_ppt_{pres_id}", use_container_width=True):
+            # Check if we need to generate the PPT
+            if st.session_state.generate_ppt_id == pres_id:
                 with st.spinner("Generating presentation..."):
-                    # Generate from saved structure
-                    from agent.ppt_agent.ppt_tools import _create_presentation_bytes
-                    ppt_bytes = _create_presentation_bytes(slides)
-                    if ppt_bytes:
-                        st.download_button(
-                            "📥 Click to Download",
-                            data=ppt_bytes,
-                            file_name=f"{title.replace(' ', '_')}.pptx",
-                            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                            key=f"dl_btn_ppt_{pres_id}",
-                            use_container_width=True
-                        )
-                    else:
-                        st.error("Failed to generate presentation")
+                    try:
+                        from agent.ppt_agent.ppt_tools import _create_presentation_bytes
+                        ppt_bytes = _create_presentation_bytes(slides)
+                        if ppt_bytes:
+                            st.download_button(
+                                "📥 Click to Download",
+                                data=ppt_bytes,
+                                file_name=f"{title.replace(' ', '_')}.pptx",
+                                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                                key=f"dl_btn_ppt_{pres_id}",
+                                use_container_width=True
+                            )
+                            # Reset after showing download button
+                            st.session_state.generate_ppt_id = None
+                        else:
+                            st.error("Failed to generate presentation")
+                            st.session_state.generate_ppt_id = None
+                    except Exception as e:
+                        st.error(f"Error generating presentation: {str(e)}")
+                        st.session_state.generate_ppt_id = None
+            else:
+                # Show the trigger button
+                if st.button("⬇️ Download .pptx", key=f"download_ppt_{pres_id}", use_container_width=True):
+                    st.session_state.generate_ppt_id = pres_id
+                    st.rerun()
 
         with col_delete:
-            if st.button("🗑️ Delete", key=f"delete_ppt_{pres_id}", use_container_width=True):
-                st.warning(f"Are you sure you want to delete '{title}'?")
+            # Check if we're in confirmation mode for this presentation
+            if st.session_state.confirm_delete_id == pres_id:
+                st.warning(f"⚠️ Are you sure you want to delete '{title}'?")
                 col_confirm, col_cancel = st.columns(2)
                 with col_confirm:
-                    if st.button("✅ Yes, Delete", key=f"confirm_delete_{pres_id}"):
-                        db.delete_presentation(pres_id)
-                        st.success(f"✅ Presentation deleted successfully!")
-                        st.session_state.selected_presentation_id = None
-                        st.rerun()
+                    if st.button("✅ Yes, Delete", key=f"confirm_delete_{pres_id}", use_container_width=True):
+                        try:
+                            db = DatabaseManager()
+                            db.delete_presentation(pres_id)
+                            st.success(f"✅ Presentation deleted successfully!")
+                            # Clear cache and reset state
+                            st.cache_data.clear()
+                            st.session_state.confirm_delete_id = None
+                            st.session_state.selected_presentation_id = None
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error deleting presentation: {str(e)}")
+                            st.session_state.confirm_delete_id = None
                 with col_cancel:
-                    if st.button("❌ Cancel", key=f"cancel_delete_{pres_id}"):
+                    if st.button("❌ Cancel", key=f"cancel_delete_{pres_id}", use_container_width=True):
+                        st.session_state.confirm_delete_id = None
                         st.rerun()
+            else:
+                # Show the delete button
+                if st.button("🗑️ Delete", key=f"delete_ppt_{pres_id}", use_container_width=True):
+                    st.session_state.confirm_delete_id = pres_id
+                    st.rerun()
